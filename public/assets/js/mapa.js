@@ -11,6 +11,9 @@
 document.addEventListener('alpine:init', function () {
     'use strict';
 
+    // Magenta: ningún estado lo usa y no aparece en el mapa de Google, así que el recorrido resalta.
+    const COLOR_RECORRIDO = '#C2185B';
+
     const ETIQUETAS = {
         PROGRAMADO: 'Programado', EN_CURSO: 'En curso', NO_INICIADO: 'No iniciado',
         SIN_CIERRE: 'Sin cierre', FINALIZADO: 'Finalizado',
@@ -254,20 +257,44 @@ document.addEventListener('alpine:init', function () {
                 if (!mapa || puntos.length < 2) {
                     return;
                 }
-                recorrido = new window.google.maps.Polyline({
-                    map: mapa,
-                    path: puntos.map((p) => ({ lat: p.lat, lng: p.lng })),
-                    strokeColor: '#1f6f50',
-                    strokeOpacity: 0.85,
-                    strokeWeight: 4,
-                    icons: [{ icon: { path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW, scale: 2.5 }, offset: '100%', repeat: '120px' }],
-                });
+                const ruta = puntos.map((p) => ({ lat: p.lat, lng: p.lng }));
+                // Dos líneas superpuestas: una blanca más ancha (el borde) y la magenta encima.
+                recorrido = [
+                    new window.google.maps.Polyline({
+                        map: mapa,
+                        path: ruta,
+                        strokeColor: '#ffffff',
+                        strokeOpacity: 1,
+                        strokeWeight: 9,
+                        zIndex: 10,
+                    }),
+                    new window.google.maps.Polyline({
+                        map: mapa,
+                        path: ruta,
+                        strokeColor: COLOR_RECORRIDO,
+                        strokeOpacity: 1,
+                        strokeWeight: 5,
+                        zIndex: 11,
+                        icons: [{
+                            icon: {
+                                path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                                scale: 3.5,
+                                fillColor: COLOR_RECORRIDO,
+                                fillOpacity: 1,
+                                strokeColor: '#ffffff',
+                                strokeWeight: 1.5,
+                            },
+                            offset: '40px',
+                            repeat: '80px',
+                        }],
+                    }),
+                ];
             },
 
             quitarRecorrido() {
                 this.quitarPuntosNumerados();
                 if (recorrido) {
-                    recorrido.setMap(null);
+                    recorrido.forEach((linea) => linea.setMap(null));
                     recorrido = null;
                 }
             },
@@ -316,7 +343,7 @@ document.addEventListener('alpine:init', function () {
                             position: posicion,
                             zIndex: 1000 + indice,
                             label: { text: numero, color: '#ffffff', fontSize: '11px', fontWeight: '700' },
-                            icon: { path: window.google.maps.SymbolPath.CIRCLE, scale: 11, fillColor: '#1f6f50', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 2 },
+                            icon: { path: window.google.maps.SymbolPath.CIRCLE, scale: 11, fillColor: COLOR_RECORRIDO, fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 2 },
                         });
                     }
                     // Texto con textContent: la referencia la escribe la unidad.

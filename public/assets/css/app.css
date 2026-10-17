@@ -9,6 +9,7 @@
     --color-institucional-claro: #8fbfac;    /* borde de los campos con foco */
     --color-institucional-rgb: 31, 111, 80;
     --color-naranja: #fd7e14;
+    --color-recorrido: #C2185B;   /* línea y puntos del recorrido en el mapa del supervisor */
 
     /* Enlaces en el verde institucional en vez del azul de Bootstrap. El azul
        (primary) se reserva para el estado FINALIZADO. */
@@ -822,12 +823,12 @@
     border-top: 2px solid #fff;
 }
 
-/* "Ver recorrido" en el mapa del supervisor: puntos numerados y barra para volver. */
+/* "Ver recorrido" en el mapa del supervisor: puntos numerados (magenta, como la línea) y barra para volver. */
 .punto-recorrido {
     width: 26px;
     height: 26px;
     border-radius: 50%;
-    background: var(--color-institucional);
+    background: var(--color-recorrido);
     color: #fff;
     font: 700 12px/26px var(--bs-body-font-family);
     text-align: center;
@@ -837,15 +838,15 @@
 
 .punto-recorrido.inicio {
     background: #fff;
-    color: var(--color-institucional);
-    border-color: var(--color-institucional);
+    color: var(--color-recorrido);
+    border-color: var(--color-recorrido);
 }
 
 .punto-recorrido.ultimo {
     width: 32px;
     height: 32px;
     line-height: 32px;
-    box-shadow: 0 0 0 4px rgba(var(--color-institucional-rgb), .3), 0 1px 4px rgba(0, 0, 0, .35);
+    box-shadow: 0 0 0 4px rgba(194, 24, 91, .3), 0 1px 4px rgba(0, 0, 0, .35);
 }
 
 .barra-recorrido {

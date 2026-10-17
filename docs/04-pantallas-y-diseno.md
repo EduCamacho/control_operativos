@@ -77,7 +77,7 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - Filtros por turno y por división. Los FINALIZADOS se pueden mostrar u ocultar.
    - Se actualiza cada 30 s e indica "Actualizado hace X s".
    - Una **barra de alertas** muestra cuántos operativos están NO_INICIADO y SIN_CIERRE. Al tocarla, despliega la lista con el lugar programado, porque los NO_INICIADO aún no tienen ubicación.
-2. **Ficha del operativo**: se abre como panel inferior al tocar un marcador. En vez de la lista del recorrido tiene el botón **Ver recorrido (N puntos)**: oculta la ficha y encuadra el mapa sobre el recorrido, con los puntos numerados (tocar uno muestra su hora y referencia) y una barra **← Volver a la ficha** / **✕**. Sin mapa (vista Lista o página de la ficha), el botón despliega la lista de puntos.
+2. **Ficha del operativo**: se abre como panel inferior al tocar un marcador. En vez de la lista del recorrido tiene el botón **Ver recorrido (N puntos)**: oculta la ficha y encuadra el mapa sobre el recorrido (línea **magenta** `#C2185B` con borde blanco y flechas de dirección; el magenta no lo usa ningún estado ni el mapa de Google), con los puntos numerados del mismo color (tocar uno muestra su hora y referencia) y una barra **← Volver a la ficha** / **✕**. Sin mapa (vista Lista o página de la ficha), el botón despliega la lista de puntos.
    - Muestra unidad, tipos, plan, jefe, fuerzas, horario programado y real, lugar, última actualización ("hace 12 min") y recorrido.
    - Botones: **Cómo llegar** (`https://www.google.com/maps/dir/?api=1&destination=LAT,LNG`), **Llamar al jefe** (`tel:`) y **Registrar control**.
 3. **Registrar control inopinado**
