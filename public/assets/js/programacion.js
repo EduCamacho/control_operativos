@@ -60,6 +60,72 @@
     }
 
     document.addEventListener('alpine:init', function () {
+        /**
+         * Coordenadas del lugar programado (opcionales): abre Google Maps con el lugar
+         * escrito y separa lo que se pega con /api/coordenadas (parsear_coordenadas()).
+         */
+        window.Alpine.data('coordenadasLugar', function (config) {
+            return {
+                texto: config.texto,
+                estado: '', // '' | analizando | ok | error
+                latitud: null,
+                longitud: null,
+                mensaje: '',
+
+                init() {
+                    if (this.texto.trim() !== '') {
+                        this.analizar();
+                    }
+                },
+
+                enlaceBuscar() {
+                    const formulario = this.$el.closest('form');
+                    const lugar = formulario ? (formulario.querySelector('[name="lugar_programado"]') || {}).value || '' : '';
+                    if (lugar.trim() === '') {
+                        return 'https://www.google.com/maps/@-8.1116,-79.0288,14z';
+                    }
+                    return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(lugar.trim() + ', La Libertad, Perú');
+                },
+
+                enlaceVer() {
+                    return 'https://www.google.com/maps/search/?api=1&query=' + this.latitud + ',' + this.longitud;
+                },
+
+                async analizar() {
+                    const texto = this.texto.trim();
+                    if (texto === '') {
+                        this.estado = '';
+                        return;
+                    }
+                    this.estado = 'analizando';
+                    try {
+                        const meta = document.querySelector('meta[name="csrf"]');
+                        const respuesta = await fetch(config.url, {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': meta ? meta.content : '' },
+                            body: JSON.stringify({ texto: texto }),
+                        });
+                        const datos = await respuesta.json();
+                        if (!respuesta.ok) {
+                            this.estado = 'error';
+                            this.mensaje = datos.error || 'No se reconocen las coordenadas.';
+                        } else if (!datos.dentro_de_la_libertad) {
+                            this.estado = 'error';
+                            this.mensaje = 'Esas coordenadas están fuera de La Libertad. Revise que las copió bien.';
+                        } else {
+                            this.latitud = datos.latitud;
+                            this.longitud = datos.longitud;
+                            this.estado = 'ok';
+                        }
+                    } catch (error) {
+                        // Sin conexión: el servidor las revisará al guardar.
+                        this.estado = '';
+                    }
+                },
+            };
+        });
+
         window.Alpine.data('formularioProgramacion', function (inicial) {
             return {
                 fecha: inicial.fecha,
@@ -140,6 +206,8 @@
                     if (paso === 2 && this.activo('lugar_programado')) {
                         if (!this.$root.querySelector('[name="tipos[]"]:checked')) return this.fallar('Marque al menos un tipo de operativo.');
                         if (this.campo('lugar_programado').value.trim() === '') return this.fallar('Indique el lugar programado.', 'lugar_programado');
+                        const coordenadas = this.campo('lugar_coordenadas');
+                        if (coordenadas && coordenadas.dataset.valido === 'false') return this.fallar('Revise las coordenadas del lugar o déjelas vacías.', 'lugar_coordenadas');
                     }
                     if (paso === 3 && this.activo('jefe_grado')) {
                         if (this.campo('jefe_grado').value === '') return this.fallar('Elija el grado del jefe.', 'jefe_grado');
@@ -195,6 +263,7 @@
                         tipos: tipos.join(', '),
                         plan: valor('nombre_plan'),
                         lugar: valor('lugar_programado'),
+                        coordenadas: valor('lugar_coordenadas'),
                         jefe: (valor('jefe_grado') + ' ' + valor('jefe_nombres')).trim(),
                         celular: valor('jefe_celular'),
                         fuerzas: valor('fuerzas_propias') + ' propias · ' + valor('fuerzas_apoyo') + ' de apoyo · ' + valor('unidades_moviles') + ' móvil(es)',

@@ -5,7 +5,7 @@
  */
 declare(strict_types=1);
 
-const COLUMNAS_OPERATIVO = 'o.id, o.unidad_id, o.fecha_servicio, o.turno, o.nombre_plan, o.lugar_programado,
+const COLUMNAS_OPERATIVO = 'o.id, o.unidad_id, o.fecha_servicio, o.turno, o.nombre_plan, o.lugar_programado, o.lugar_latitud, o.lugar_longitud,
     o.inicio_programado, o.fin_programado, o.jefe_grado, o.jefe_nombres, o.jefe_celular,
     o.fuerzas_propias, o.fuerzas_apoyo, o.unidades_moviles, o.estado, o.inicio_real, o.fin_real,
     o.nota_informativa, o.observaciones, o.creado_en, o.actualizado_en,

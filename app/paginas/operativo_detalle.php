@@ -177,7 +177,13 @@ require RUTA_APP . '/vistas/cabecera.php';
                         <dd class="col-7"><?= e($operativo['nombre_plan']) ?></dd>
                     <?php endif; ?>
                     <dt class="col-5">Lugar programado</dt>
-                    <dd class="col-7"><?= e($operativo['lugar_programado']) ?></dd>
+                    <dd class="col-7">
+                        <?= e($operativo['lugar_programado']) ?>
+                        <?php if ($operativo['lugar_latitud'] !== null): ?>
+                            <a href="<?= e(armar_enlace_google_maps((float) $operativo['lugar_latitud'], (float) $operativo['lugar_longitud'])) ?>"
+                               target="_blank" rel="noopener" class="d-block"><i class="bi bi-geo-alt"></i> Ver en Google Maps</a>
+                        <?php endif; ?>
+                    </dd>
                     <dt class="col-5">Jefe</dt>
                     <dd class="col-7">
                         <?= e($operativo['jefe_grado'] . ' ' . $operativo['jefe_nombres']) ?><br>

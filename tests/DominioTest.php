@@ -645,6 +645,41 @@ final class DominioTest extends TestCase
         $this->assertNull($r['datos']['observaciones']);
     }
 
+    public function test_coordenadas_del_lugar_son_opcionales(): void
+    {
+        $r = validar_programacion(['lugar_coordenadas' => '  '] + self::entrada_valida(), [1, 2, 3]);
+        $this->assertSame([], $r['errores']);
+        $this->assertNull($r['datos']['lugar_latitud']);
+        $this->assertNull($r['datos']['lugar_longitud']);
+    }
+
+    public function test_coordenadas_del_lugar_pegadas_de_google_maps(): void
+    {
+        $r = validar_programacion(['lugar_coordenadas' => 'https://www.google.com/maps/@-8.1116,-79.0288,17z'] + self::entrada_valida(), [1, 2, 3]);
+        $this->assertSame([], $r['errores']);
+        $this->assertSame(-8.1116, $r['datos']['lugar_latitud']);
+        $this->assertSame(-79.0288, $r['datos']['lugar_longitud']);
+    }
+
+    public function test_coordenadas_del_lugar_invalidas_o_fuera_de_la_libertad(): void
+    {
+        $this->assertArrayHasKey('lugar_coordenadas', validar_programacion(['lugar_coordenadas' => 'Av. España'] + self::entrada_valida(), [1, 2, 3])['errores']);
+        $this->assertArrayHasKey('lugar_coordenadas', validar_programacion(['lugar_coordenadas' => '8.1116, 79.0288'] + self::entrada_valida(), [1, 2, 3])['errores']);
+    }
+
+    public function test_en_curso_no_cambia_las_coordenadas_del_lugar(): void
+    {
+        $this->assertNotContains('lugar_coordenadas', campos_editables('EN_CURSO', true));
+        $this->assertContains('lugar_coordenadas', campos_editables('PROGRAMADO', true));
+    }
+
+    public function test_formatea_coordenadas_para_mostrar_y_reeditar(): void
+    {
+        $this->assertSame('-8.111600, -79.028800', formatear_coordenadas('-8.1116000', '-79.0288000'));
+        $this->assertSame('', formatear_coordenadas(null, null));
+        $this->assertSame([-8.1116, -79.0288], parsear_coordenadas(formatear_coordenadas(-8.1116, -79.0288)));
+    }
+
     public function test_nombre_del_plan_vacio_queda_null(): void
     {
         $entrada = ['nombre_plan' => '   '] + self::entrada_valida();

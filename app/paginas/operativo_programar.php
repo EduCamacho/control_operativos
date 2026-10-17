@@ -37,6 +37,7 @@ if ($actual !== null) {
         'hora_inicio' => formatear_hora($actual['inicio_programado']),
         'hora_fin'    => formatear_hora($actual['fin_programado']),
         'tipos'       => $tipos_actuales,
+        'lugar_coordenadas' => formatear_coordenadas($actual['lugar_latitud'], $actual['lugar_longitud']),
     ];
 } else {
     $fecha = (string) ($_GET['fecha'] ?? $vigente);
@@ -66,7 +67,7 @@ if ($actual !== null) {
     )->fetch() ?: ['jefe_grado' => '', 'jefe_nombres' => '', 'jefe_celular' => ''];
     $valores = [
         'fecha_servicio' => $fecha, 'hora_inicio' => $hora_inicio, 'hora_fin' => '', 'tipos' => [],
-        'nombre_plan' => '', 'lugar_programado' => '',
+        'nombre_plan' => '', 'lugar_programado' => '', 'lugar_coordenadas' => '',
         'fuerzas_propias' => 1, 'fuerzas_apoyo' => 0, 'unidades_moviles' => 0, 'observaciones' => '',
     ] + $ultimo_jefe;
 }
@@ -178,7 +179,7 @@ if (es_post()) {
 // Asistente por pasos (docs/04): 1 Cuándo · 2 Qué y dónde · 3 Jefe y fuerzas · 4 Revisar.
 const PASO_DE_CAMPO = [
     'fecha_servicio' => 1, 'hora_inicio' => 1, 'hora_fin' => 1,
-    'tipos' => 2, 'nombre_plan' => 2, 'lugar_programado' => 2,
+    'tipos' => 2, 'nombre_plan' => 2, 'lugar_programado' => 2, 'lugar_coordenadas' => 2,
     'jefe_grado' => 3, 'jefe_nombres' => 3, 'jefe_celular' => 3,
     'fuerzas_propias' => 3, 'fuerzas_apoyo' => 3, 'unidades_moviles' => 3, 'observaciones' => 3,
 ];
@@ -209,7 +210,7 @@ $fecha_minima = $vigente;
 $scripts = ['assets/js/programacion.js'];
 require RUTA_APP . '/vistas/cabecera.php';
 ?>
-<div class="formulario-angosto">
+<div class="formulario-angosto mx-auto">
     <div class="d-flex align-items-center gap-2 mb-2">
         <h1 class="h4 mb-0 me-auto"><?= e($titulo) ?></h1>
         <a href="<?= e($actual === null ? armar_url() : armar_url('operativos/ver', ['id' => $id])) ?>" class="btn btn-sm btn-link text-body-secondary">Cancelar</a>

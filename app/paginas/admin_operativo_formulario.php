@@ -35,7 +35,7 @@ $a_local = static fn (?string $fecha_hora): string => $fecha_hora === null ? '' 
 $valores = $actual === null
     ? [
         'unidad_id' => '', 'fecha_servicio' => fecha_servicio_vigente($ahora), 'hora_inicio' => '', 'hora_fin' => '', 'tipos' => [],
-        'nombre_plan' => '', 'lugar_programado' => '', 'jefe_grado' => '', 'jefe_nombres' => '', 'jefe_celular' => '',
+        'nombre_plan' => '', 'lugar_programado' => '', 'lugar_coordenadas' => '', 'jefe_grado' => '', 'jefe_nombres' => '', 'jefe_celular' => '',
         'fuerzas_propias' => 1, 'fuerzas_apoyo' => 0, 'unidades_moviles' => 0, 'observaciones' => '',
         'estado' => 'PROGRAMADO', 'inicio_real' => '', 'fin_real' => '', 'nota_informativa' => '', 'cantidad' => [], 'motivo' => '',
     ]
@@ -43,6 +43,7 @@ $valores = $actual === null
         'hora_inicio' => formatear_hora($actual['inicio_programado']),
         'hora_fin'    => formatear_hora($actual['fin_programado']),
         'tipos'       => $tipos_actuales,
+        'lugar_coordenadas' => formatear_coordenadas($actual['lugar_latitud'], $actual['lugar_longitud']),
         'cantidad'    => $cantidades_actuales,
         'motivo'      => '',
     ];

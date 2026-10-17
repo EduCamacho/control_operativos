@@ -76,6 +76,7 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
   - Tipo(s) de operativo: uno o más, del catálogo.
   - Nombre del plan: opcional, por ejemplo "Saltamonte 2026" o "Estado de Emergencia Trujillo-V-2026".
   - Lugar programado: texto con calle, avenida, sector o barrio.
+  - Coordenadas del lugar programado: opcionales. Se pegan desde Google Maps (botón **Abrir Google Maps**) y se validan dentro de La Libertad. Permiten "Cómo llegar" al lugar aunque el operativo no se haya iniciado.
   - Hora de inicio y hora de fin.
   - Jefe del operativo: grado, nombres y celular. El grado se elige de una lista fija, en este orden: ALFZ, TNTE, CAP, MAY, CMDTE, CRNL y GRAL; luego S3, S2, S1, ST3, ST2, ST1, SB y SS.
   - Fuerzas propias: entero ≥ 1.
@@ -163,4 +164,5 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 - [x] El grado de Comandante se abrevia CMDTE (confirmado por Eduardo).
 - [x] Servicio diario de 06:00 a 05:59 y rangos horarios de los turnos (confirmado por Eduardo).
 - [ ] Observación del control inopinado opcional cuando el resultado es CONFORME (propuesta de Claude, por validar).
+- [ ] Coordenadas del lugar programado opcionales (propuesta de Claude, por validar; pueden pasar a obligatorias).
 - [ ] SUPERVISOR y ADMIN ven el tablero y la ficha de cualquier operativo; el mapa y el registro de controles son solo del SUPERVISOR (propuesta de Claude, por validar).

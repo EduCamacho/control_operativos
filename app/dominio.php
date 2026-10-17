@@ -87,7 +87,7 @@ const ALFABETO_CLAVE_TEMPORAL = 'abcdefghjkmnpqrstuvwxyz23456789';
 
 const CAMPOS_HORARIO = ['fecha_servicio', 'hora_inicio', 'hora_fin'];
 const CAMPOS_DATOS = [
-    'tipos', 'nombre_plan', 'lugar_programado',
+    'tipos', 'nombre_plan', 'lugar_programado', 'lugar_coordenadas',
     'jefe_grado', 'jefe_nombres', 'jefe_celular',
     'fuerzas_propias', 'fuerzas_apoyo', 'unidades_moviles',
     'observaciones',
@@ -405,6 +405,15 @@ function distancia_m(float $lat1, float $lng1, float $lat2, float $lng2): int
     return (int) round(2 * $radio_tierra_m * asin(min(1.0, sqrt($a))));
 }
 
+/** "-8.111600, -79.028800" para mostrar o volver a editar; '' si no hay coordenadas. */
+function formatear_coordenadas(string|float|null $latitud, string|float|null $longitud): string
+{
+    if ($latitud === null || $longitud === null || $latitud === '' || $longitud === '') {
+        return '';
+    }
+    return sprintf('%.6F, %.6F', (float) $latitud, (float) $longitud);
+}
+
 /** Enlace que no consume la API de Google Maps (RN-21). Siempre con punto decimal. */
 function armar_enlace_google_maps(float $latitud, float $longitud): string
 {
@@ -680,6 +689,23 @@ function validar_programacion(array $entrada, array $ids_tipos_activos, ?array $
             $errores['lugar_programado'] = 'El lugar programado admite hasta 255 caracteres.';
         } else {
             $datos['lugar_programado'] = $lugar;
+        }
+    }
+
+    // Coordenadas del lugar programado: opcionales, pegadas de Google Maps.
+    if (in_array('lugar_coordenadas', $campos, true)) {
+        $texto_coordenadas = $texto('lugar_coordenadas');
+        $datos['lugar_latitud'] = null;
+        $datos['lugar_longitud'] = null;
+        if ($texto_coordenadas !== '') {
+            $coordenadas = parsear_coordenadas($texto_coordenadas);
+            if ($coordenadas === null) {
+                $errores['lugar_coordenadas'] = 'No se reconocen las coordenadas. Cópielas de Google Maps (por ejemplo: -8.1116, -79.0288).';
+            } elseif (!dentro_de_la_libertad($coordenadas[0], $coordenadas[1])) {
+                $errores['lugar_coordenadas'] = 'Esas coordenadas están fuera de La Libertad. Revise que las copió bien.';
+            } else {
+                [$datos['lugar_latitud'], $datos['lugar_longitud']] = $coordenadas;
+            }
         }
     }
 

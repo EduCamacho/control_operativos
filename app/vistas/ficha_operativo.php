@@ -30,6 +30,11 @@ $recorrido = array_map(static fn (array $u): array => [(float) $u['latitud'], (f
                href="<?= e(armar_enlace_como_llegar((float) $ultima['latitud'], (float) $ultima['longitud'])) ?>">
                 <i class="bi bi-sign-turn-right"></i> Cómo llegar
             </a>
+        <?php elseif ($operativo['lugar_latitud'] !== null): ?>
+            <a class="btn btn-primary boton-accion" target="_blank" rel="noopener"
+               href="<?= e(armar_enlace_como_llegar((float) $operativo['lugar_latitud'], (float) $operativo['lugar_longitud'])) ?>">
+                <i class="bi bi-sign-turn-right"></i> Cómo llegar al lugar programado
+            </a>
         <?php endif; ?>
         <a class="btn btn-outline-success boton-accion" href="tel:<?= e($operativo['jefe_celular']) ?>">
             <i class="bi bi-telephone"></i> Llamar al jefe
@@ -50,6 +55,10 @@ $recorrido = array_map(static fn (array $u): array => [(float) $u['latitud'], (f
         <div class="alert alert-light border py-2 small">
             <div class="text-body-secondary">Lugar programado (todavía sin ubicación)</div>
             <?= e($operativo['lugar_programado']) ?>
+            <?php if ($operativo['lugar_latitud'] !== null): ?>
+                <a href="<?= e(armar_enlace_google_maps((float) $operativo['lugar_latitud'], (float) $operativo['lugar_longitud'])) ?>"
+                   target="_blank" rel="noopener" class="text-nowrap"><i class="bi bi-geo-alt"></i> Ver en Google Maps</a>
+            <?php endif; ?>
         </div>
     <?php endif; ?>
 
