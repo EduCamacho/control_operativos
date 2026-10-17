@@ -754,4 +754,158 @@ final class DominioTest extends TestCase
         $this->assertFalse(cuenta_bloqueada('2026-10-17 10:15:00', self::lima('2026-10-17 10:15:00')));
         $this->assertFalse(cuenta_bloqueada(null, self::lima('2026-10-17 10:00:00')));
     }
+
+    // --- claves -------------------------------------------------------------
+
+    public function test_valida_el_largo_de_la_clave(): void
+    {
+        $this->assertNotNull(validar_clave('123456789'));
+        $this->assertNull(validar_clave('1234567890'));
+        $this->assertNull(validar_clave('ñandú-áéíó'));
+        $this->assertNotNull(validar_clave(str_repeat('a', 73)));
+    }
+
+    public function test_clave_temporal_sin_caracteres_confusos(): void
+    {
+        $claves = [];
+        for ($i = 0; $i < 50; $i++) {
+            $clave = generar_clave_temporal();
+            $this->assertMatchesRegularExpression('/^[abcdefghjkmnpqrstuvwxyz23456789]{12}$/', $clave);
+            $this->assertNull(validar_clave($clave));
+            $claves[] = $clave;
+        }
+        $this->assertCount(50, array_unique($claves));
+    }
+
+    // --- validar_unidad -----------------------------------------------------
+
+    public function test_unidad_valida(): void
+    {
+        $r = validar_unidad(['division' => 'DUE', 'nombre' => ' HALCONES TRUJILLO ', 'nombre_corto' => 'HALCONES', 'orden' => '22', 'activo' => '1']);
+        $this->assertSame([], $r['errores']);
+        $this->assertSame(['division' => 'DUE', 'nombre' => 'HALCONES TRUJILLO', 'nombre_corto' => 'HALCONES', 'orden' => 22, 'activo' => 1], $r['datos']);
+    }
+
+    public function test_unidad_sin_marcar_activo_queda_inactiva(): void
+    {
+        $r = validar_unidad(['division' => 'DUE', 'nombre' => 'UPROVE', 'nombre_corto' => 'UPROVE', 'orden' => '0']);
+        $this->assertSame(0, $r['datos']['activo']);
+    }
+
+    public function test_unidad_con_errores(): void
+    {
+        $r = validar_unidad(['division' => 'DIVPOL', 'nombre' => '', 'nombre_corto' => str_repeat('x', 61), 'orden' => '-1']);
+        $this->assertEqualsCanonicalizing(['division', 'nombre', 'nombre_corto', 'orden'], array_keys($r['errores']));
+    }
+
+    // --- validar_usuario ----------------------------------------------------
+
+    public function test_usuario_unidad_con_unidad_asignada(): void
+    {
+        $r = validar_usuario(['usuario' => ' Com.Ayacucho ', 'nombre' => 'Comisaría Ayacucho', 'rol' => 'UNIDAD', 'unidad_id' => '1', 'activo' => '1'], [1, 2], true);
+        $this->assertSame([], $r['errores']);
+        $this->assertSame('com.ayacucho', $r['datos']['usuario']);
+        $this->assertSame(1, $r['datos']['unidad_id']);
+        $this->assertArrayNotHasKey('clave', $r['datos']);
+    }
+
+    public function test_usuario_unidad_sin_unidad_es_error(): void
+    {
+        $this->assertArrayHasKey('unidad_id', validar_usuario(['usuario' => 'abc', 'nombre' => 'X', 'rol' => 'UNIDAD', 'unidad_id' => ''], [1], true)['errores']);
+        $this->assertArrayHasKey('unidad_id', validar_usuario(['usuario' => 'abc', 'nombre' => 'X', 'rol' => 'UNIDAD', 'unidad_id' => '9'], [1], true)['errores']);
+    }
+
+    public function test_admin_y_supervisor_no_llevan_unidad(): void
+    {
+        foreach (['ADMIN', 'SUPERVISOR'] as $rol) {
+            $r = validar_usuario(['usuario' => 'abc', 'nombre' => 'X', 'rol' => $rol, 'unidad_id' => '1'], [1], false);
+            $this->assertSame([], $r['errores'], $rol);
+            $this->assertNull($r['datos']['unidad_id'], $rol);
+        }
+    }
+
+    public function test_usuario_con_errores(): void
+    {
+        $r = validar_usuario(['usuario' => 'ab', 'nombre' => '', 'rol' => 'GENERAL', 'clave' => 'corta'], [], true);
+        $this->assertEqualsCanonicalizing(['usuario', 'nombre', 'rol', 'clave'], array_keys($r['errores']));
+    }
+
+    public function test_usuario_rechaza_tildes_y_espacios(): void
+    {
+        $this->assertArrayHasKey('usuario', validar_usuario(['usuario' => 'comisaría', 'nombre' => 'X', 'rol' => 'ADMIN'], [], false)['errores']);
+        $this->assertArrayHasKey('usuario', validar_usuario(['usuario' => 'com ayacucho', 'nombre' => 'X', 'rol' => 'ADMIN'], [], false)['errores']);
+    }
+
+    public function test_la_clave_solo_se_valida_al_crear(): void
+    {
+        $r = validar_usuario(['usuario' => 'abc', 'nombre' => 'X', 'rol' => 'ADMIN', 'clave' => 'corta'], [], false);
+        $this->assertSame([], $r['errores']);
+        $this->assertArrayNotHasKey('clave', $r['datos']);
+
+        $r = validar_usuario(['usuario' => 'abc', 'nombre' => 'X', 'rol' => 'ADMIN', 'clave' => 'ClaveSegura2026'], [], true);
+        $this->assertSame('ClaveSegura2026', $r['datos']['clave']);
+    }
+
+    // --- validar_elemento_catalogo ------------------------------------------
+
+    public function test_elemento_de_catalogo_en_mayusculas(): void
+    {
+        $r = validar_elemento_catalogo(['nombre' => ' control de identidad ', 'orden' => '1', 'activo' => '1'], 100, false);
+        $this->assertSame([], $r['errores']);
+        $this->assertSame(['nombre' => 'CONTROL DE IDENTIDAD', 'orden' => 1, 'activo' => 1], $r['datos']);
+    }
+
+    public function test_mayusculas_con_tildes_y_enie(): void
+    {
+        $r = validar_elemento_catalogo(['nombre' => 'zonas rígidas y señales', 'orden' => '8'], 100, false);
+        $this->assertSame('ZONAS RÍGIDAS Y SEÑALES', $r['datos']['nombre']);
+    }
+
+    public function test_concepto_con_descripcion(): void
+    {
+        $r = validar_elemento_catalogo(['nombre' => 'Requisitoriados', 'descripcion' => ' Personas con RQ ', 'orden' => '2'], 120, true);
+        $this->assertSame('Personas con RQ', $r['datos']['descripcion']);
+        $r = validar_elemento_catalogo(['nombre' => 'Requisitoriados', 'descripcion' => '', 'orden' => '2'], 120, true);
+        $this->assertNull($r['datos']['descripcion']);
+    }
+
+    public function test_elemento_de_catalogo_con_errores(): void
+    {
+        $r = validar_elemento_catalogo(['nombre' => str_repeat('a', 101), 'orden' => 'x', 'descripcion' => str_repeat('a', 256)], 100, true);
+        $this->assertEqualsCanonicalizing(['nombre', 'orden', 'descripcion'], array_keys($r['errores']));
+        $this->assertArrayHasKey('nombre', validar_elemento_catalogo(['nombre' => '  ', 'orden' => '1'], 100, false)['errores']);
+    }
+
+    // --- calcular_cambios ---------------------------------------------------
+
+    public function test_solo_devuelve_los_campos_que_cambiaron(): void
+    {
+        $antes = ['nombre' => 'COM. MOCHE', 'orden' => '14', 'activo' => '1', 'division' => 'DIVOPUS'];
+        $despues = ['nombre' => 'COM. MOCHE', 'orden' => 15, 'activo' => 1];
+        $this->assertSame(['orden' => ['antes' => '14', 'despues' => 15]], calcular_cambios($antes, $despues));
+    }
+
+    public function test_distingue_null_de_texto_vacio_y_de_cero(): void
+    {
+        $this->assertSame(
+            ['descripcion' => ['antes' => null, 'despues' => '']],
+            calcular_cambios(['descripcion' => null], ['descripcion' => '']),
+        );
+        $this->assertSame([], calcular_cambios(['unidad_id' => null], ['unidad_id' => null]));
+        $this->assertSame(
+            ['unidad_id' => ['antes' => null, 'despues' => 0]],
+            calcular_cambios(['unidad_id' => null], ['unidad_id' => 0]),
+        );
+    }
+
+    public function test_compara_listas_sin_importar_el_orden(): void
+    {
+        $this->assertSame([], calcular_cambios(['tipos' => [3, 1]], ['tipos' => ['1', '3']]));
+        $this->assertArrayHasKey('tipos', calcular_cambios(['tipos' => [1]], ['tipos' => [1, 2]]));
+    }
+
+    public function test_campo_nuevo_cuenta_como_cambio(): void
+    {
+        $this->assertSame(['activo' => ['antes' => null, 'despues' => 1]], calcular_cambios([], ['activo' => 1]));
+    }
 }

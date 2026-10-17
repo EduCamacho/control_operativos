@@ -13,7 +13,13 @@ $ruta_actual = obtener_ruta_actual();
 
 // Menú por rol. Cada fase agrega sus opciones.
 $menu = match ($usuario['rol'] ?? null) {
-    'ADMIN'      => ['' => 'Inicio'],
+    'ADMIN'      => [
+        ''                => 'Inicio',
+        'admin/unidades'  => 'Unidades',
+        'admin/usuarios'  => 'Usuarios',
+        'admin/catalogos' => 'Catálogos',
+        'admin/bitacora'  => 'Bitácora',
+    ],
     'SUPERVISOR' => ['' => 'Inicio'],
     'UNIDAD'     => ['' => 'Mis operativos'],
     default      => [],
@@ -46,8 +52,9 @@ $menu = match ($usuario['rol'] ?? null) {
             <ul class="navbar-nav me-auto">
                 <?php foreach ($menu as $ruta => $etiqueta): ?>
                     <li class="nav-item">
-                        <a class="nav-link<?= $ruta === $ruta_actual ? ' active' : '' ?>"
-                           <?= $ruta === $ruta_actual ? 'aria-current="page"' : '' ?>
+                        <?php $activa = $ruta === $ruta_actual || ($ruta !== '' && str_starts_with($ruta_actual, $ruta . '/')); ?>
+                        <a class="nav-link<?= $activa ? ' active' : '' ?>"
+                           <?= $activa ? 'aria-current="page"' : '' ?>
                            href="<?= e(armar_url($ruta)) ?>"><?= e($etiqueta) ?></a>
                     </li>
                 <?php endforeach; ?>

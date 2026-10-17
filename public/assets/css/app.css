@@ -34,3 +34,13 @@
 .border-naranja {
     border-color: var(--color-naranja) !important;
 }
+
+/* Formularios de una columna: no se estiran en pantallas anchas. */
+.formulario-angosto {
+    max-width: 40rem;
+}
+
+/* Alpine: oculta los elementos con x-cloak hasta que Alpine arranca. */
+[x-cloak] {
+    display: none !important;
+}

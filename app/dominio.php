@@ -39,6 +39,17 @@ const MAX_FUERZAS = 9999;
 const MAX_CANTIDAD_RESULTADO = 9999;
 const MAX_DIGITOS_NOTA = 20;
 
+const ROLES = ['ADMIN', 'SUPERVISOR', 'UNIDAD'];
+const DIVISIONES = [
+    'DIVOPUS'  => 'DIVOPUS Trujillo',
+    'DUE'      => 'DUE',
+    'DIVINCRI' => 'DIVINCRI La Libertad',
+];
+const LARGO_MINIMO_CLAVE = 10;
+const LARGO_CLAVE_TEMPORAL = 12;
+// Sin caracteres que se confunden al dictarlos o leerlos en el celular (0/o, 1/l/i).
+const ALFABETO_CLAVE_TEMPORAL = 'abcdefghjkmnpqrstuvwxyz23456789';
+
 const CAMPOS_HORARIO = ['fecha_servicio', 'hora_inicio', 'hora_fin'];
 const CAMPOS_DATOS = [
     'tipos', 'nombre_plan', 'lugar_programado',
@@ -580,4 +591,203 @@ function calcular_intento_fallido(int $intentos_previos, DateTimeImmutable $ahor
 function cuenta_bloqueada(string|DateTimeInterface|null $bloqueado_hasta, DateTimeImmutable $ahora): bool
 {
     return $bloqueado_hasta !== null && $ahora < convertir_a_fecha_hora($bloqueado_hasta);
+}
+
+/** @return string|null Mensaje de error, o null si la clave es válida. */
+function validar_clave(string $clave): ?string
+{
+    if (mb_strlen($clave) < LARGO_MINIMO_CLAVE) {
+        return 'La clave debe tener al menos ' . LARGO_MINIMO_CLAVE . ' caracteres.';
+    }
+    if (mb_strlen($clave) > 72) {
+        return 'La clave admite hasta 72 caracteres.';
+    }
+    return null;
+}
+
+/** Clave que ADMIN entrega al crear una cuenta o resetear la clave (RN-19). */
+function generar_clave_temporal(): string
+{
+    $clave = '';
+    $ultimo = strlen(ALFABETO_CLAVE_TEMPORAL) - 1;
+    for ($i = 0; $i < LARGO_CLAVE_TEMPORAL; $i++) {
+        $clave .= ALFABETO_CLAVE_TEMPORAL[random_int(0, $ultimo)];
+    }
+    return $clave;
+}
+
+// ---------------------------------------------------------------------------
+// Administración: unidades, usuarios y catálogos
+// ---------------------------------------------------------------------------
+
+/**
+ * @return array{datos: array<string, mixed>, errores: array<string, string>}
+ */
+function validar_unidad(array $entrada): array
+{
+    $datos = [];
+    $errores = [];
+    $texto = static fn (string $campo): string => trim((string) ($entrada[$campo] ?? ''));
+
+    $division = $texto('division');
+    if (!array_key_exists($division, DIVISIONES)) {
+        $errores['division'] = 'Elija la división.';
+    } else {
+        $datos['division'] = $division;
+    }
+
+    foreach (['nombre' => [150, 'el nombre completo'], 'nombre_corto' => [60, 'el nombre corto']] as $campo => [$largo, $etiqueta]) {
+        $valor = $texto($campo);
+        if ($valor === '') {
+            $errores[$campo] = "Indique $etiqueta.";
+        } elseif (mb_strlen($valor) > $largo) {
+            $errores[$campo] = ucfirst($etiqueta) . " admite hasta $largo caracteres.";
+        } else {
+            $datos[$campo] = $valor;
+        }
+    }
+
+    $orden = validar_entero($entrada['orden'] ?? null, 0, 65535);
+    if ($orden === null) {
+        $errores['orden'] = 'El orden debe ser un número entero de 0 a 65535.';
+    } else {
+        $datos['orden'] = $orden;
+    }
+
+    $datos['activo'] = !empty($entrada['activo']) ? 1 : 0;
+    return ['datos' => $datos, 'errores' => $errores];
+}
+
+/**
+ * Datos de una cuenta (RN-20): UNIDAD lleva unidad; ADMIN y SUPERVISOR no.
+ * La clave es opcional: si viene vacía, la página genera una temporal.
+ * La unicidad del usuario y de la unidad la garantiza la base de datos.
+ *
+ * @param list<int> $ids_unidades Unidades que existen.
+ * @return array{datos: array<string, mixed>, errores: array<string, string>}
+ */
+function validar_usuario(array $entrada, array $ids_unidades, bool $es_nuevo): array
+{
+    $datos = [];
+    $errores = [];
+    $texto = static fn (string $campo): string => trim((string) ($entrada[$campo] ?? ''));
+
+    $usuario = mb_strtolower($texto('usuario'));
+    if (!preg_match('/^[a-z0-9._-]{3,50}$/', $usuario)) {
+        $errores['usuario'] = 'El usuario debe tener de 3 a 50 caracteres: letras sin tilde, números, punto, guion o guion bajo.';
+    } else {
+        $datos['usuario'] = $usuario;
+    }
+
+    $nombre = $texto('nombre');
+    if ($nombre === '') {
+        $errores['nombre'] = 'Indique el nombre.';
+    } elseif (mb_strlen($nombre) > 150) {
+        $errores['nombre'] = 'El nombre admite hasta 150 caracteres.';
+    } else {
+        $datos['nombre'] = $nombre;
+    }
+
+    $rol = $texto('rol');
+    if (!in_array($rol, ROLES, true)) {
+        $errores['rol'] = 'Elija el rol.';
+    } else {
+        $datos['rol'] = $rol;
+        if ($rol === 'UNIDAD') {
+            $unidad_id = validar_entero($entrada['unidad_id'] ?? null, 1, PHP_INT_MAX);
+            if ($unidad_id === null || !in_array($unidad_id, $ids_unidades, true)) {
+                $errores['unidad_id'] = 'Una cuenta UNIDAD debe tener una unidad asignada.';
+            } else {
+                $datos['unidad_id'] = $unidad_id;
+            }
+        } else {
+            $datos['unidad_id'] = null;
+        }
+    }
+
+    if ($es_nuevo) {
+        $clave = (string) ($entrada['clave'] ?? '');
+        if ($clave !== '') {
+            $error = validar_clave($clave);
+            if ($error !== null) {
+                $errores['clave'] = $error;
+            } else {
+                $datos['clave'] = $clave;
+            }
+        }
+    }
+
+    $datos['activo'] = !empty($entrada['activo']) ? 1 : 0;
+    return ['datos' => $datos, 'errores' => $errores];
+}
+
+/**
+ * Tipos de operativo y conceptos de resultado. Los conceptos llevan además una descripción.
+ * Los nombres se guardan en mayúsculas, como en el catálogo inicial.
+ *
+ * @return array{datos: array<string, mixed>, errores: array<string, string>}
+ */
+function validar_elemento_catalogo(array $entrada, int $largo_nombre, bool $con_descripcion): array
+{
+    $datos = [];
+    $errores = [];
+
+    $nombre = mb_strtoupper(trim((string) ($entrada['nombre'] ?? '')));
+    if ($nombre === '') {
+        $errores['nombre'] = 'Indique el nombre.';
+    } elseif (mb_strlen($nombre) > $largo_nombre) {
+        $errores['nombre'] = "El nombre admite hasta $largo_nombre caracteres.";
+    } else {
+        $datos['nombre'] = $nombre;
+    }
+
+    if ($con_descripcion) {
+        $descripcion = trim((string) ($entrada['descripcion'] ?? ''));
+        if (mb_strlen($descripcion) > 255) {
+            $errores['descripcion'] = 'La descripción admite hasta 255 caracteres.';
+        } else {
+            $datos['descripcion'] = $descripcion === '' ? null : $descripcion;
+        }
+    }
+
+    $orden = validar_entero($entrada['orden'] ?? null, 0, 65535);
+    if ($orden === null) {
+        $errores['orden'] = 'El orden debe ser un número entero de 0 a 65535.';
+    } else {
+        $datos['orden'] = $orden;
+    }
+
+    $datos['activo'] = !empty($entrada['activo']) ? 1 : 0;
+    return ['datos' => $datos, 'errores' => $errores];
+}
+
+/**
+ * Campos que cambiaron, para la bitácora: ['campo' => ['antes' => x, 'despues' => y]].
+ * Compara como texto, para que 5 y '5' (como vienen de la base de datos) sean iguales.
+ * Solo revisa las claves de $despues.
+ *
+ * @return array<string, array{antes: mixed, despues: mixed}>
+ */
+function calcular_cambios(array $antes, array $despues): array
+{
+    $normalizar = static function (mixed $valor): mixed {
+        if (is_array($valor)) {
+            $valor = array_map('strval', $valor);
+            sort($valor);
+            return $valor;
+        }
+        if (is_bool($valor)) {
+            return (string) (int) $valor;
+        }
+        return $valor === null ? null : (string) $valor;
+    };
+
+    $cambios = [];
+    foreach ($despues as $campo => $valor_nuevo) {
+        $valor_anterior = $antes[$campo] ?? null;
+        if ($normalizar($valor_anterior) !== $normalizar($valor_nuevo)) {
+            $cambios[$campo] = ['antes' => $valor_anterior, 'despues' => $valor_nuevo];
+        }
+    }
+    return $cambios;
 }

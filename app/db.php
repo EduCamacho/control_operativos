@@ -28,3 +28,9 @@ function consultar(string $sql, array $parametros = []): PDOStatement
     $sentencia->execute($parametros);
     return $sentencia;
 }
+
+/** Error de clave única (MySQL 1062), para mostrar "ya existe" en lugar de un error del servidor. */
+function es_error_duplicado(PDOException $error): bool
+{
+    return ($error->errorInfo[1] ?? null) === 1062;
+}

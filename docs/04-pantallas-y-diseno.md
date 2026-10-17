@@ -77,8 +77,11 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
 
 ## Rol ADMIN
 
-- Unidades: crear, editar, activar y desactivar, y fijar el orden.
-- Usuarios: crear, asignar rol y unidad, resetear clave, desbloquear y activar o desactivar.
-- Catálogos: tipos de operativo y conceptos de resultado.
-- Operativos: buscar y corregir cualquiera. Cada cambio queda en bitácora.
-- Bitácora: consulta filtrada por usuario, acción y fecha.
+- **Unidades** (`/admin/unidades`): crear, editar, activar y desactivar, y fijar el orden. La lista se agrupa por división y avisa qué unidades no tienen cuenta.
+- **Usuarios** (`/admin/usuarios`): crear, asignar rol y unidad, resetear clave, desbloquear y activar o desactivar.
+  - Al crear una cuenta, la clave es opcional: si se deja vacía, el sistema genera una de 12 caracteres sin letras confusas (sin 0/o ni 1/l/i) y la muestra **una sola vez**. Al resetear la clave pasa lo mismo.
+  - En la lista de unidades para una cuenta UNIDAD, las que ya tienen cuenta aparecen deshabilitadas (RN-20).
+  - Un ADMIN no puede quitarse su propio rol ni desactivar su propia cuenta, y siempre debe quedar al menos un ADMIN activo.
+- **Catálogos** (`/admin/catalogos`): tipos de operativo y conceptos de resultado. Los nombres se guardan en mayúsculas. No se eliminan, porque los operativos los referencian: se desactivan, y dejan de aparecer en los formularios nuevos.
+- **Operativos**: buscar y corregir cualquiera. Cada cambio queda en bitácora. Se construye después de la fase 2, porque usa el mismo formulario que la programación de la unidad.
+- **Bitácora** (`/admin/bitacora`): consulta filtrada por usuario, acción y rango de fechas (por defecto, los últimos 7 días), con 50 registros por página. Las ediciones muestran cada campo como "antes → después".
