@@ -17,6 +17,8 @@ const RUTAS = [
     'admin/usuarios/editar'  => 'paginas/admin_usuario_formulario.php',
     'admin/catalogos'        => 'paginas/admin_catalogos.php',
     'admin/bitacora'         => 'paginas/admin_bitacora.php',
+    'admin/operativos'        => 'paginas/admin_operativos.php',
+    'admin/operativos/editar' => 'paginas/admin_operativo_formulario.php',
 
     // UNIDAD (fase 2). La pantalla principal de la unidad es '' (mis_operativos.php).
     'operativos/programar'   => 'paginas/operativo_programar.php',

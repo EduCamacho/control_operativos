@@ -211,3 +211,80 @@ function contar_controles(int $operativo_id): int
 {
     return (int) consultar('SELECT COUNT(*) FROM controles_inopinados WHERE operativo_id = :id', ['id' => $operativo_id])->fetchColumn();
 }
+
+// ---------------------------------------------------------------------------
+// ADMIN: búsqueda y corrección de operativos
+// ---------------------------------------------------------------------------
+
+/**
+ * Condiciones SQL de la búsqueda de ADMIN. El estado visible (NO_INICIADO,
+ * SIN_CIERRE, PENDIENTE_NOTA) se traduce a condiciones con las tolerancias.
+ *
+ * @return array{0: string, 1: array<string, mixed>}
+ */
+function armar_filtro_operativos(array $filtros, DateTimeImmutable $ahora): array
+{
+    $condiciones = ['o.fecha_servicio BETWEEN :desde AND :hasta'];
+    $parametros = ['desde' => $filtros['desde'], 'hasta' => $filtros['hasta']];
+    if ($filtros['unidad_id'] !== null) {
+        $condiciones[] = 'o.unidad_id = :unidad_id';
+        $parametros['unidad_id'] = $filtros['unidad_id'];
+    }
+    if ($filtros['turno'] !== '') {
+        $condiciones[] = 'o.turno = :turno';
+        $parametros['turno'] = $filtros['turno'];
+    }
+    $limite_no_iniciado = $ahora->modify('-' . TOLERANCIA_NO_INICIADO_MIN . ' minutes')->format(FORMATO_FECHA_HORA);
+    $limite_sin_cierre = $ahora->modify('-' . TOLERANCIA_SIN_CIERRE_MIN . ' minutes')->format(FORMATO_FECHA_HORA);
+    switch ($filtros['estado']) {
+        case 'PROGRAMADO':
+            $condiciones[] = "o.estado = 'PROGRAMADO' AND o.inicio_programado >= :limite";
+            $parametros['limite'] = $limite_no_iniciado;
+            break;
+        case 'NO_INICIADO':
+            $condiciones[] = "o.estado = 'PROGRAMADO' AND o.inicio_programado < :limite";
+            $parametros['limite'] = $limite_no_iniciado;
+            break;
+        case 'EN_CURSO':
+            $condiciones[] = "o.estado = 'EN_CURSO' AND o.fin_programado >= :limite";
+            $parametros['limite'] = $limite_sin_cierre;
+            break;
+        case 'SIN_CIERRE':
+            $condiciones[] = "o.estado = 'EN_CURSO' AND o.fin_programado < :limite";
+            $parametros['limite'] = $limite_sin_cierre;
+            break;
+        case 'FINALIZADO':
+            $condiciones[] = "o.estado = 'FINALIZADO'";
+            break;
+        case 'PENDIENTE_NOTA':
+            $condiciones[] = "o.estado = 'FINALIZADO' AND (o.nota_informativa IS NULL OR o.nota_informativa = '')";
+            break;
+    }
+    return [implode(' AND ', $condiciones), $parametros];
+}
+
+/** @return array{total: int, filas: list<array>} */
+function buscar_operativos(array $filtros, DateTimeImmutable $ahora, int $limite, int $desplazamiento): array
+{
+    [$donde, $parametros] = armar_filtro_operativos($filtros, $ahora);
+    $total = (int) consultar("SELECT COUNT(*) FROM operativos o WHERE $donde", $parametros)->fetchColumn();
+    $filas = consultar(
+        'SELECT ' . COLUMNAS_OPERATIVO . "
+         FROM operativos o JOIN unidades un ON un.id = o.unidad_id
+         WHERE $donde
+         ORDER BY o.fecha_servicio DESC, un.orden, o.inicio_programado
+         LIMIT $limite OFFSET $desplazamiento",
+        $parametros,
+    )->fetchAll();
+    return ['total' => $total, 'filas' => $filas];
+}
+
+/** @return array<int, int> Cantidades del cierre por concepto. */
+function obtener_cantidades(int $operativo_id): array
+{
+    $cantidades = [];
+    foreach (consultar('SELECT concepto_resultado_id, cantidad FROM operativo_resultados WHERE operativo_id = :id', ['id' => $operativo_id])->fetchAll() as $fila) {
+        $cantidades[(int) $fila['concepto_resultado_id']] = (int) $fila['cantidad'];
+    }
+    return $cantidades;
+}

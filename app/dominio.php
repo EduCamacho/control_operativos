@@ -965,6 +965,90 @@ function validar_elemento_catalogo(array $entrada, int $largo_nombre, bool $con_
     return ['datos' => $datos, 'errores' => $errores];
 }
 
+/** Valor de un <input type="datetime-local"> ('2026-10-17T12:05') a fecha y hora de Lima. null si no es válido. */
+function convertir_fecha_hora_local(string $valor): ?DateTimeImmutable
+{
+    $valor = trim($valor);
+    foreach (['!Y-m-d\TH:i', '!Y-m-d\TH:i:s'] as $formato) {
+        $fecha = DateTimeImmutable::createFromFormat($formato, $valor, obtener_zona_horaria());
+        if ($fecha !== false && $fecha->format(substr($formato, 1)) === $valor) {
+            return $fecha;
+        }
+    }
+    return null;
+}
+
+/**
+ * Estado y horas reales que fija ADMIN al corregir un operativo (RN-05).
+ * Mantiene la coherencia del ciclo de vida: PROGRAMADO sin horas reales ni
+ * puntos; EN_CURSO con inicio y sin fin; FINALIZADO con inicio y fin.
+ * Las horas reales no pueden estar en el futuro.
+ *
+ * @return array{datos: array{estado?: string, inicio_real?: string|null, fin_real?: string|null}, errores: array<string, string>}
+ */
+function validar_ejecucion(array $entrada, bool $tiene_ubicaciones, DateTimeImmutable $ahora): array
+{
+    $datos = [];
+    $errores = [];
+
+    $estado = $entrada['estado'] ?? null;
+    if (!in_array($estado, ESTADOS, true)) {
+        return ['datos' => [], 'errores' => ['estado' => 'Elija el estado.']];
+    }
+    $datos['estado'] = $estado;
+
+    $leer = static function (string $campo) use ($entrada, $ahora, &$errores): ?DateTimeImmutable {
+        $texto = trim((string) ($entrada[$campo] ?? ''));
+        if ($texto === '') {
+            return null;
+        }
+        $fecha = convertir_fecha_hora_local($texto);
+        if ($fecha === null) {
+            $errores[$campo] = 'La fecha y hora no es válida.';
+        } elseif ($fecha > $ahora) {
+            $errores[$campo] = 'No puede estar en el futuro.';
+        }
+        return $fecha;
+    };
+    $inicio = $leer('inicio_real');
+    $fin = $leer('fin_real');
+
+    if ($estado === 'PROGRAMADO') {
+        if ($tiene_ubicaciones) {
+            $errores['estado'] = 'Tiene puntos registrados: no puede volver a PROGRAMADO.';
+        }
+        $inicio = $fin = null;
+    } else {
+        if ($inicio === null && !isset($errores['inicio_real'])) {
+            $errores['inicio_real'] = 'Indique la hora real de inicio.';
+        }
+        if ($estado === 'EN_CURSO') {
+            $fin = null;
+        } elseif ($fin === null && !isset($errores['fin_real'])) {
+            $errores['fin_real'] = 'Indique la hora real de fin.';
+        } elseif ($inicio !== null && $fin !== null && $fin < $inicio) {
+            $errores['fin_real'] = 'El fin real no puede ser anterior al inicio real.';
+        }
+    }
+
+    $datos['inicio_real'] = $inicio?->format(FORMATO_FECHA_HORA);
+    $datos['fin_real'] = $fin?->format(FORMATO_FECHA_HORA);
+    return ['datos' => $datos, 'errores' => $errores];
+}
+
+/** Motivo de una corrección o eliminación de ADMIN, para la bitácora. null si es válido. */
+function validar_motivo(string $motivo): ?string
+{
+    $largo = mb_strlen(trim($motivo));
+    if ($largo < 5) {
+        return 'Explique el motivo de la corrección (al menos 5 caracteres).';
+    }
+    if ($largo > 500) {
+        return 'El motivo admite hasta 500 caracteres.';
+    }
+    return null;
+}
+
 /**
  * Campos que cambiaron, para la bitácora: ['campo' => ['antes' => x, 'despues' => y]].
  * Compara como texto, para que 5 y '5' (como vienen de la base de datos) sean iguales.

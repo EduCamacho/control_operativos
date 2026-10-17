@@ -86,6 +86,10 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
   - `EN_CURSO`: fuerzas, unidades móviles, jefe y observaciones.
   - `FINALIZADO`: la unidad no puede modificar nada. Solo puede **agregar** la nota informativa si falta (RN-13).
   - ADMIN puede corregir cualquier dato en cualquier estado, eliminar operativos, reabrir uno `FINALIZADO` y programar en nombre de una unidad, también con la hora ya pasada. Cada corrección queda en bitácora con el valor anterior y el nuevo.
+    - Cada corrección o eliminación de ADMIN exige un **motivo**, que queda en la bitácora con los cambios.
+    - El estado se corrige respetando el ciclo de vida: PROGRAMADO sin horas reales ni puntos; EN_CURSO con inicio real y sin fin; FINALIZADO con inicio y fin reales (el fin no antes del inicio). Las horas reales no pueden estar en el futuro.
+    - **Reabrir** (de FINALIZADO a EN_CURSO) borra los resultados y la nota; la copia queda en la bitácora y la unidad puede volver a finalizarlo.
+    - ADMIN tampoco puede eliminar un operativo con controles inopinados (RN-06).
 - **RN-06** — La unidad solo puede **eliminar** un operativo `PROGRAMADO` **antes de su hora de inicio programada**. Después queda visible como `NO_INICIADO`, para que no se puedan ocultar incumplimientos. Tampoco se puede eliminar un operativo que ya tiene un control inopinado: el control es evidencia de supervisión.
 
 **Ejecución en campo**

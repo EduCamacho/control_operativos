@@ -23,6 +23,7 @@ $menu = match ($usuario['rol'] ?? null) {
         ''                => ['Inicio', 'house'],
         'admin/unidades'  => ['Unidades', 'building'],
         'admin/usuarios'  => ['Usuarios', 'people'],
+        'admin/operativos' => ['Operativos', 'clipboard-data'],
         'admin/catalogos' => ['Catálogos', 'list-check'],
         'admin/bitacora'  => ['Bitácora', 'journal-text'],
         'supervisor/tablero' => ['Tablero', 'grid-3x3'],

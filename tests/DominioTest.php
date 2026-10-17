@@ -1101,4 +1101,74 @@ final class DominioTest extends TestCase
         $r = validar_control(['resultado' => 'EXCELENTE', 'observacion' => str_repeat('a', 5001)]);
         $this->assertEqualsCanonicalizing(['resultado', 'observacion', 'id_envio'], array_keys($r['errores']));
     }
+
+    // --- convertir_fecha_hora_local -----------------------------------------
+
+    public function test_convierte_el_valor_de_datetime_local(): void
+    {
+        $this->assertSame('2026-10-17 12:05:00', convertir_fecha_hora_local('2026-10-17T12:05')->format(FORMATO_FECHA_HORA));
+        $this->assertSame('2026-10-17 12:05:30', convertir_fecha_hora_local('2026-10-17T12:05:30')->format(FORMATO_FECHA_HORA));
+        $this->assertNull(convertir_fecha_hora_local('2026-10-17 12:05'));
+        $this->assertNull(convertir_fecha_hora_local('2026-02-30T12:05'));
+        $this->assertNull(convertir_fecha_hora_local(''));
+    }
+
+    // --- validar_ejecucion --------------------------------------------------
+
+    private function ejecucion(array $entrada, bool $con_puntos = true): array
+    {
+        return validar_ejecucion($entrada, $con_puntos, self::lima('2026-10-17 13:00:00'));
+    }
+
+    public function test_finalizado_valido(): void
+    {
+        $r = $this->ejecucion(['estado' => 'FINALIZADO', 'inicio_real' => '2026-10-17T08:00', 'fin_real' => '2026-10-17T11:00']);
+        $this->assertSame([], $r['errores']);
+        $this->assertSame(['estado' => 'FINALIZADO', 'inicio_real' => '2026-10-17 08:00:00', 'fin_real' => '2026-10-17 11:00:00'], $r['datos']);
+    }
+
+    public function test_reabrir_quita_el_fin_real(): void
+    {
+        $r = $this->ejecucion(['estado' => 'EN_CURSO', 'inicio_real' => '2026-10-17T08:00', 'fin_real' => '2026-10-17T11:00']);
+        $this->assertSame([], $r['errores']);
+        $this->assertNull($r['datos']['fin_real']);
+    }
+
+    public function test_programado_sin_puntos_borra_las_horas_reales(): void
+    {
+        $r = $this->ejecucion(['estado' => 'PROGRAMADO', 'inicio_real' => '2026-10-17T08:00'], false);
+        $this->assertSame([], $r['errores']);
+        $this->assertNull($r['datos']['inicio_real']);
+    }
+
+    public function test_no_vuelve_a_programado_si_tiene_puntos(): void
+    {
+        $this->assertArrayHasKey('estado', $this->ejecucion(['estado' => 'PROGRAMADO'], true)['errores']);
+    }
+
+    public function test_ejecucion_exige_horas_coherentes(): void
+    {
+        $this->assertArrayHasKey('inicio_real', $this->ejecucion(['estado' => 'EN_CURSO'])['errores']);
+        $this->assertArrayHasKey('fin_real', $this->ejecucion(['estado' => 'FINALIZADO', 'inicio_real' => '2026-10-17T08:00'])['errores']);
+        $this->assertArrayHasKey('fin_real', $this->ejecucion(['estado' => 'FINALIZADO', 'inicio_real' => '2026-10-17T08:00', 'fin_real' => '2026-10-17T07:59'])['errores']);
+        $this->assertArrayHasKey('inicio_real', $this->ejecucion(['estado' => 'EN_CURSO', 'inicio_real' => '2026-10-17T13:01'])['errores']);
+        $this->assertArrayHasKey('inicio_real', $this->ejecucion(['estado' => 'EN_CURSO', 'inicio_real' => 'ayer'])['errores']);
+        $this->assertArrayHasKey('estado', $this->ejecucion(['estado' => 'ANULADO'])['errores']);
+    }
+
+    public function test_fin_igual_al_inicio_es_valido(): void
+    {
+        $r = $this->ejecucion(['estado' => 'FINALIZADO', 'inicio_real' => '2026-10-17T08:00', 'fin_real' => '2026-10-17T08:00']);
+        $this->assertSame([], $r['errores']);
+    }
+
+    // --- validar_motivo -----------------------------------------------------
+
+    public function test_el_motivo_es_obligatorio(): void
+    {
+        $this->assertNotNull(validar_motivo('   '));
+        $this->assertNotNull(validar_motivo('abcd'));
+        $this->assertNull(validar_motivo('Pedido del jefe de la DIVOPUS'));
+        $this->assertNotNull(validar_motivo(str_repeat('a', 501)));
+    }
 }
