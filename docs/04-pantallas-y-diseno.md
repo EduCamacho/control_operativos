@@ -33,11 +33,11 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - Encabezado con el nombre de la unidad y el botón **Programar** a la derecha. Debajo, el título de sección **Servicio diario · Sábado 17/10 · 13:20** sobre los turnos y **Otros días** sobre las pestañas, para dar contexto en el celular, donde no se ve el menú.
    - Los **4 turnos** del servicio diario vigente (MAÑANA, TARDE, NOCHE y MADRUGADA), en una columna en el celular y en cuatro en la PC, con el borde izquierdo del color del estado. El **turno actual** se resalta con "● AHORA".
      - Turno vacío: una sola línea con el rango de inicio y **+ Programar**; si ya no se puede programar, "Sin programar" en amarillo.
-     - Turno programado: horario, lugar, jefe y **un solo botón** con la acción que toca: *Iniciar operativo*, *Nuevo punto / Finalizar* (verde institucional) o *Agregar N.I* (nota informativa; contorno).
+     - Turno con operativos: **uno o más** (RN-01), cada uno con su horario, lugar, jefe, estado y **un solo botón** con la acción que toca: *Iniciar operativo*, *Nuevo punto / Finalizar* (verde institucional) o *Agregar N.I* (nota informativa; contorno). Si el turno tiene varios, lo indica ("2 operativos"); mientras se pueda programar, ofrece **+ Agregar otro operativo en este turno**.
    - Si un operativo del servicio anterior sigue en curso, aparece arriba como aviso naranja con su acción.
    - Debajo, pestañas **Próximos** (con la cantidad) e **Historial**, con los operativos agrupados por día ("Domingo 18/10"). El historial muestra los últimos 7 días con operativos y **Ver más** llega hasta 30.
 2. **Programar / editar**: asistente en **4 pasos**, con la barra de progreso arriba y los botones **Atrás** y **Siguiente** fijos al pie, al alcance del pulgar.
-   1. **Cuándo**: fecha de servicio, hora de inicio y hora de fin (24 horas). El turno no se elige: se muestra calculado al escribir la hora, junto con el día y la hora reales ("MADRUGADA · empieza el sáb 18/10 a las 02:00"). Avisa si la unidad ya tiene un operativo en ese turno.
+   1. **Cuándo**: fecha de servicio, hora de inicio y hora de fin (24 horas). El turno no se elige: se muestra calculado al escribir la hora, junto con el día y la hora reales ("MADRUGADA · empieza el sáb 18/10 a las 02:00"). Si la unidad ya tiene operativos en ese turno, lo informa sin impedir programar otro.
    2. **Qué y dónde**: arriba, los tipos de operativo como casillas (fila completa tocable, una columna en el celular y dos en la PC); debajo, la tarjeta destacada **¿Dónde será el operativo?** con la dirección o referencia y las **coordenadas del lugar** (obligatorias: el campo lleva pegado a su derecha el botón **Buscar**, que abre Google Maps con el lugar escrito; debajo, un recuadro "¿Cómo obtener las coordenadas?" con la lista de 4 pasos: buscar, mantener presionado el punto, copiar y pegar).
    3. **Jefe y fuerzas**, en dos tarjetas (**Jefe del operativo** y **Fuerzas**): grado (lista desplegable), nombres y celular, que se completan con el jefe del último operativo de la unidad; fuerzas propias, de apoyo y unidades móviles con botones − y +; observaciones.
    4. **Revisar**: resumen de los tres bloques, cada uno con **Cambiar**, y el botón **Programar operativo**.
@@ -88,7 +88,7 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
 4. **Tablero de cumplimiento**
    - Matriz de **unidades activas × 4 turnos** de la fecha elegida (por defecto, el servicio diario vigente), con flechas para el día anterior y el siguiente y filtro por división. Cada celda tiene el color de su estado y abre la ficha.
    - Una celda sin operativo es SIN_PROGRAMAR (amarillo) cuando ya pasó la última hora de inicio posible del turno; antes se muestra "—", porque todavía puede programarse.
-   - Arriba, los totales: ejecutados (en curso, sin cierre y finalizados) sobre el total de turnos, y la cantidad por estado.
+   - Cada celda muestra **todos** los operativos de esa unidad y turno, uno debajo del otro. Arriba, los totales: turnos con al menos un operativo sobre el total de turnos, cantidad de operativos y ejecutados (en curso, sin cierre y finalizados), y la cantidad por estado.
    - También lo ve ADMIN, porque no usa la API de Google Maps.
    - Sirve para ver de un vistazo quién no programó o no inició.
 

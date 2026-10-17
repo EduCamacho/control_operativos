@@ -13,7 +13,7 @@ $dia_vigente = validar_fecha($vigente);
 
 $del_servicio = [];
 foreach (listar_operativos_de_unidad($unidad_id, $vigente, $vigente) as $operativo) {
-    $del_servicio[$operativo['turno']] = $operativo;
+    $del_servicio[$operativo['turno']][] = $operativo; // Uno o más por turno (RN-01).
 }
 
 // Sin duración máxima: un operativo del servicio anterior puede seguir en curso.
@@ -109,52 +109,73 @@ require RUTA_APP . '/vistas/cabecera.php';
 <div class="turnos mb-4">
     <?php foreach (TURNOS as $turno): ?>
         <?php
-        $operativo = $del_servicio[$turno] ?? null;
+        // Un turno puede tener uno o más operativos (RN-01).
+        $operativos_turno = $del_servicio[$turno] ?? [];
         $rango = calcular_rango_turno($vigente, $turno);
-        $estado = $operativo === null
-            ? ($rango['hasta'] > $ahora ? null : 'SIN_PROGRAMAR')
-            : calcular_estado_visible($operativo, $ahora);
-        $accion = $calcular_accion($operativo, $turno);
+        $se_puede_programar = $rango['hasta'] > $ahora;
+        $vacio = $operativos_turno === [];
+        $sin_programar = $vacio && !$se_puede_programar;
+        $accion_programar = $calcular_accion(null, $turno);
         $es_ahora = $turno === $turno_actual;
         ?>
-        <div class="turno fila-estado<?= $estado !== null ? ' tarjeta-' . strtolower($estado) : '' ?><?= $es_ahora ? ' ahora' : '' ?>">
+        <div class="turno fila-estado<?= $sin_programar ? ' tarjeta-sin_programar' : '' ?><?= $es_ahora ? ' ahora' : '' ?>">
             <div class="d-flex flex-wrap align-items-center gap-2">
                 <span class="fw-semibold"><?= e(obtener_etiqueta_turno($turno)) ?></span>
                 <?php if ($es_ahora): ?><span class="badge insignia-ahora">● AHORA</span><?php endif; ?>
+                <?php if (count($operativos_turno) > 1): ?>
+                    <span class="badge text-bg-light border"><?= count($operativos_turno) ?> operativos</span>
+                <?php endif; ?>
                 <span class="ms-auto">
-                    <?php if ($estado !== null): ?>
-                        <?= mostrar_estado($estado, $operativo !== null && pendiente_nota($operativo)) ?>
-                    <?php elseif ($accion !== null): ?>
-                        <a href="<?= e(armar_url($accion[1], $accion[2])) ?>" class="btn btn-sm <?= e($accion[3]) ?>">
-                            <i class="bi bi-<?= e($accion[4]) ?>"></i> <?= e($accion[0]) ?>
+                    <?php if ($sin_programar): ?>
+                        <?= mostrar_estado('SIN_PROGRAMAR') ?>
+                    <?php elseif ($vacio && $accion_programar !== null): ?>
+                        <a href="<?= e(armar_url($accion_programar[1], $accion_programar[2])) ?>" class="btn btn-sm <?= e($accion_programar[3]) ?>">
+                            <i class="bi bi-<?= e($accion_programar[4]) ?>"></i> <?= e($accion_programar[0]) ?>
                         </a>
                     <?php endif; ?>
                 </span>
             </div>
 
-            <?php if ($operativo === null): ?>
+            <?php if ($vacio): ?>
                 <div class="small text-body-secondary">
-                    <?= $estado === 'SIN_PROGRAMAR'
+                    <?= $sin_programar
                         ? 'No se programó operativo para este turno.'
                         : 'Inicio entre las ' . e(formatear_hora($rango['desde'])) . ' y las ' . e(formatear_hora($rango['hasta'])) ?>
                 </div>
-            <?php else: ?>
-                <a href="<?= e(armar_url('operativos/ver', ['id' => $operativo['id']])) ?>" class="d-block text-reset text-decoration-none mt-1">
-                    <span class="fs-5 fw-semibold"><?= e(formatear_hora($operativo['inicio_programado'])) ?>–<?= e(formatear_hora($operativo['fin_programado'])) ?></span>
-                    <span class="d-block small text-body-secondary text-truncate"><i class="bi bi-geo-alt"></i> <?= e($operativo['lugar_programado']) ?></span>
-                    <span class="d-block small text-body-secondary text-truncate"><i class="bi bi-person-badge"></i> <?= e($operativo['jefe_grado'] . ' ' . $operativo['jefe_nombres']) ?></span>
-                </a>
-                <?php if ($operativo['estado'] === 'PROGRAMADO' && !puede_iniciar($operativo, $ahora, VENTANA_INICIO_MIN) && $ahora < convertir_a_fecha_hora($operativo['fin_programado'])): ?>
-                    <div class="small text-body-secondary mt-1">
-                        <i class="bi bi-clock"></i>
-                        Podrá iniciarlo desde las <?= e(formatear_hora(convertir_a_fecha_hora($operativo['inicio_programado'])->modify('-' . VENTANA_INICIO_MIN . ' minutes'))) ?>.
-                    </div>
-                <?php endif; ?>
-                <?php if ($accion !== null): ?>
-                    <a href="<?= e(armar_url($accion[1], $accion[2])) ?>" class="btn <?= e($accion[3]) ?> w-100 boton-accion mt-2">
-                        <i class="bi bi-<?= e($accion[4]) ?>"></i> <?= e($accion[0]) ?>
+            <?php endif; ?>
+
+            <?php foreach ($operativos_turno as $operativo): ?>
+                <?php
+                $estado = calcular_estado_visible($operativo, $ahora);
+                $accion = $calcular_accion($operativo, $turno);
+                ?>
+                <div class="operativo-en-turno fila-estado tarjeta-<?= e(strtolower($estado)) ?>">
+                    <a href="<?= e(armar_url('operativos/ver', ['id' => $operativo['id']])) ?>" class="d-block text-reset text-decoration-none">
+                        <span class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="fs-5 fw-semibold me-auto"><?= e(formatear_hora($operativo['inicio_programado'])) ?>–<?= e(formatear_hora($operativo['fin_programado'])) ?></span>
+                            <?= mostrar_estado($estado, pendiente_nota($operativo)) ?>
+                        </span>
+                        <span class="d-block small text-body-secondary text-truncate"><i class="bi bi-geo-alt"></i> <?= e($operativo['lugar_programado']) ?></span>
+                        <span class="d-block small text-body-secondary text-truncate"><i class="bi bi-person-badge"></i> <?= e($operativo['jefe_grado'] . ' ' . $operativo['jefe_nombres']) ?></span>
                     </a>
-                <?php endif; ?>
+                    <?php if ($operativo['estado'] === 'PROGRAMADO' && !puede_iniciar($operativo, $ahora, VENTANA_INICIO_MIN) && $ahora < convertir_a_fecha_hora($operativo['fin_programado'])): ?>
+                        <div class="small text-body-secondary mt-1">
+                            <i class="bi bi-clock"></i>
+                            Podrá iniciarlo desde las <?= e(formatear_hora(convertir_a_fecha_hora($operativo['inicio_programado'])->modify('-' . VENTANA_INICIO_MIN . ' minutes'))) ?>.
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($accion !== null): ?>
+                        <a href="<?= e(armar_url($accion[1], $accion[2])) ?>" class="btn <?= e($accion[3]) ?> w-100 boton-accion mt-2">
+                            <i class="bi bi-<?= e($accion[4]) ?>"></i> <?= e($accion[0]) ?>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+
+            <?php if (!$vacio && $accion_programar !== null): ?>
+                <a href="<?= e(armar_url($accion_programar[1], $accion_programar[2])) ?>" class="btn btn-sm btn-link enlace-institucional text-decoration-none px-0 mt-1">
+                    <i class="bi bi-plus-lg"></i> Agregar otro operativo en este turno
+                </a>
             <?php endif; ?>
         </div>
     <?php endforeach; ?>

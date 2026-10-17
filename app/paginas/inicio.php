@@ -19,21 +19,30 @@ if ($usuario['rol'] === 'SUPERVISOR') {
 $ahora = obtener_ahora();
 $vigente = fecha_servicio_vigente($ahora);
 $unidades = listar_unidades_activas();
+// Un turno puede tener uno o más operativos (RN-01).
 $por_unidad = [];
 foreach (listar_operativos_del_servicio($vigente) as $operativo) {
-    $por_unidad[(int) $operativo['unidad_id']][$operativo['turno']] = $operativo;
+    $por_unidad[(int) $operativo['unidad_id']][$operativo['turno']][] = $operativo;
 }
 $totales = array_fill_keys(array_keys(ETIQUETAS_ESTADO), 0);
 $alertas = [];
 foreach ($unidades as $unidad) {
     foreach (TURNOS as $turno) {
-        $operativo = $por_unidad[(int) $unidad['id']][$turno] ?? null;
-        $estado = calcular_estado_celda($operativo, $vigente, $turno, $ahora, TOLERANCIA_NO_INICIADO_MIN, TOLERANCIA_SIN_CIERRE_MIN);
-        if ($estado !== null) {
-            $totales[$estado]++;
+        $operativos = $por_unidad[(int) $unidad['id']][$turno] ?? [];
+        if ($operativos === []) {
+            // Turno sin ningún operativo: SIN_PROGRAMAR solo si ya no se puede programar.
+            $estado = calcular_estado_celda(null, $vigente, $turno, $ahora, TOLERANCIA_NO_INICIADO_MIN, TOLERANCIA_SIN_CIERRE_MIN);
+            if ($estado !== null) {
+                $totales[$estado]++;
+            }
+            continue;
         }
-        if ($operativo !== null && in_array($estado, ['NO_INICIADO', 'SIN_CIERRE'], true)) {
-            $alertas[] = ['operativo' => $operativo, 'estado' => $estado];
+        foreach ($operativos as $operativo) {
+            $estado = calcular_estado_visible($operativo, $ahora);
+            $totales[$estado]++;
+            if (in_array($estado, ['NO_INICIADO', 'SIN_CIERRE'], true)) {
+                $alertas[] = ['operativo' => $operativo, 'estado' => $estado];
+            }
         }
     }
 }

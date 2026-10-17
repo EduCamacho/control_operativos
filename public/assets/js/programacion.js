@@ -169,8 +169,11 @@
 
                 get turno() { return calcularTurno(this.horaInicio); },
                 get resumen() { return armarResumen(this.fecha, this.horaInicio, this.horaFin); },
-                get turnoOcupado() {
-                    return Boolean(this.turno) && this.ocupados.includes(this.fecha + '|' + CLAVES_TURNO[this.turno]);
+                /** Cuántos operativos tiene ya la unidad en ese servicio diario y turno (solo informativo, RN-01). */
+                get operativosEnTurno() {
+                    if (!this.turno) return 0;
+                    const clave = this.fecha + '|' + CLAVES_TURNO[this.turno];
+                    return this.ocupados.filter((ocupado) => ocupado === clave).length;
                 },
 
                 campo(nombre) {
@@ -201,7 +204,6 @@
                         if (this.horaInicio === this.horaFin) return this.fallar('La hora de fin debe ser distinta de la de inicio.', 'hora_fin');
                         const inicio = inicioReal(this.fecha, this.horaInicio);
                         if (inicio && inicio <= new Date()) return this.fallar('La hora de inicio ya pasó. Elija una hora futura.', 'hora_inicio');
-                        if (this.turnoOcupado) return this.fallar('Su unidad ya tiene un operativo ' + this.turno + ' en ese servicio diario.', 'hora_inicio');
                     }
                     if (paso === 2 && this.activo('lugar_programado')) {
                         if (!this.$root.querySelector('[name="tipos[]"]:checked')) return this.fallar('Marque al menos un tipo de operativo.');

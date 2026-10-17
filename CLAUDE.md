@@ -1,6 +1,6 @@
 # Control de Operativos — REGPOL La Libertad
 
-Es un sistema web para que 26 comisarías y unidades especializadas programen un operativo por turno (mañana, tarde, noche y madrugada) e inicien y actualicen su ubicación desde el celular del jefe del operativo con GPS. El General ve los operativos en un mapa para hacer controles inopinados. Es independiente de SICAD.
+Es un sistema web para que 26 comisarías y unidades especializadas programen uno o más operativos por turno (mañana, tarde, noche y madrugada) e inicien y actualicen su ubicación desde el celular del jefe del operativo con GPS. El General ve los operativos en un mapa para hacer controles inopinados. Es independiente de SICAD.
 
 ## Leer antes de programar
 

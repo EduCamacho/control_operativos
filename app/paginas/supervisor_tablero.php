@@ -22,28 +22,41 @@ $unidades = array_values(array_filter(
     listar_unidades_activas(),
     static fn (array $u): bool => $division === '' || $u['division'] === $division,
 ));
+// Un turno puede tener uno o más operativos (RN-01): cada celda es una lista.
 $por_unidad = [];
 foreach (listar_operativos_del_servicio($fecha) as $operativo) {
-    $por_unidad[(int) $operativo['unidad_id']][$operativo['turno']] = $operativo;
+    $por_unidad[(int) $operativo['unidad_id']][$operativo['turno']][] = $operativo;
 }
 
-// Celdas y totales por estado.
+// Celdas y totales: los estados cuentan operativos; SIN_PROGRAMAR cuenta turnos vacíos.
 $celdas = [];
 $totales = array_fill_keys(array_keys(ETIQUETAS_ESTADO), 0);
 $pendientes = 0;
+$total_operativos = 0;
+$turnos_cubiertos = 0;
 foreach ($unidades as $unidad) {
     foreach (TURNOS as $turno) {
-        $operativo = $por_unidad[(int) $unidad['id']][$turno] ?? null;
-        $estado = calcular_estado_celda($operativo, $fecha, $turno, $ahora, TOLERANCIA_NO_INICIADO_MIN, TOLERANCIA_SIN_CIERRE_MIN);
-        $celdas[$unidad['id']][$turno] = ['operativo' => $operativo, 'estado' => $estado];
-        if ($estado === null) {
+        $operativos = [];
+        foreach ($por_unidad[(int) $unidad['id']][$turno] ?? [] as $operativo) {
+            $estado = calcular_estado_visible($operativo, $ahora);
+            $operativos[] = ['operativo' => $operativo, 'estado' => $estado];
+            $totales[$estado]++;
+            $total_operativos++;
+        }
+        $estado_vacio = $operativos === []
+            ? calcular_estado_celda(null, $fecha, $turno, $ahora, TOLERANCIA_NO_INICIADO_MIN, TOLERANCIA_SIN_CIERRE_MIN)
+            : null;
+        if ($operativos !== []) {
+            $turnos_cubiertos++;
+        } elseif ($estado_vacio === null) {
             $pendientes++;
         } else {
-            $totales[$estado]++;
+            $totales[$estado_vacio]++;
         }
+        $celdas[$unidad['id']][$turno] = ['operativos' => $operativos, 'estado_vacio' => $estado_vacio];
     }
 }
-$total_celdas = count($unidades) * count(TURNOS);
+$total_turnos = count($unidades) * count(TURNOS);
 $ejecutados = $totales['EN_CURSO'] + $totales['SIN_CIERRE'] + $totales['FINALIZADO'];
 
 $dia = validar_fecha($fecha);
@@ -78,7 +91,8 @@ require RUTA_APP . '/vistas/cabecera.php';
 </p>
 
 <div class="d-flex flex-wrap gap-2 mb-3 small">
-    <span class="badge text-bg-light border fs-6 fw-normal">Ejecutados: <strong><?= $ejecutados ?></strong> de <?= $total_celdas ?></span>
+    <span class="badge text-bg-light border fs-6 fw-normal">Turnos con operativo: <strong><?= $turnos_cubiertos ?></strong> de <?= $total_turnos ?></span>
+    <span class="badge text-bg-light border fs-6 fw-normal">Operativos: <strong><?= $total_operativos ?></strong> · ejecutados <strong><?= $ejecutados ?></strong></span>
     <?php foreach ($totales as $estado => $cantidad): ?>
         <?php if ($cantidad > 0): ?>
             <span class="badge <?= e(obtener_clase_estado($estado)) ?> fs-6 fw-normal"><?= e(obtener_etiqueta_estado($estado)) ?>: <?= $cantidad ?></span>
@@ -109,19 +123,21 @@ require RUTA_APP . '/vistas/cabecera.php';
                 <tr>
                     <th scope="row" class="text-nowrap small"><?= e($unidad['nombre_corto']) ?></th>
                     <?php foreach (TURNOS as $turno): ?>
-                        <?php ['operativo' => $operativo, 'estado' => $estado] = $celdas[$unidad['id']][$turno]; ?>
-                        <?php if ($operativo !== null): ?>
+                        <?php ['operativos' => $operativos, 'estado_vacio' => $estado_vacio] = $celdas[$unidad['id']][$turno]; ?>
+                        <?php if ($operativos !== []): ?>
                             <td class="p-0 celda-tablero">
-                                <a href="<?= e(armar_url('supervisor/operativo', ['id' => $operativo['id']])) ?>"
-                                   class="d-block text-center text-decoration-none py-2 px-1 <?= e(obtener_clase_estado($estado)) ?>"
-                                   title="<?= e(obtener_etiqueta_estado($estado) . ' · ' . $operativo['lugar_programado']) ?>">
-                                    <span class="d-block small fw-semibold"><?= e(obtener_etiqueta_estado($estado)) ?></span>
-                                    <span class="d-block small"><?= e(formatear_hora($operativo['inicio_programado'])) ?>–<?= e(formatear_hora($operativo['fin_programado'])) ?><?= pendiente_nota($operativo) ? ' · sin N.I' : '' ?></span>
-                                </a>
+                                <?php foreach ($operativos as ['operativo' => $operativo, 'estado' => $estado]): ?>
+                                    <a href="<?= e(armar_url('supervisor/operativo', ['id' => $operativo['id']])) ?>"
+                                       class="d-block text-center text-decoration-none py-2 px-1 operativo-celda <?= e(obtener_clase_estado($estado)) ?>"
+                                       title="<?= e(obtener_etiqueta_estado($estado) . ' · ' . $operativo['lugar_programado']) ?>">
+                                        <span class="d-block small fw-semibold"><?= e(obtener_etiqueta_estado($estado)) ?></span>
+                                        <span class="d-block small"><?= e(formatear_hora($operativo['inicio_programado'])) ?>–<?= e(formatear_hora($operativo['fin_programado'])) ?><?= pendiente_nota($operativo) ? ' · sin N.I' : '' ?></span>
+                                    </a>
+                                <?php endforeach; ?>
                             </td>
-                        <?php elseif ($estado === 'SIN_PROGRAMAR'): ?>
+                        <?php elseif ($estado_vacio === 'SIN_PROGRAMAR'): ?>
                             <td class="p-0 celda-tablero">
-                                <span class="d-block text-center py-2 px-1 small fw-semibold <?= e(obtener_clase_estado($estado)) ?>">Sin programar</span>
+                                <span class="d-block text-center py-2 px-1 small fw-semibold <?= e(obtener_clase_estado($estado_vacio)) ?>">Sin programar</span>
                             </td>
                         <?php else: ?>
                             <td class="text-center text-body-secondary small celda-tablero" title="Todavía puede programarse">—</td>

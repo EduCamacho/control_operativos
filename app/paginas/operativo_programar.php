@@ -162,12 +162,9 @@ if (es_post()) {
                 : 'Cambios guardados.');
             redirigir('operativos/ver', ['id' => $id]);
         } catch (PDOException $error) {
+            // Va antes: PDOException hereda de RuntimeException.
             $pdo->rollBack();
-            if (!es_error_duplicado($error)) {
-                throw $error;
-            }
-            $errores['hora_inicio'] = 'La unidad ya tiene un operativo en el turno '
-                . obtener_etiqueta_turno($datos['turno']) . ' de ese servicio diario (RN-01).';
+            throw $error;
         } catch (RuntimeException $error) {
             $pdo->rollBack();
             guardar_mensaje('warning', 'El operativo cambió mientras lo editaba (por ejemplo, se inició desde otro dispositivo). Revise los datos.');
@@ -194,7 +191,8 @@ $pasos_editables = array_values(array_unique(array_map(
     array_values(array_intersect(array_keys(PASO_DE_CAMPO), $editables)),
 )));
 
-// Turnos que la unidad ya tiene programados, para avisar en el paso 1 sin esperar al servidor (RN-01).
+// Operativos que la unidad ya tiene por servicio diario y turno: el paso 1 avisa cuántos hay
+// (un turno puede tener uno o más operativos, RN-01; es solo informativo).
 $ocupados = array_map(
     static fn (array $fila): string => $fila['fecha_servicio'] . '|' . $fila['turno'],
     consultar(

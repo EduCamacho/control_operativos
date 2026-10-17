@@ -186,12 +186,9 @@ if ($accion === 'guardar') {
                 }
             }
             $pdo->commit();
-        } catch (PDOException $error) {
+        } catch (Throwable $error) {
             $pdo->rollBack();
-            if (!es_error_duplicado($error)) {
-                throw $error;
-            }
-            $errores['hora_inicio'] = 'La unidad ya tiene un operativo en el turno ' . obtener_etiqueta_turno($datos['turno']) . ' de ese servicio diario (RN-01).';
+            throw $error;
         }
 
         if ($errores === []) {

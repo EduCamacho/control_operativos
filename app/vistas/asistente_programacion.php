@@ -31,8 +31,9 @@ $texto_guardar = $actual === null ? 'Programar operativo' : 'Guardar cambios';
 <section class="card card-body shadow-sm mb-3" data-paso="1" x-show="paso === 1" x-cloak>
     <h2 class="h5 titulo-paso" tabindex="-1">¿Cuándo?</h2>
     <?php require RUTA_APP . '/vistas/campos_horario.php'; ?>
-    <div class="alert alert-warning py-2 small mt-2 mb-0" x-show="turnoOcupado" x-cloak>
-        <i class="bi bi-exclamation-triangle"></i> Su unidad ya tiene un operativo <span x-text="turno"></span> en ese servicio diario.
+    <div class="aviso-estado small mt-2" x-show="operativosEnTurno > 0" x-cloak>
+        <i class="bi bi-info-circle"></i> Su unidad ya tiene <strong x-text="operativosEnTurno === 1 ? '1 operativo' : operativosEnTurno + ' operativos'"></strong>
+        en el turno <span x-text="turno"></span> de ese servicio diario. Este será uno más.
     </div>
 </section>
 

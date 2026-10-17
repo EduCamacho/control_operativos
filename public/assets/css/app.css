@@ -782,3 +782,14 @@
     color: #fff;
     background: rgba(255, 255, 255, .12);
 }
+
+/* Operativo dentro de un turno de Mis operativos (un turno puede tener varios). */
+.operativo-en-turno {
+    padding: .55rem .7rem;
+    margin-top: .5rem;
+}
+
+/* Tablero: varios operativos en una misma celda, separados por una línea blanca. */
+.operativo-celda + .operativo-celda {
+    border-top: 2px solid #fff;
+}

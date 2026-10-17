@@ -4,7 +4,7 @@ En la interfaz, los mensajes y el código se usan estos términos tal como los e
 
 | Término | Significado en el sistema |
 |---|---|
-| **Operativo** | Acción policial que una unidad ejecuta en un turno. Solo hay uno por unidad, fecha de servicio y turno. |
+| **Operativo** | Acción policial que una unidad ejecuta en un turno. Una unidad puede tener uno o más en el mismo turno. |
 | **Unidad** | Comisaría o unidad especializada que ejecuta operativos. Tiene una cuenta de usuario. |
 | **Comisaría (CPNP)** | Unidad de la DIVOPUS Trujillo. |
 | **DIVOPUS Trujillo** | División a la que pertenecen las 18 comisarías del sistema. |
