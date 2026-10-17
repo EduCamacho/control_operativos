@@ -113,7 +113,7 @@ $recorrido = array_map(static fn (array $u): array => [(float) $u['latitud'], (f
             <?php foreach (array_reverse($ubicaciones, true) as $indice => $ubicacion): ?>
                 <li class="list-group-item px-0 d-flex gap-2">
                     <span class="badge rounded-pill text-bg-light border align-self-start"><?= $indice + 1 ?></span>
-                    <span><?= mostrar_ubicacion($ubicacion) ?></span>
+                    <span><?= mostrar_ubicacion($ubicacion, true, false) ?></span>
                 </li>
             <?php endforeach; ?>
         </ul>
