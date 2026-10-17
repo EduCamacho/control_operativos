@@ -2,7 +2,7 @@
 -- Aplicar después de 002_datos_iniciales.sql.
 SET NAMES utf8mb4;
 
--- Cuarto turno de la jornada (00:00 a 05:59, RN-02).
+-- Cuarto turno del servicio diario (00:00 a 05:59, RN-02).
 ALTER TABLE operativos
   MODIFY turno ENUM('MANANA','TARDE','NOCHE','MADRUGADA') NOT NULL;
 

@@ -36,7 +36,7 @@ erDiagram
 ## Decisiones de diseño
 
 - **`turno`** se guarda como `ENUM('MANANA','TARDE','NOCHE','MADRUGADA')`, sin Ñ en el código. En pantalla se muestra "MAÑANA". No lo elige el usuario: lo calcula `clasificar_turno()` a partir de la hora de inicio (RN-02). `MADRUGADA` se agrega con `sql/003_turno_madrugada.sql`.
-- **`fecha_servicio` es la jornada** (de 06:00 a 05:59 del día siguiente), no necesariamente el día calendario del inicio: el turno MADRUGADA empieza el día siguiente a su `fecha_servicio`.
+- **`fecha_servicio` es el servicio diario** (de 06:00 a 05:59 del día siguiente), no necesariamente el día calendario del inicio: el turno MADRUGADA empieza el día siguiente a su `fecha_servicio`.
 - **`inicio_programado` y `fin_programado` son DATETIME**, no TIME, porque la MADRUGADA empieza al día siguiente y los operativos pueden cruzar la medianoche (RN-02).
 - **Origen de la ubicación** (RN-09): `operativo_ubicaciones.origen` y `controles_inopinados.origen`, como `ENUM('GPS','MANUAL')`. Se agregan con `sql/003`. Las filas existentes quedan como `GPS`.
 - **Grado del jefe**: lista fija en la constante `GRADOS` de `app/dominio.php`. No se crea una tabla, porque no cambia. Se sigue guardando en `jefe_grado VARCHAR(30)`.
@@ -65,11 +65,11 @@ LEFT JOIN operativo_ubicaciones ub ON ub.id = (
     SELECT id FROM operativo_ubicaciones
     WHERE operativo_id = o.id
     ORDER BY registrado_en DESC, id DESC LIMIT 1)
-WHERE o.fecha_servicio = :jornada
-   OR (o.fecha_servicio = :jornada - INTERVAL 1 DAY AND o.estado = 'EN_CURSO');
+WHERE o.fecha_servicio = :servicio_diario
+   OR (o.fecha_servicio = :servicio_diario - INTERVAL 1 DAY AND o.estado = 'EN_CURSO');
 ```
 
-`:jornada` es la jornada vigente (`fecha_servicio_vigente()`). La segunda condición mantiene en el mapa los operativos de la jornada anterior que siguen en curso, porque no hay duración máxima. Las tolerancias se pasan como parámetros desde `app/config.php`; aquí aparecen fijas solo como ejemplo.
+`:servicio_diario` es el servicio diario vigente (`fecha_servicio_vigente()`). La segunda condición mantiene en el mapa los operativos del servicio diario anterior que siguen en curso, porque no hay duración máxima. Las tolerancias se pasan como parámetros desde `app/config.php`; aquí aparecen fijas solo como ejemplo.
 
 **Reporte de la fase 2: resultados por unidad en un rango de fechas**
 
@@ -98,6 +98,6 @@ GROUP BY u.id
 ORDER BY u.orden;
 ```
 
-Los turnos `SIN_PROGRAMAR` de cada unidad son `4 × días del rango − programados`. En el tablero de una jornada, cada celda sin fila en `operativos` es `SIN_PROGRAMAR`.
+Los turnos `SIN_PROGRAMAR` de cada unidad son `4 × días del rango − programados`. En el tablero de un servicio diario, cada celda sin fila en `operativos` es `SIN_PROGRAMAR`.
 
 > `NOW()` depende de la zona horaria de la conexión: `app/db.php` ejecuta `SET time_zone = '-05:00'` al conectar (ver 03).

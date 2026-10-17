@@ -28,9 +28,9 @@ Son 26 unidades en 3 divisiones. El catálogo lo administra ADMIN; los nombres c
 - **DUE** (5): UNEME-SECEME, Escuadrón Verde, UTSEVI Trujillo, Halcones Trujillo y UPROVE.
 - **DIVINCRI La Libertad** (3): DEPINCRI Centro, DEPINCRI Este y DEPINCRI Norte.
 
-## Jornada de servicio y turnos
+## Servicio diario y turnos
 
-La **jornada de servicio** va de las 06:00 de un día a las 05:59 del día siguiente, y la identifica la `fecha_servicio` (el día en que empieza la jornada). Tiene cuatro turnos, en este orden:
+El **servicio diario** va de las 06:00 de un día a las 05:59 del día siguiente, y lo identifica la `fecha_servicio` (el día en que empieza el servicio diario). Tiene cuatro turnos, en este orden:
 
 | Turno | Hora de inicio programada | Día calendario del inicio |
 |---|---|---|
@@ -41,8 +41,8 @@ La **jornada de servicio** va de las 06:00 de un día a las 05:59 del día sigui
 
 - El usuario **no elige el turno**: el sistema lo clasifica según la hora de inicio que se ingresa, en formato de 24 horas.
 - La hora de fin no cambia el turno y **no hay duración máxima**. Por ejemplo, un operativo de 22:00 a 02:00 es de turno NOCHE.
-- Ejemplo: el operativo que empieza el sábado 18 a las 02:00 es el turno MADRUGADA de la jornada del viernes 17.
-- La **jornada vigente** es la de hoy desde las 06:00, y la de ayer entre las 00:00 y las 05:59. Es la jornada que muestran por defecto la pantalla de la unidad, el mapa y el tablero.
+- Ejemplo: el operativo que empieza el sábado 18 a las 02:00 es el turno MADRUGADA del servicio diario del viernes 17.
+- El **servicio diario vigente** es el de hoy desde las 06:00, y el de ayer entre las 00:00 y las 05:59. Es el que muestran por defecto la pantalla de la unidad, el mapa y el tablero.
 
 ## Ciclo de vida del operativo
 
@@ -57,7 +57,7 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 
 | Estado derivado | Condición |
 |---|---|
-| `SIN_PROGRAMAR` | No existe un operativo para esa unidad, jornada y turno (solo en el tablero) |
+| `SIN_PROGRAMAR` | No existe un operativo para esa unidad, servicio diario y turno (solo en el tablero) |
 | `NO_INICIADO` | `PROGRAMADO` y ahora > `inicio_programado` + 15 min |
 | `SIN_CIERRE` | `EN_CURSO` y ahora > `fin_programado` + 30 min |
 | `PENDIENTE_NOTA` | `FINALIZADO` sin número de nota informativa. Se muestra como distintivo sobre `FINALIZADO`, no como un estado aparte. |
@@ -66,8 +66,8 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 
 **Programación**
 
-- **RN-01** — Solo puede haber **un operativo por unidad, fecha de servicio y turno**, es decir, hasta cuatro por jornada. Lo garantiza una clave única en la base de datos.
-- **RN-02** — El usuario ingresa la fecha de servicio, la hora de inicio y la hora de fin. El sistema clasifica el turno según la hora de inicio (ver "Jornada de servicio y turnos") y arma `inicio_programado` y `fin_programado` como fecha y hora completas:
+- **RN-01** — Solo puede haber **un operativo por unidad, fecha de servicio y turno**, es decir, hasta cuatro por servicio diario. Lo garantiza una clave única en la base de datos.
+- **RN-02** — El usuario ingresa la fecha de servicio, la hora de inicio y la hora de fin. El sistema clasifica el turno según la hora de inicio (ver "Servicio diario y turnos") y arma `inicio_programado` y `fin_programado` como fecha y hora completas:
   - Si la hora de inicio es anterior a las 06:00 (MADRUGADA), el inicio cae el día siguiente a la fecha de servicio.
   - El fin es la primera vez que llega la hora de fin después del inicio. Si la hora de fin es menor que la de inicio, cae al día siguiente del inicio (por ejemplo, de 20:00 a 02:00).
   - La hora de inicio y la de fin no pueden ser iguales.
@@ -118,7 +118,7 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 
 - **RN-14** — **Alertas**: `NO_INICIADO` y `SIN_CIERRE`, según la tabla de estados derivados. Las tolerancias (15 y 30 min) y la ventana de inicio (60 min) se configuran en `app/config.php`.
 - **RN-15** — **Control inopinado**:
-  - Lo registra un SUPERVISOR sobre operativos de la jornada vigente, en cualquier estado.
+  - Lo registra un SUPERVISOR sobre operativos del servicio diario vigente, en cualquier estado.
   - Guarda el resultado (`CONFORME`, `CON_OBSERVACIONES` o `NO_ENCONTRADO`), una observación y, si está disponible, la ubicación GPS del supervisor.
   - **El GPS del supervisor no es obligatorio**, y a su ubicación no se le aplican el rectángulo de La Libertad ni la advertencia de precisión.
   - El sistema calcula la distancia a la última ubicación que el operativo registró antes del control. Si falta alguna de las dos ubicaciones, la distancia queda vacía.
@@ -154,5 +154,5 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 - [ ] Quiénes, además del General, tendrán rol SUPERVISOR.
 - [ ] Catálogos iniciales de tipos de operativo y conceptos de resultado (ver `sql/002_datos_iniciales.sql`).
 - [x] Tolerancias (15 y 30 min) y ventana para iniciar (60 min antes): se configuran en `app/config.php` (`TOLERANCIA_NO_INICIADO_MIN`, `TOLERANCIA_SIN_CIERRE_MIN`, `VENTANA_INICIO_MIN`). No hay pantalla de ADMIN.
-- [ ] Grado "CMDTE" o "CDMTE" (se escribió "CDMTE"; la abreviatura usual es CMDTE).
-- [ ] Rangos horarios de los turnos y la jornada de 06:00 a 05:59 (propuesta de Claude, por validar).
+- [x] El grado de Comandante se abrevia CMDTE (confirmado por Eduardo).
+- [x] Servicio diario de 06:00 a 05:59 y rangos horarios de los turnos (confirmado por Eduardo).

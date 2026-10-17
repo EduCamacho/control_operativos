@@ -18,8 +18,8 @@ const ETIQUETAS_TURNO = [
     'MADRUGADA' => 'MADRUGADA',
 ];
 
-// La jornada de servicio va de las 06:00 a las 05:59 del día siguiente.
-const HORA_INICIO_JORNADA = 6;
+// El servicio diario va de las 06:00 a las 05:59 del día siguiente.
+const HORA_INICIO_SERVICIO_DIARIO = 6;
 
 const GRADOS = [
     'ALFZ', 'TNTE', 'CAP', 'MAY', 'CMDTE', 'CRNL', 'GRAL',
@@ -138,11 +138,11 @@ function calcular_horario_turno(string $fecha_servicio, string $hora_inicio, str
     return ['turno' => $turno, 'inicio' => $inicio, 'fin' => $fin];
 }
 
-/** Jornada vigente: hoy desde las 06:00, ayer entre las 00:00 y las 05:59. */
+/** Servicio diario vigente: hoy desde las 06:00, ayer entre las 00:00 y las 05:59. */
 function fecha_servicio_vigente(DateTimeImmutable $ahora): string
 {
     $local = $ahora->setTimezone(obtener_zona_horaria());
-    if ((int) $local->format('G') < HORA_INICIO_JORNADA) {
+    if ((int) $local->format('G') < HORA_INICIO_SERVICIO_DIARIO) {
         $local = $local->modify('-1 day');
     }
     return $local->format('Y-m-d');

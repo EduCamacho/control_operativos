@@ -34,7 +34,7 @@ La Google Maps JS API se carga **solo en las pantallas del SUPERVISOR** (RN-21).
 PHPUnit **solo en local** (Laragon). Toda función de `app/dominio.php` debe tener tests, incluidos los casos borde:
 
 - Clasificación del turno en los límites de cada rango (05:59, 06:00, 11:59, 12:00…) y operativos que cruzan la medianoche.
-- Jornada vigente antes y después de las 06:00 (la MADRUGADA pertenece a la fecha de servicio anterior).
+- Servicio diario vigente antes y después de las 06:00 (la MADRUGADA pertenece a la fecha de servicio anterior).
 - Coordenadas dentro y fuera de La Libertad, incluidos los bordes del rectángulo; las de signo invertido o sin punto decimal deben quedar rechazadas.
 - `parsear_coordenadas()` con los formatos de Google Maps (decimal, URL con `@`, grados, minutos y segundos, coma decimal) y con textos que no reconoce.
 - Tolerancias de los estados derivados.

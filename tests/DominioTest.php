@@ -147,7 +147,7 @@ final class DominioTest extends TestCase
 
     // --- fecha_servicio_vigente ---------------------------------------------
 
-    public static function momentos_y_jornada(): array
+    public static function momentos_y_servicio_diario(): array
     {
         return [
             ['2026-10-18 00:00:00', '2026-10-17'],
@@ -158,15 +158,15 @@ final class DominioTest extends TestCase
         ];
     }
 
-    #[DataProvider('momentos_y_jornada')]
-    public function test_jornada_vigente_cambia_a_las_6(string $ahora, string $jornada): void
+    #[DataProvider('momentos_y_servicio_diario')]
+    public function test_servicio_diario_vigente_cambia_a_las_6(string $ahora, string $servicio_diario): void
     {
-        $this->assertSame($jornada, fecha_servicio_vigente(self::lima($ahora)));
+        $this->assertSame($servicio_diario, fecha_servicio_vigente(self::lima($ahora)));
     }
 
-    public function test_jornada_vigente_convierte_desde_utc(): void
+    public function test_servicio_diario_vigente_convierte_desde_utc(): void
     {
-        // 10:00 UTC son las 05:00 en Lima: todavía es la jornada anterior.
+        // 10:00 UTC son las 05:00 en Lima: todavía es el servicio diario anterior.
         $this->assertSame('2026-10-17', fecha_servicio_vigente(new DateTimeImmutable('2026-10-18 10:00:00', new DateTimeZone('UTC'))));
     }
 

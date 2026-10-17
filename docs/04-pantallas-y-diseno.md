@@ -28,7 +28,7 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
 ## Rol UNIDAD
 
 1. **Mis operativos (inicio)**
-   - Muestra la jornada vigente con **4 tarjetas fijas: MAÑANA, TARDE, NOCHE y MADRUGADA**.
+   - Muestra el servicio diario vigente con **4 tarjetas fijas: MAÑANA, TARDE, NOCHE y MADRUGADA**.
    - Cada tarjeta tiene su estado y **un solo botón** con la acción que toca: *Programar*, *Iniciar*, *Nuevo punto / Finalizar* o *Agregar nota*.
    - Debajo, los operativos de los próximos días y el historial.
 2. **Programar / editar**
