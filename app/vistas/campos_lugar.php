@@ -42,10 +42,14 @@ declare(strict_types=1);
         <span x-show="estado === 'error'" class="text-danger" x-cloak x-text="mensaje"></span>
     </div>
     <?php if (!$coordenadas_bloqueadas): ?>
-        <ol id="ayuda-coordenadas" class="pasos-coordenadas form-text list-unstyled mb-0 mt-1">
-            <li><span class="numero">1</span> Toque <strong>Buscar</strong></li>
-            <li><span class="numero">2</span> <strong>Mantenga presionado</strong> el punto <span class="text-nowrap">(clic derecho en la PC)</span></li>
-            <li><span class="numero">3</span> Copie las coordenadas y péguelas aquí</li>
-        </ol>
+        <div id="ayuda-coordenadas" class="ayuda-coordenadas mt-2">
+            <div class="fw-semibold small mb-2"><i class="bi bi-info-circle"></i> ¿Cómo obtener las coordenadas?</div>
+            <ol class="pasos-coordenadas list-unstyled small mb-0">
+                <li><span class="numero">1</span><span>Toque <strong>Buscar</strong>: se abre Google Maps con el lugar que escribió.</span></li>
+                <li><span class="numero">2</span><span><strong>Mantenga presionado</strong> el punto exacto del operativo (en la PC, clic derecho).</span></li>
+                <li><span class="numero">3</span><span><strong>Copie</strong> las coordenadas que aparecen (por ejemplo <span class="text-nowrap">-8.1116, -79.0288</span>).</span></li>
+                <li><span class="numero">4</span><span>Vuelva aquí y <strong>péguelas</strong> en el campo de arriba.</span></li>
+            </ol>
+        </div>
     <?php endif; ?>
 </div>

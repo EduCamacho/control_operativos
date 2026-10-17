@@ -416,11 +416,23 @@
     gap: .3rem;
 }
 
-.pasos-coordenadas {
+/* Instrucciones para obtener las coordenadas: recuadro con una lista de pasos. */
+.ayuda-coordenadas {
+    background: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+    border-left: 4px solid var(--color-institucional);
+    border-radius: .5rem;
+    padding: .65rem .8rem;
+}
+
+.pasos-coordenadas li {
     display: flex;
-    flex-wrap: wrap;
-    column-gap: 1rem;
-    row-gap: .15rem;
+    align-items: flex-start;
+    gap: .5rem;
+}
+
+.pasos-coordenadas li + li {
+    margin-top: .4rem;
 }
 
 .pasos-coordenadas .numero {
@@ -434,7 +446,8 @@
     color: #fff;
     font-size: .7rem;
     font-weight: 600;
-    margin-right: .15rem;
+    margin-top: .05rem;
+    flex-shrink: 0;
 }
 
 /* Marcador en el lugar programado (operativo aún sin puntos): fondo blanco y borde
