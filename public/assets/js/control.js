@@ -19,6 +19,21 @@ document.addEventListener('alpine:init', function () {
             idEnvio: window.Envio.crearIdEnvio(),
             envio: null,
 
+            /** La observación solo se pide con "Con observaciones" o "No encontrado" (RN-15). */
+            get pideObservacion() {
+                return this.resultado === 'CON_OBSERVACIONES' || this.resultado === 'NO_ENCONTRADO';
+            },
+
+            init() {
+                // Al elegir un resultado que pide observación, el cursor va al campo.
+                this.$watch('resultado', () => {
+                    this.errores = {};
+                    if (this.pideObservacion) {
+                        this.$nextTick(() => this.$refs.observacion && this.$refs.observacion.focus());
+                    }
+                });
+            },
+
             claseResultado(resultado) {
                 if (resultado === 'CONFORME') return 'text-bg-success';
                 if (resultado === 'NO_ENCONTRADO') return 'text-bg-danger';
@@ -31,14 +46,14 @@ document.addEventListener('alpine:init', function () {
                     this.errores.resultado = 'Elija el resultado del control.';
                     return;
                 }
-                if (this.resultado !== 'CONFORME' && this.observacion.trim() === '') {
+                if (this.pideObservacion && this.observacion.trim() === '') {
                     this.errores.observacion = 'Describa lo observado.';
                     return;
                 }
                 const datos = {
                     operativo_id: config.operativoId,
                     resultado: this.resultado,
-                    observacion: this.observacion,
+                    observacion: this.pideObservacion ? this.observacion : '',
                     id_envio: this.idEnvio,
                 };
                 this.fase = 'enviando';

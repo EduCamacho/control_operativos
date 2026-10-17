@@ -548,8 +548,9 @@ function operativo_controlable(array $operativo, string $servicio_vigente): bool
 }
 
 /**
- * Resultado y observación del control (RN-15). La observación es obligatoria
- * salvo cuando el resultado es CONFORME.
+ * Resultado y observación del control (RN-15). La observación solo se pide con
+ * CON_OBSERVACIONES y NO_ENCONTRADO, y ahí es obligatoria; con CONFORME no hay
+ * observación (si llega texto, se descarta).
  *
  * @return array{datos: array<string, mixed>, errores: array<string, string>}
  */
@@ -565,7 +566,7 @@ function validar_control(array $entrada): array
         $datos['resultado'] = $resultado;
     }
 
-    $observacion = trim((string) ($entrada['observacion'] ?? ''));
+    $observacion = $resultado === 'CONFORME' ? '' : trim((string) ($entrada['observacion'] ?? ''));
     if (mb_strlen($observacion) > 5000) {
         $errores['observacion'] = 'La observación admite hasta 5000 caracteres.';
     } elseif ($observacion === '' && $resultado !== null && $resultado !== 'CONFORME' && isset($datos['resultado'])) {

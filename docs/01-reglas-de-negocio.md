@@ -126,7 +126,7 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
   - Guarda el resultado (`CONFORME`, `CON_OBSERVACIONES` o `NO_ENCONTRADO`) y una observación.
   - **No registra la ubicación del supervisor ni calcula distancias**: a veces el General controla con un dron, sin ir al lugar (decisión de Eduardo, 17/10/2026). Las columnas de ubicación y distancia de `controles_inopinados` se conservan solo por los controles registrados antes.
   - Un operativo puede tener varios controles.
-  - La observación es obligatoria cuando el resultado es `CON_OBSERVACIONES` o `NO_ENCONTRADO`, y opcional cuando es `CONFORME`.
+  - La observación solo se pide cuando el resultado es `CON_OBSERVACIONES` o `NO_ENCONTRADO`, y ahí es obligatoria. Con `CONFORME` no hay observación.
   - Un reintento sin señal no duplica el control (`id_envio`, RN-11a).
 - **RN-16** — **Visibilidad**: una cuenta UNIDAD solo ve y modifica los operativos de su unidad. El filtro por la unidad de la sesión se aplica **en el servidor**, en cada consulta. SUPERVISOR y ADMIN ven todo.
 - **RN-21** — **El mapa interactivo es solo del SUPERVISOR.** En las vistas de UNIDAD y ADMIN, cada ubicación se muestra como un **enlace a Google Maps** armado con las coordenadas que guardó el sistema: `https://www.google.com/maps/search/?api=1&query=LAT,LNG`. Esos enlaces no consumen la API.
@@ -163,6 +163,6 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 - [x] Tolerancias (15 y 30 min) y ventana para iniciar (60 min antes): se configuran en `app/config.php` (`TOLERANCIA_NO_INICIADO_MIN`, `TOLERANCIA_SIN_CIERRE_MIN`, `VENTANA_INICIO_MIN`). No hay pantalla de ADMIN.
 - [x] El grado de Comandante se abrevia CMDTE (confirmado por Eduardo).
 - [x] Servicio diario de 06:00 a 05:59 y rangos horarios de los turnos (confirmado por Eduardo).
-- [ ] Observación del control inopinado opcional cuando el resultado es CONFORME (propuesta de Claude, por validar).
+- [x] Observación del control inopinado: solo con Con observaciones y No encontrado; con Conforme no se pide (Eduardo).
 - [x] Coordenadas del lugar programado obligatorias (confirmado por Eduardo: permiten poner el marcador en el mapa).
 - [ ] SUPERVISOR y ADMIN ven el tablero y la ficha de cualquier operativo; el mapa y el registro de controles son solo del SUPERVISOR (propuesta de Claude, por validar).

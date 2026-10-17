@@ -88,11 +88,11 @@ require RUTA_APP . '/vistas/cabecera.php';
             <div class="text-danger small mt-1" x-show="errores.resultado" x-text="errores.resultado"></div>
         </fieldset>
 
-        <div class="mb-3">
-            <label for="observacion" class="form-label fw-semibold">
-                Observación <span class="fw-normal text-body-secondary small" x-show="resultado === 'CONFORME'">(opcional)</span>
-            </label>
-            <textarea id="observacion" rows="3" class="form-control" x-model="observacion" :class="errores.observacion && 'is-invalid'"></textarea>
+        <!-- Solo con "Con observaciones" o "No encontrado" (ahí es obligatoria); con Conforme no hay observación. -->
+        <div class="mb-3" x-show="pideObservacion" x-cloak x-transition.opacity>
+            <label for="observacion" class="form-label fw-semibold">Observación</label>
+            <textarea id="observacion" rows="3" class="form-control" x-model="observacion" :class="errores.observacion && 'is-invalid'"
+                      x-ref="observacion"></textarea>
             <div class="invalid-feedback" x-text="errores.observacion"></div>
         </div>
 

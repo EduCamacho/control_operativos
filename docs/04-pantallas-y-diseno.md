@@ -83,7 +83,7 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
 3. **Registrar control inopinado** (`/supervisor/control`), con poco texto:
    - **← Mapa** y el encabezado del operativo (unidad, estado, turno y horario) con el borde del color del estado.
    - **Resultado**: tres botones grandes en una fila, con ícono: ✓ Conforme (verde), ⚠ Con observaciones (amarillo) y ✕ No encontrado (rojo).
-   - **Observación** (opcional si es Conforme) y **Guardar control** fijo al pie.
+   - **Observación**, que aparece solo al elegir Con observaciones o No encontrado (y ahí es obligatoria), y **Guardar control** fijo al pie.
    - Al guardar: ✓ **Control registrado** y **Volver al mapa**. No usa el GPS del supervisor ni calcula distancias (RN-15: a veces controla con un dron).
    - Al pie, **Controles anteriores** del operativo (resultado y hora; el nombre del supervisor solo si es otro). Los controles se ven aquí, donde se registran, y no en la ficha del mapa. El recién registrado aparece arriba de inmediato, resaltado, sin recargar la página.
 4. **Tablero de cumplimiento**

@@ -1138,6 +1138,13 @@ final class DominioTest extends TestCase
         $this->assertNull($r['datos']['observacion']);
     }
 
+    public function test_control_conforme_descarta_la_observacion(): void
+    {
+        $r = validar_control(['resultado' => 'CONFORME', 'observacion' => 'Texto escrito antes de cambiar a Conforme', 'id_envio' => 'abcdef012345']);
+        $this->assertSame([], $r['errores']);
+        $this->assertNull($r['datos']['observacion']);
+    }
+
     public function test_control_con_observaciones_exige_observacion(): void
     {
         foreach (['CON_OBSERVACIONES', 'NO_ENCONTRADO'] as $resultado) {
