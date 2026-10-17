@@ -79,13 +79,8 @@ $dias_historial_visibles = 7;
 $titulo = 'Mis operativos';
 require RUTA_APP . '/vistas/cabecera.php';
 ?>
-<div class="d-flex align-items-start gap-2 mb-3">
-    <div class="me-auto">
-        <h1 class="h4 mb-0"><?= e(usuario_actual()['unidad_nombre']) ?></h1>
-        <div class="text-body-secondary small">
-            <?= e(ucfirst(formatear_fecha_larga($dia_vigente))) ?> · <?= e($ahora->format('H:i')) ?>
-        </div>
-    </div>
+<div class="d-flex align-items-center gap-2 mb-3">
+    <h1 class="h4 mb-0 me-auto"><?= e(usuario_actual()['unidad_nombre']) ?></h1>
     <a href="<?= e(armar_url('operativos/programar')) ?>" class="btn btn-institucional">
         <i class="bi bi-plus-lg"></i> Programar
     </a>
@@ -107,6 +102,10 @@ require RUTA_APP . '/vistas/cabecera.php';
 <?php endforeach; ?>
 
 <!-- Los cuatro turnos del servicio diario vigente -->
+<h2 class="titulo-seccion">
+    <i class="bi bi-calendar-day"></i> Servicio diario
+    <span class="titulo-seccion-detalle">· <?= e($titulo_dia($vigente)) ?> · <?= e($ahora->format('H:i')) ?></span>
+</h2>
 <div class="turnos mb-4">
     <?php foreach (TURNOS as $turno): ?>
         <?php
@@ -188,6 +187,7 @@ $mostrar_grupos = static function (array $grupos, ?int $dias_visibles) use ($aho
 ?>
 
 <!-- Próximos días e historial en pestañas -->
+<h2 class="titulo-seccion"><i class="bi bi-calendar-range"></i> Otros días</h2>
 <div x-data="{ pestana: 'proximos', mas: false }">
     <div class="pestanas mb-3" role="tablist">
         <button type="button" role="tab" class="pestana" :class="pestana === 'proximos' && 'activa'" :aria-selected="pestana === 'proximos'"

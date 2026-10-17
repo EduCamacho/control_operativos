@@ -742,3 +742,17 @@
         transform: none;
     }
 }
+
+/* Título de sección dentro de una pantalla (por ejemplo, "Servicio diario" y "Otros días"). */
+.titulo-seccion {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--color-institucional);
+    margin-bottom: .6rem;
+}
+
+.titulo-seccion-detalle {
+    font-weight: 400;
+    font-size: .9rem;
+    color: var(--bs-secondary-color);
+}

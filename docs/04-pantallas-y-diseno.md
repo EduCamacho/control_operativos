@@ -29,7 +29,7 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
 ## Rol UNIDAD
 
 1. **Mis operativos (inicio)**
-   - Encabezado con el nombre de la unidad, la fecha y la hora, y el botón **Programar** a la derecha.
+   - Encabezado con el nombre de la unidad y el botón **Programar** a la derecha. Debajo, el título de sección **Servicio diario · Sábado 17/10 · 13:20** sobre los turnos y **Otros días** sobre las pestañas, para dar contexto en el celular, donde no se ve el menú.
    - Los **4 turnos** del servicio diario vigente (MAÑANA, TARDE, NOCHE y MADRUGADA), en una columna en el celular y en cuatro en la PC, con el borde izquierdo del color del estado. El **turno actual** se resalta con "● AHORA".
      - Turno vacío: una sola línea con el rango de inicio y **+ Programar**; si ya no se puede programar, "Sin programar" en amarillo.
      - Turno programado: horario, lugar, jefe y **un solo botón** con la acción que toca: *Iniciar operativo*, *Nuevo punto / Finalizar* (verde institucional) o *Agregar N.I* (nota informativa; contorno).
