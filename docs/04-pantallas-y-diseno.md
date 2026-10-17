@@ -4,7 +4,7 @@
 
 - **Pensado primero para el celular.** El jefe usa el sistema en campo, a veces de noche y con una sola mano, y el General lo usa desde la camioneta.
 - Botones de acción grandes (mínimo 48 px de alto, de ancho completo en el celular).
-- **Menú superior** (navbar de Bootstrap que se colapsa), sin sidebar.
+- **Menú en barra lateral izquierda**: fija en pantallas grandes (desde 992 px) y, en el celular, panel deslizable (offcanvas) que se abre con el botón ☰ de la barra superior, para no quitarle pantalla al jefe en campo.
 - Bootstrap 5.3 con tema claro. La tipografía es la del sistema (`system-ui`): carga rápido y se lee bien.
 - Los textos de la interfaz van en español y con la terminología de la PNP (ver 05-glosario).
 

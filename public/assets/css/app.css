@@ -44,3 +44,55 @@
 [x-cloak] {
     display: none !important;
 }
+
+/* Barra lateral izquierda (menú). Fija desde lg; en el celular es un panel deslizable. */
+.barra-lateral {
+    --bs-offcanvas-width: 16rem;
+    background-color: var(--color-institucional) !important;
+    color: #fff;
+}
+
+.barra-lateral-marca {
+    min-height: 3.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, .15);
+}
+
+.barra-lateral .nav-link {
+    color: rgba(255, 255, 255, .85);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+}
+
+.barra-lateral .nav-link:hover,
+.barra-lateral .nav-link:focus-visible {
+    color: #fff;
+    background-color: rgba(255, 255, 255, .1);
+}
+
+.barra-lateral .nav-link.active {
+    color: var(--color-institucional);
+    background-color: #fff;
+    font-weight: 600;
+}
+
+@media (min-width: 992px) {
+    .barra-lateral {
+        width: var(--bs-offcanvas-width);
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+    }
+}
+
+/* Evita que tablas anchas empujen la página fuera de la pantalla. */
+.contenido-principal {
+    min-width: 0;
+}
+
+.contenedor-pagina {
+    max-width: 1200px;
+}
