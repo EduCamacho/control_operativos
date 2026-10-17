@@ -30,7 +30,7 @@ erDiagram
 | `operativo_tipos` | Relación N:M entre operativo y tipos | Clave primaria compuesta. |
 | `operativo_ubicaciones` | Puntos del recorrido | La última por `registrado_en` es la posición actual. `origen` es `GPS` (con precisión en metros) o `MANUAL` (sin precisión), RN-09. |
 | `operativo_resultados` | Cantidad por concepto | Clave primaria `(operativo_id, concepto_resultado_id)`. Se crean al finalizar. |
-| `controles_inopinados` | Controles del General | `distancia_m` se calcula con Haversine contra la última ubicación del operativo. |
+| `controles_inopinados` | Controles del General | Resultado y observación. Desde el 17/10/2026 no se guardan la ubicación del supervisor ni la distancia (puede controlar con un dron); esas columnas quedan para los controles anteriores. |
 | `bitacora` | Auditoría de acciones | Es obligatoria porque las cuentas de unidad son compartidas (RN-17). |
 
 ## Decisiones de diseño

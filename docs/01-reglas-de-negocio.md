@@ -123,9 +123,8 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 - **RN-14** — **Alertas**: `NO_INICIADO` y `SIN_CIERRE`, según la tabla de estados derivados. Las tolerancias (15 y 30 min) y la ventana de inicio (60 min) se configuran en `app/config.php`.
 - **RN-15** — **Control inopinado**:
   - Lo registra un SUPERVISOR sobre operativos del servicio diario vigente, en cualquier estado.
-  - Guarda el resultado (`CONFORME`, `CON_OBSERVACIONES` o `NO_ENCONTRADO`), una observación y, si está disponible, la ubicación GPS del supervisor.
-  - **El GPS del supervisor no es obligatorio**, y a su ubicación no se le aplican el rectángulo de La Libertad ni la advertencia de precisión.
-  - El sistema calcula la distancia a la última ubicación que el operativo registró antes del control. Si falta alguna de las dos ubicaciones, la distancia queda vacía.
+  - Guarda el resultado (`CONFORME`, `CON_OBSERVACIONES` o `NO_ENCONTRADO`) y una observación.
+  - **No registra la ubicación del supervisor ni calcula distancias**: a veces el General controla con un dron, sin ir al lugar (decisión de Eduardo, 17/10/2026). Las columnas de ubicación y distancia de `controles_inopinados` se conservan solo por los controles registrados antes.
   - Un operativo puede tener varios controles.
   - La observación es obligatoria cuando el resultado es `CON_OBSERVACIONES` o `NO_ENCONTRADO`, y opcional cuando es `CONFORME`.
   - Un reintento sin señal no duplica el control (`id_envio`, RN-11a).

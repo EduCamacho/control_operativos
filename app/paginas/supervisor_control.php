@@ -1,10 +1,9 @@
 <?php
 /**
  * SUPERVISOR: registrar un control inopinado (RN-15, docs/04).
- * Pantalla con poco texto: encabezado del operativo, una línea con el estado
- * del GPS del supervisor (opcional, sin rectángulo ni aviso de precisión),
- * tres botones de resultado, observación y Guardar fijo al pie. Al guardar
- * muestra la distancia al último punto y agrega el control a la lista.
+ * Pantalla con poco texto: encabezado del operativo, tres botones de resultado,
+ * observación y Guardar fijo al pie. No usa el GPS ni calcula distancias: a
+ * veces el General controla con un dron, sin ir al lugar.
  */
 declare(strict_types=1);
 
@@ -27,7 +26,6 @@ $controles = obtener_controles($id);
 $configuracion = [
     'operativoId'    => (int) $id,
     'urlEnvio'       => armar_url('api/controles'),
-    'urlCoordenadas' => armar_url('api/coordenadas'),
     'urlFicha'       => armar_url('supervisor/operativo', ['id' => $id]),
     'urlIngreso'     => armar_url('login'),
     'controles'      => array_map('presentar_control', $controles),
@@ -45,7 +43,7 @@ $titulo = 'Registrar control';
 $scripts = ['assets/js/envio.js', 'assets/js/control.js'];
 require RUTA_APP . '/vistas/cabecera.php';
 ?>
-<div class="formulario-angosto mx-auto" x-data="registroControl(<?= e(json_encode($configuracion)) ?>)" x-init="obtenerGps()">
+<div class="formulario-angosto mx-auto" x-data="registroControl(<?= e(json_encode($configuracion)) ?>)">
     <a href="<?= e(armar_url()) ?>" class="d-inline-block small text-body-secondary text-decoration-none mb-2">
         <i class="bi bi-arrow-left"></i> Mapa
     </a>
@@ -68,43 +66,12 @@ require RUTA_APP . '/vistas/cabecera.php';
     <div x-show="fase === 'hecho'" x-cloak class="card shadow-sm mb-3 control-registrado">
         <div class="card-body text-center py-4">
             <i class="bi bi-check-circle-fill display-4 texto-institucional"></i>
-            <h2 class="h5 mt-2 mb-1">Control registrado</h2>
-            <p class="mb-3" x-show="distancia !== null">
-                a <span class="distancia-control" x-text="textoDistancia"></span><br>
-                <span class="small text-body-secondary">del último punto del operativo</span>
-            </p>
-            <p class="small text-body-secondary mb-3" x-show="distancia === null">Sin distancia: falta su ubicación o la del operativo.</p>
+            <h2 class="h5 mt-2 mb-3">Control registrado</h2>
             <a href="<?= e(armar_url()) ?>" class="btn btn-institucional boton-accion px-4"><i class="bi bi-map"></i> Volver al mapa</a>
         </div>
     </div>
 
     <form x-show="fase !== 'hecho'" @submit.prevent="enviar()" novalidate>
-        <!-- Ubicación del supervisor: una sola línea de estado (opcional) -->
-        <div class="estado-gps mb-3" aria-live="polite">
-            <i class="bi bi-geo-alt-fill texto-institucional"></i>
-            <span x-show="ubicacion.estado === 'obteniendo'" class="text-body-secondary">
-                <span class="spinner-border spinner-border-sm" role="status"></span> Obteniendo su ubicación…
-            </span>
-            <span x-show="ubicacion.estado === 'lista'" x-cloak>
-                Su ubicación <i class="bi bi-check-circle-fill text-success"></i>
-                <span class="small text-body-secondary" x-show="ubicacion.origen === 'MANUAL'">(manual)</span>
-            </span>
-            <span x-show="ubicacion.estado === 'error' || ubicacion.estado === 'inactiva'" x-cloak class="text-body-secondary">Sin ubicación</span>
-            <span class="ms-auto d-inline-flex gap-1">
-                <button type="button" class="btn btn-link btn-sm p-0" x-show="ubicacion.estado === 'lista'" x-cloak @click="quitarUbicacion()">Quitar</button>
-                <button type="button" class="btn btn-link btn-sm p-0" x-show="ubicacion.estado === 'error'" x-cloak @click="obtenerGps()">Reintentar</button>
-                <span class="text-body-secondary" x-show="ubicacion.estado === 'error'" x-cloak>·</span>
-                <button type="button" class="btn btn-link btn-sm p-0" x-show="ubicacion.estado === 'error'" x-cloak @click="ubicacion.estado = 'manual'">Manual</button>
-            </span>
-        </div>
-        <div x-show="ubicacion.estado === 'manual'" x-cloak class="mb-3">
-            <div class="input-group">
-                <input type="text" id="coordenadas-pegadas" class="form-control" x-model="textoPegado" inputmode="decimal"
-                       placeholder="Pegue coordenadas de Google Maps" aria-label="Coordenadas de Google Maps">
-                <button type="button" class="btn btn-outline-institucional" @click="usarTextoPegado()">Usar</button>
-            </div>
-            <div class="text-danger small mt-1" x-show="errorManual" x-text="errorManual"></div>
-        </div>
 
         <!-- Resultado: tres botones grandes en una fila -->
         <fieldset class="mb-3">
@@ -151,9 +118,7 @@ require RUTA_APP . '/vistas/cabecera.php';
             <template x-for="c in controles" :key="c.id">
                 <li class="list-group-item px-0" :class="c.id === ultimoId && 'control-nuevo'">
                     <span class="badge" :class="claseResultado(c.resultado)" x-text="c.etiqueta"></span>
-                    <span x-text="c.hora
-                        + (c.supervisor !== config.yo ? ' · ' + c.supervisor : '')
-                        + (c.distancia_m !== null ? ' · a ' + c.distancia_m + ' m' : '')"></span>
+                    <span x-text="c.hora + (c.supervisor !== config.yo ? ' · ' + c.supervisor : '')"></span>
                     <div class="text-body-secondary" x-show="c.observacion" x-text="c.observacion"></div>
                 </li>
             </template>

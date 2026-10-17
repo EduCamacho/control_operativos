@@ -82,11 +82,10 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - Botones: **Cómo llegar** (`https://www.google.com/maps/dir/?api=1&destination=LAT,LNG`), **Llamar al jefe** (`tel:`) y **Registrar control**.
 3. **Registrar control inopinado** (`/supervisor/control`), con poco texto:
    - **← Mapa** y el encabezado del operativo (unidad, estado, turno y horario) con el borde del color del estado.
-   - Una línea con el estado del GPS del supervisor: "Obteniendo su ubicación…", "Su ubicación ✓" (con **Quitar**) o "Sin ubicación" (con **Reintentar** · **Manual** para pegar coordenadas). Es opcional (RN-15).
    - **Resultado**: tres botones grandes en una fila, con ícono: ✓ Conforme (verde), ⚠ Con observaciones (amarillo) y ✕ No encontrado (rojo).
    - **Observación** (opcional si es Conforme) y **Guardar control** fijo al pie.
-   - Al guardar: ✓ **Control registrado** con la distancia al último punto en cifra grande y **Volver al mapa**.
-   - Al pie, **Controles anteriores** del operativo (resultado, hora y distancia; el nombre del supervisor solo si es otro). Los controles se ven aquí, donde se registran, y no en la ficha del mapa. El recién registrado aparece arriba de inmediato, resaltado, sin recargar la página.
+   - Al guardar: ✓ **Control registrado** y **Volver al mapa**. No usa el GPS del supervisor ni calcula distancias (RN-15: a veces controla con un dron).
+   - Al pie, **Controles anteriores** del operativo (resultado y hora; el nombre del supervisor solo si es otro). Los controles se ven aquí, donde se registran, y no en la ficha del mapa. El recién registrado aparece arriba de inmediato, resaltado, sin recargar la página.
 4. **Tablero de cumplimiento**
    - Matriz de **unidades activas × 4 turnos** de la fecha elegida (por defecto, el servicio diario vigente), con flechas para el día anterior y el siguiente y filtro por división. Cada celda tiene el color de su estado y abre la ficha.
    - Una celda sin operativo es SIN_PROGRAMAR (amarillo) cuando ya pasó la última hora de inicio posible del turno; antes se muestra "—", porque todavía puede programarse.
