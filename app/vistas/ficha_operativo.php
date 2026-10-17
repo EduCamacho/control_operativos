@@ -73,15 +73,6 @@ $recorrido = array_map(static fn (array $u): array => [(float) $u['latitud'], (f
         <dd class="col-8">
             <?= e(formatear_hora($operativo['inicio_programado'])) ?> – <?= e(formatear_hora($operativo['fin_programado'])) ?>
         </dd>
-        <dt class="col-4">Real</dt>
-        <dd class="col-8">
-            <?php if ($operativo['inicio_real'] === null): ?>
-                Sin iniciar
-            <?php else: ?>
-                <?= e(convertir_a_fecha_hora($operativo['inicio_real'])->format('d/m H:i')) ?> –
-                <?= $operativo['fin_real'] === null ? 'en curso' : e(convertir_a_fecha_hora($operativo['fin_real'])->format('d/m H:i')) ?>
-            <?php endif; ?>
-        </dd>
         <dt class="col-4">Lugar</dt>
         <dd class="col-8"><?= e($operativo['lugar_programado']) ?></dd>
         <?php if ($operativo['nota_informativa'] !== null && $operativo['nota_informativa'] !== ''): ?>
