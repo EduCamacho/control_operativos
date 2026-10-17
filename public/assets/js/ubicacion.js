@@ -37,18 +37,42 @@ document.addEventListener('alpine:init', function () {
             envio: null,
             segundosReintento: window.Envio.SEGUNDOS_ENTRE_REINTENTOS,
 
+            modal: null,
+
+            init() {
+                // El modal es estático: solo se cierra con la ✕ o Cancelar (ver cancelar()).
+                this.modal = window.bootstrap.Modal.getOrCreateInstance(this.$refs.modal);
+                this.$refs.modal.addEventListener('shown.bs.modal', () => {
+                    if (this.$refs.referencia) this.$refs.referencia.focus();
+                });
+                this.$refs.modal.addEventListener('hidden.bs.modal', () => {
+                    if (!this.bloqueado && this.fase !== 'hecho') {
+                        this.fase = 'inactiva';
+                    }
+                });
+            },
+
+            /** Mientras se envía o espera la señal, el modal no se puede cerrar (se perdería el punto). */
+            get bloqueado() {
+                return this.fase === 'enviando' || this.fase === 'sin_conexion';
+            },
+
             abrir() {
                 this.idEnvio = window.Envio.crearIdEnvio();
                 this.errores = {};
+                this.referencia = '';
+                this.textoPegado = '';
+                this.latitudManual = '';
+                this.longitudManual = '';
+                this.modal.show();
                 this.obtenerGps();
-                this.$nextTick(() => this.$refs.referencia && this.$refs.referencia.focus());
             },
 
             cancelar() {
-                if (this.fase === 'enviando' || this.fase === 'sin_conexion') {
+                if (this.bloqueado) {
                     return;
                 }
-                this.fase = 'inactiva';
+                this.modal.hide();
             },
 
             obtenerGps() {

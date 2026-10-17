@@ -85,7 +85,7 @@ require RUTA_APP . '/vistas/cabecera.php';
         <?php if ($operativo['estado'] === 'PROGRAMADO'): ?>
             <div x-data="capturaUbicacion(<?= $configuracion_captura('INICIAR') ?>)">
                 <?php if ($puede_iniciar): ?>
-                    <button type="button" class="btn btn-institucional btn-lg w-100 boton-accion mb-3" x-show="fase === 'inactiva'" @click="abrir()">
+                    <button type="button" class="btn btn-institucional btn-lg w-100 boton-accion mb-3" @click="abrir()">
                         <i class="bi bi-play-fill"></i> Iniciar operativo
                     </button>
                     <?php $captura = ['titulo' => 'Iniciar operativo', 'boton' => 'Iniciar operativo']; ?>
@@ -123,7 +123,7 @@ require RUTA_APP . '/vistas/cabecera.php';
                 </div>
             </div>
             <div x-data="capturaUbicacion(<?= $configuracion_captura('PUNTO') ?>)">
-                <div class="d-grid gap-2 mb-3" x-show="fase === 'inactiva'">
+                <div class="d-grid gap-2 mb-3">
                     <button type="button" class="btn btn-institucional btn-lg boton-accion" @click="abrir()">
                         <i class="bi bi-geo-alt-fill"></i> Registrar nuevo punto
                     </button>

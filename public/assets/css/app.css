@@ -587,17 +587,23 @@
     background: var(--bs-border-color);
 }
 
-/* Panel de captura de ubicación en el color institucional. */
-.panel-captura {
-    border-color: var(--color-institucional);
-}
-
-.panel-captura > .card-header {
-    background: rgba(var(--color-institucional-rgb), .08);
-    color: var(--color-institucional);
-}
 
 /* Recorrido plegado: el último punto visible no muestra la línea hacia los ocultos. */
 .recorrido li.sin-linea::after {
     display: none;
+}
+
+/* Modal de captura de ubicación (Iniciar / Nuevo punto). */
+.encabezado-modal {
+    background: var(--color-institucional);
+    color: #fff;
+}
+
+.texto-institucional {
+    color: var(--color-institucional);
+}
+
+.barra-modal {
+    flex-wrap: nowrap;
+    padding-bottom: calc(.75rem + env(safe-area-inset-bottom));
 }
