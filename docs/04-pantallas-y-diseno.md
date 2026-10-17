@@ -45,7 +45,7 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - **En curso**: tarjeta **Posición actual** (la referencia en grande, hora, hace cuánto, precisión o "Manual" y **Ver en Google Maps**). Debajo, dos botones grandes: **Registrar nuevo punto** (verde institucional) y **Finalizar operativo** (contorno rojo). No hay mapa (RN-21).
    - **Programado**: botón **Iniciar operativo**, o el aviso "Podrá iniciarlo desde las HH:MM".
    - **Finalizado**: **Resultados** como recuadros con la cifra grande (o "Negativo") y la **Nota informativa**, con el campo para agregarla si falta.
-   - **Recorrido** como línea de tiempo vertical, el punto más reciente arriba y resaltado, el primero marcado como "Inicio".
+   - **Recorrido** como línea de tiempo vertical, el punto más reciente arriba y resaltado, el primero marcado como "Inicio". Muestra los 5 más recientes y el botón **Ver los N puntos anteriores** despliega el resto. En el celular es la **última tarjeta** (después de los datos del operativo), porque puede crecer mucho.
    - **Datos del operativo** con ícono por dato (tipos, lugar programado con su enlace, jefe con el botón **Llamar** y fuerzas en tres recuadros con la cifra), y **Editar** en el encabezado de la tarjeta. **Eliminar** va al pie, discreto, solo cuando se permite (RN-06).
    - En la PC, dos columnas: a la izquierda la acción y el recorrido; a la derecha los datos.
 4. **Captura de ubicación** (al iniciar y al registrar un nuevo punto)

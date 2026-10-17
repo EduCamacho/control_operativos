@@ -596,3 +596,8 @@
     background: rgba(var(--color-institucional-rgb), .08);
     color: var(--color-institucional);
 }
+
+/* Recorrido plegado: el último punto visible no muestra la línea hacia los ocultos. */
+.recorrido li.sin-linea::after {
+    display: none;
+}

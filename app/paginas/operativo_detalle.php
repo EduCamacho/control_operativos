@@ -184,28 +184,9 @@ require RUTA_APP . '/vistas/cabecera.php';
         <?php endif; ?>
 
         <?php if ($ubicaciones !== []): ?>
-            <div class="card shadow-sm mb-3">
-                <div class="card-body">
-                    <h2 class="h6 titulo-tarjeta"><i class="bi bi-signpost-split"></i> Recorrido · <?= count($ubicaciones) ?> punto(s)</h2>
-                    <ol class="recorrido list-unstyled mb-0">
-                        <?php foreach (array_reverse($ubicaciones, true) as $indice => $ubicacion): ?>
-                            <li class="<?= $indice === array_key_last($ubicaciones) ? 'reciente' : '' ?>">
-                                <div class="d-flex flex-wrap align-items-baseline gap-2">
-                                    <span class="fw-semibold"><?= e(formatear_hora($ubicacion['registrado_en'])) ?></span>
-                                    <span><?= e($ubicacion['referencia']) ?></span>
-                                    <?php if ($indice === 0): ?><span class="badge text-bg-success">Inicio</span><?php endif; ?>
-                                </div>
-                                <div class="small text-body-secondary">
-                                    <?= $ubicacion['origen'] === 'MANUAL'
-                                        ? '<span class="badge text-bg-warning">Manual</span>'
-                                        : 'precisión ' . e($ubicacion['precision_m'] ?? '?') . ' m' ?>
-                                    · <a href="<?= e(armar_enlace_google_maps((float) $ubicacion['latitud'], (float) $ubicacion['longitud'])) ?>"
-                                         target="_blank" rel="noopener" class="enlace-institucional">Ver en Google Maps</a>
-                                </div>
-                            </li>
-                        <?php endforeach; ?>
-                    </ol>
-                </div>
+            <!-- En la PC el recorrido va aquí, bajo la acción; en el celular, al final (abajo). -->
+            <div class="d-none d-lg-block">
+                <?php require RUTA_APP . '/vistas/recorrido_operativo.php'; ?>
             </div>
         <?php endif; ?>
     </div>
@@ -277,4 +258,10 @@ require RUTA_APP . '/vistas/cabecera.php';
         </div>
     </div>
 </div>
+<?php if ($ubicaciones !== []): ?>
+    <!-- En el celular, el recorrido es la última tarjeta: puede crecer mucho y no debe desplazar los datos. -->
+    <div class="d-lg-none">
+        <?php require RUTA_APP . '/vistas/recorrido_operativo.php'; ?>
+    </div>
+<?php endif; ?>
 <?php require RUTA_APP . '/vistas/pie.php'; ?>
