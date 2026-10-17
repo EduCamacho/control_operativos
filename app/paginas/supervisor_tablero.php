@@ -23,6 +23,7 @@ $solo_alertas = ($_GET['alertas'] ?? '') === '1';
 
 const TURNOS_ABREVIADOS = ['MANANA' => 'MAÑ', 'TARDE' => 'TAR', 'NOCHE' => 'NOC', 'MADRUGADA' => 'MAD'];
 const ESTADOS_ALERTA = ['NO_INICIADO', 'SIN_CIERRE', 'SIN_PROGRAMAR'];
+const ESTADOS_RESUMEN = ['EN_CURSO', 'SIN_CIERRE', 'NO_INICIADO', 'PROGRAMADO', 'FINALIZADO', 'SIN_PROGRAMAR'];
 
 $unidades = array_values(array_filter(
     listar_unidades_activas(),
@@ -38,6 +39,8 @@ foreach (listar_operativos_del_servicio($fecha) as $operativo) {
 $celdas = [];
 $con_alerta = [];
 $totales = array_fill_keys(array_keys(ETIQUETAS_ESTADO), 0);
+// Lo que lista el modal de cada tarjeta del resumen: unidad, turno y operativo (si lo hay).
+$listas = array_fill_keys(array_keys(ETIQUETAS_ESTADO), []);
 foreach ($unidades as $unidad) {
     foreach (TURNOS as $turno) {
         $operativos = [];
@@ -45,6 +48,7 @@ foreach ($unidades as $unidad) {
             $estado = calcular_estado_visible($operativo, $ahora);
             $operativos[] = ['operativo' => $operativo, 'estado' => $estado];
             $totales[$estado]++;
+            $listas[$estado][] = ['unidad' => $unidad['nombre_corto'], 'turno' => $turno, 'operativo' => $operativo];
             if (in_array($estado, ESTADOS_ALERTA, true)) {
                 $con_alerta[$unidad['id']] = true;
             }
@@ -54,6 +58,7 @@ foreach ($unidades as $unidad) {
             : null;
         if ($estado_vacio !== null) {
             $totales[$estado_vacio]++;
+            $listas[$estado_vacio][] = ['unidad' => $unidad['nombre_corto'], 'turno' => $turno, 'operativo' => null];
             $con_alerta[$unidad['id']] = true;
         }
         $celdas[$unidad['id']][$turno] = ['operativos' => $operativos, 'estado_vacio' => $estado_vacio];
@@ -111,16 +116,54 @@ require RUTA_APP . '/vistas/cabecera.php';
     </a>
 </div>
 
-<!-- Resumen: una tarjeta pequeña por estado (hace de leyenda); 3 por fila en el celular, 6 en la PC -->
+<!-- Resumen: una tarjeta pequeña por estado (hace de leyenda); 3 por fila en el celular, 6 en la PC.
+     Al tocarla se abre la lista de unidades en ese estado (las tarjetas en 0 no se tocan). -->
 <div class="cifras-estado mb-3">
-    <?php foreach (['EN_CURSO', 'SIN_CIERRE', 'NO_INICIADO', 'PROGRAMADO', 'FINALIZADO', 'SIN_PROGRAMAR'] as $estado): ?>
-        <div class="cifra-estado">
+    <?php foreach (ESTADOS_RESUMEN as $estado): ?>
+        <button type="button" class="cifra-estado" data-bs-toggle="modal" data-bs-target="#lista-<?= e(strtolower($estado)) ?>"
+                <?= $totales[$estado] === 0 ? 'disabled' : '' ?>>
             <strong><?= $totales[$estado] ?></strong>
             <span class="etiqueta-estado"><?= e(obtener_etiqueta_estado($estado)) ?></span>
             <span class="franja-estado <?= e(obtener_clase_estado($estado)) ?>"></span>
-        </div>
+        </button>
     <?php endforeach; ?>
 </div>
+
+<!-- Un modal por estado con su lista: hoja inferior en el celular, centrado en la PC -->
+<?php foreach (ESTADOS_RESUMEN as $estado): ?>
+    <?php if ($listas[$estado] === []) { continue; } ?>
+    <div class="modal fade" id="lista-<?= e(strtolower($estado)) ?>" tabindex="-1" aria-labelledby="lista-<?= e(strtolower($estado)) ?>-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-hoja-inferior">
+            <div class="modal-content">
+                <div class="modal-header encabezado-modal py-2">
+                    <h2 class="modal-title h6 fila-flex align-items-center gap-2" id="lista-<?= e(strtolower($estado)) ?>-titulo">
+                        <span class="punto-estado <?= e(obtener_clase_estado($estado)) ?>"></span>
+                        <?= e(obtener_etiqueta_estado($estado)) ?> · <?= $totales[$estado] ?>
+                    </h2>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="list-group list-group-flush lista-estado">
+                    <?php foreach ($listas[$estado] as ['unidad' => $nombre, 'turno' => $turno, 'operativo' => $operativo]): ?>
+                        <?php if ($operativo !== null): ?>
+                            <a class="list-group-item list-group-item-action fila-flex align-items-center gap-2"
+                               href="<?= e(armar_url('supervisor/operativo', ['id' => $operativo['id']])) ?>">
+                                <span class="me-auto"><?= e($nombre) ?></span>
+                                <span class="text-body-secondary small" title="<?= e(obtener_etiqueta_turno($turno)) ?>"><?= e(TURNOS_ABREVIADOS[$turno]) ?></span>
+                                <span class="fw-semibold"><?= e(formatear_hora($operativo['inicio_programado'])) ?></span>
+                                <i class="bi bi-chevron-right text-body-secondary"></i>
+                            </a>
+                        <?php else: ?>
+                            <div class="list-group-item fila-flex align-items-center gap-2">
+                                <span class="me-auto"><?= e($nombre) ?></span>
+                                <span class="text-body-secondary small"><?= e(obtener_etiqueta_turno($turno)) ?></span>
+                            </div>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endforeach; ?>
 
 <!-- Matriz: encabezado y columna de unidades fijos -->
 <div class="tablero-contenedor">

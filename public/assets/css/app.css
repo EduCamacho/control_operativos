@@ -966,6 +966,28 @@
     border-radius: .5rem;
     text-align: center;
     line-height: 1.15;
+    color: inherit;
+    cursor: pointer;
+}
+
+.cifra-estado:hover:not(:disabled) {
+    border-color: var(--color-institucional);
+}
+
+/* En 0 no hay lista que abrir: se ve atenuada y no se toca. */
+.cifra-estado:disabled {
+    opacity: .5;
+    cursor: default;
+}
+
+/* Punto del color del estado en el título del modal de la lista. */
+.punto-estado {
+    display: inline-block;
+    flex-shrink: 0;
+    width: .8rem;
+    height: .8rem;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px #fff;
 }
 
 .cifra-estado strong {
