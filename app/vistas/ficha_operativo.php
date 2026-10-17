@@ -69,6 +69,10 @@ $recorrido = array_map(static fn (array $u): array => [(float) $u['latitud'], (f
             <?= e($operativo['fuerzas_propias']) ?> propias · <?= e($operativo['fuerzas_apoyo']) ?> de apoyo ·
             <?= e($operativo['unidades_moviles']) ?> móvil(es)
         </dd>
+        <dt class="col-4">Horario</dt>
+        <dd class="col-8">
+            <?= e(formatear_hora($operativo['inicio_programado'])) ?> – <?= e(formatear_hora($operativo['fin_programado'])) ?>
+        </dd>
         <dt class="col-4">Real</dt>
         <dd class="col-8">
             <?php if ($operativo['inicio_real'] === null): ?>
