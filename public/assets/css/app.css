@@ -407,3 +407,32 @@
 .tarjeta-lugar h2 {
     color: var(--color-institucional);
 }
+
+/* Coordenadas del lugar: el botón Buscar va pegado al campo y no compite con él. */
+.boton-buscar-mapa {
+    font-size: .95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+}
+
+.pasos-coordenadas {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1rem;
+    row-gap: .15rem;
+}
+
+.pasos-coordenadas .numero {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.15rem;
+    height: 1.15rem;
+    border-radius: 50%;
+    background: var(--color-institucional);
+    color: #fff;
+    font-size: .7rem;
+    font-weight: 600;
+    margin-right: .15rem;
+}
