@@ -622,7 +622,6 @@ final class DominioTest extends TestCase
     {
         return [
             'tipos'            => ['1', '3'],
-            'nombre_plan'      => '  Saltamonte 2026 ',
             'lugar_programado' => 'Av. España con Jr. Grau',
             'jefe_grado'       => 'CAP',
             'jefe_nombres'     => 'Juan Pérez Rodríguez',
@@ -639,7 +638,6 @@ final class DominioTest extends TestCase
         $r = validar_programacion(self::entrada_valida(), [1, 2, 3]);
         $this->assertSame([], $r['errores']);
         $this->assertSame([1, 3], $r['datos']['tipos']);
-        $this->assertSame('Saltamonte 2026', $r['datos']['nombre_plan']);
         $this->assertSame('987654321', $r['datos']['jefe_celular']);
         $this->assertSame(12, $r['datos']['fuerzas_propias']);
         $this->assertNull($r['datos']['observaciones']);
@@ -680,12 +678,6 @@ final class DominioTest extends TestCase
         $this->assertSame([-8.1116, -79.0288], parsear_coordenadas(formatear_coordenadas(-8.1116, -79.0288)));
     }
 
-    public function test_nombre_del_plan_vacio_queda_null(): void
-    {
-        $entrada = ['nombre_plan' => '   '] + self::entrada_valida();
-        $this->assertNull(validar_programacion($entrada, [1, 2, 3])['datos']['nombre_plan']);
-    }
-
     public function test_programacion_con_errores(): void
     {
         $entrada = [
@@ -712,10 +704,10 @@ final class DominioTest extends TestCase
 
     public function test_rechaza_textos_demasiado_largos(): void
     {
-        $entrada = ['lugar_programado' => str_repeat('á', 256), 'nombre_plan' => str_repeat('a', 151)] + self::entrada_valida();
+        $entrada = ['lugar_programado' => str_repeat('á', 256), 'jefe_nombres' => str_repeat('a', 151)] + self::entrada_valida();
         $errores = validar_programacion($entrada, [1, 2, 3])['errores'];
         $this->assertArrayHasKey('lugar_programado', $errores);
-        $this->assertArrayHasKey('nombre_plan', $errores);
+        $this->assertArrayHasKey('jefe_nombres', $errores);
     }
 
     public function test_255_caracteres_con_tilde_son_validos(): void

@@ -74,7 +74,6 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 - **RN-03** — **No hay hora límite para programar**: se puede hacer en cualquier momento, siempre que `inicio_programado` sea posterior a la hora actual. **No se puede programar con la hora de inicio ya pasada**; eso solo lo puede hacer ADMIN, y queda en bitácora.
 - **RN-04** — Datos de programación:
   - Tipo(s) de operativo: uno o más, del catálogo.
-  - Nombre del plan: opcional, por ejemplo "Saltamonte 2026" o "Estado de Emergencia Trujillo-V-2026".
   - Lugar programado: texto con calle, avenida, sector o barrio.
   - Coordenadas del lugar programado: opcionales. Se pegan desde Google Maps (botón **Abrir Google Maps**) y se validan dentro de La Libertad. Permiten "Cómo llegar" al lugar aunque el operativo no se haya iniciado.
   - Hora de inicio y hora de fin.

@@ -87,7 +87,7 @@ const ALFABETO_CLAVE_TEMPORAL = 'abcdefghjkmnpqrstuvwxyz23456789';
 
 const CAMPOS_HORARIO = ['fecha_servicio', 'hora_inicio', 'hora_fin'];
 const CAMPOS_DATOS = [
-    'tipos', 'nombre_plan', 'lugar_programado', 'lugar_coordenadas',
+    'tipos', 'lugar_programado', 'lugar_coordenadas',
     'jefe_grado', 'jefe_nombres', 'jefe_celular',
     'fuerzas_propias', 'fuerzas_apoyo', 'unidades_moviles',
     'observaciones',
@@ -669,15 +669,6 @@ function validar_programacion(array $entrada, array $ids_tipos_activos, ?array $
             $errores['tipos'] = 'Hay un tipo de operativo que no es válido.';
         } else {
             $datos['tipos'] = $tipos;
-        }
-    }
-
-    if (in_array('nombre_plan', $campos, true)) {
-        $plan = $texto('nombre_plan');
-        if (mb_strlen($plan) > 150) {
-            $errores['nombre_plan'] = 'El nombre del plan admite hasta 150 caracteres.';
-        } else {
-            $datos['nombre_plan'] = $plan === '' ? null : $plan;
         }
     }
 

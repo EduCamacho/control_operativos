@@ -65,10 +65,6 @@ $recorrido = array_map(static fn (array $u): array => [(float) $u['latitud'], (f
     <dl class="row small mb-2">
         <dt class="col-4">Tipo(s)</dt>
         <dd class="col-8"><?= e(implode(', ', array_column($tipos, 'nombre'))) ?></dd>
-        <?php if ($operativo['nombre_plan'] !== null): ?>
-            <dt class="col-4">Plan</dt>
-            <dd class="col-8"><?= e($operativo['nombre_plan']) ?></dd>
-        <?php endif; ?>
         <dt class="col-4">Jefe</dt>
         <dd class="col-8"><?= e($operativo['jefe_grado'] . ' ' . $operativo['jefe_nombres']) ?> · <?= e($operativo['jefe_celular']) ?></dd>
         <dt class="col-4">Fuerzas</dt>

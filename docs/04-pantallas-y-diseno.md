@@ -33,7 +33,7 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - Debajo, los operativos de los próximos días y el historial.
 2. **Programar / editar**: asistente en **4 pasos**, con la barra de progreso arriba y los botones **Atrás** y **Siguiente** fijos al pie, al alcance del pulgar.
    1. **Cuándo**: fecha de servicio, hora de inicio y hora de fin (24 horas). El turno no se elige: se muestra calculado al escribir la hora, junto con el día y la hora reales ("MADRUGADA · empieza el sáb 18/10 a las 02:00"). Avisa si la unidad ya tiene un operativo en ese turno.
-   2. **Qué y dónde**: tipos de operativo como botones grandes que se marcan al tocarlos, lugar programado, **coordenadas del lugar** (opcionales: el botón **Abrir Google Maps** busca el lugar escrito; el usuario mantiene presionado el punto, copia las coordenadas y las pega) y nombre del plan (opcional).
+   2. **Qué y dónde**: tipos de operativo como botones grandes que se marcan al tocarlos, lugar programado, **coordenadas del lugar** (opcionales: el botón **Abrir Google Maps** busca el lugar escrito; el usuario mantiene presionado el punto, copia las coordenadas y las pega).
    3. **Jefe y fuerzas**: grado (lista desplegable), nombres y celular, que se completan con el jefe del último operativo de la unidad; fuerzas propias, de apoyo y unidades móviles con botones − y +; observaciones.
    4. **Revisar**: resumen de los tres bloques, cada uno con **Cambiar**, y el botón **Programar operativo**.
    - Cada paso se valida antes de avanzar; el servidor vuelve a validar todo y, si rechaza algo, el asistente abre el paso con el error.

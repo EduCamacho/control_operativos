@@ -14,7 +14,6 @@ En la interfaz, los mensajes y el código se usan estos términos tal como los e
 | **Servicio diario** | Periodo de 06:00 a 05:59 del día siguiente, con sus cuatro turnos. |
 | **Fecha de servicio** | Día en que empieza el servicio diario. La MADRUGADA del sábado 18 pertenece al servicio diario del viernes 17. |
 | **Tipo de operativo** | Modalidad: control de identidad, rastrillaje, alto impacto, requisa, zonas rígidas, etc. Un operativo puede tener más de una. |
-| **Nombre del plan** | Denominación del plan u orden de operaciones (por ejemplo, "Saltamonte 2026" o "Estado de Emergencia Trujillo-V-2026"). Es opcional. |
 | **Lugar programado** | Dónde se planea ejecutar el operativo, en texto. |
 | **Jefe del operativo** | Efectivo a cargo en campo. Usa la cuenta de la unidad para iniciar el operativo y registrar los puntos. |
 | **Fuerzas propias** | Número de efectivos de la propia unidad. |

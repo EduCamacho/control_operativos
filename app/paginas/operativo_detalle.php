@@ -172,10 +172,6 @@ require RUTA_APP . '/vistas/cabecera.php';
                     <?php endif; ?>
                     <dt class="col-5">Tipo(s)</dt>
                     <dd class="col-7"><?= e(implode(', ', array_column($tipos, 'nombre'))) ?></dd>
-                    <?php if ($operativo['nombre_plan'] !== null): ?>
-                        <dt class="col-5">Plan</dt>
-                        <dd class="col-7"><?= e($operativo['nombre_plan']) ?></dd>
-                    <?php endif; ?>
                     <dt class="col-5">Lugar programado</dt>
                     <dd class="col-7">
                         <?= e($operativo['lugar_programado']) ?>

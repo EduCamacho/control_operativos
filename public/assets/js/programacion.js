@@ -261,7 +261,6 @@
                         .map((casilla) => this.$root.querySelector('label[for="' + casilla.id + '"] .nombre-tipo').textContent.trim());
                     this.revision = {
                         tipos: tipos.join(', '),
-                        plan: valor('nombre_plan'),
                         lugar: valor('lugar_programado'),
                         coordenadas: valor('lugar_coordenadas'),
                         jefe: (valor('jefe_grado') + ' ' + valor('jefe_nombres')).trim(),

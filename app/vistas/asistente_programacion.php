@@ -91,7 +91,6 @@ $texto_guardar = $actual === null ? 'Programar operativo' : 'Guardar cambios';
                             <span x-show="revision.coordenadas" x-text="revision.coordenadas"></span>
                             <span x-show="!revision.coordenadas" class="text-body-secondary">Sin coordenadas</span>
                         </dd>
-                        <dt class="col-4" x-show="revision.plan">Plan</dt><dd class="col-8 mb-0" x-show="revision.plan" x-text="revision.plan"></dd>
                     </dl>
                 <?php else: ?>
                     <dl class="row small mb-0">

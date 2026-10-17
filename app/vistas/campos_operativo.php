@@ -1,7 +1,7 @@
 <?php
 /**
  * Bloque "Qué y dónde": tipos de operativo (botones que se marcan al tocarlos),
- * nombre del plan y lugar programado.
+ * lugar programado y sus coordenadas (opcionales).
  * Espera $valores, $errores, $deshabilitado y $tipos_formulario.
  */
 declare(strict_types=1);
@@ -61,11 +61,4 @@ $tipos_marcados = array_map('intval', (array) $valores['tipos']);
             copie las coordenadas que aparecen y péguelas aquí.
         </div>
     <?php endif; ?>
-</div>
-<div class="mb-1">
-    <label for="nombre_plan" class="form-label">Nombre del plan <span class="text-body-secondary">(opcional)</span></label>
-    <input type="text" id="nombre_plan" name="nombre_plan" maxlength="150"
-           class="form-control<?= clase_error($errores, 'nombre_plan') ?>" value="<?= e($valores['nombre_plan'] ?? '') ?>"
-           placeholder="Saltamonte 2026"<?= $deshabilitado('nombre_plan') ?>>
-    <?= mostrar_error($errores, 'nombre_plan') ?>
 </div>
