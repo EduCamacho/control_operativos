@@ -1,0 +1,23 @@
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # HTTPS obligatorio: sin él el navegador no entrega el GPS (RN-19).
+    # Se exceptúa el desarrollo local (localhost y dominios .test de Laragon).
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+    RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)(:\d+)?$ [NC]
+    RewriteCond %{HTTP_HOST} !\.test(:\d+)?$ [NC]
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Todo lo que no sea un archivo existente va al front controller.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Archivos que nunca deben servirse aunque terminen en public/.
+<FilesMatch "\.(md|sql|log|ini|lock|json|xml|dist)$">
+    Require all denied
+</FilesMatch>

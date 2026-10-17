@@ -1,0 +1,21 @@
+{
+    "name": "regpol-la-libertad/control-operativos",
+    "description": "Control de Operativos — REGPOL La Libertad. Composer solo se usa en local para PHPUnit.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5"
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "config": {
+        "platform": {
+            "php": "8.2.0"
+        },
+        "sort-packages": true
+    }
+}

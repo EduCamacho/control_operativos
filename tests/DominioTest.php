@@ -1,0 +1,757 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
+
+final class DominioTest extends TestCase
+{
+    private const TOLERANCIA_NO_INICIADO = 15;
+    private const TOLERANCIA_SIN_CIERRE = 30;
+    private const VENTANA_INICIO = 60;
+
+    private static function lima(string $fecha_hora): DateTimeImmutable
+    {
+        return new DateTimeImmutable($fecha_hora, new DateTimeZone('America/Lima'));
+    }
+
+    private static function operativo(string $estado, string $inicio, string $fin, ?string $nota = null): array
+    {
+        return [
+            'estado'            => $estado,
+            'inicio_programado' => $inicio,
+            'fin_programado'    => $fin,
+            'nota_informativa'  => $nota,
+        ];
+    }
+
+    // --- clasificar_turno ---------------------------------------------------
+
+    public static function limites_de_turno(): array
+    {
+        return [
+            ['00:00', 'MADRUGADA'],
+            ['05:59', 'MADRUGADA'],
+            ['06:00', 'MANANA'],
+            ['11:59', 'MANANA'],
+            ['12:00', 'TARDE'],
+            ['17:59', 'TARDE'],
+            ['18:00', 'NOCHE'],
+            ['23:59', 'NOCHE'],
+        ];
+    }
+
+    #[DataProvider('limites_de_turno')]
+    public function test_clasifica_el_turno_en_los_limites(string $hora, string $turno): void
+    {
+        $this->assertSame($turno, clasificar_turno($hora));
+    }
+
+    public static function horas_invalidas(): array
+    {
+        return [['24:00'], ['7:00'], ['07:60'], ['07:00:00'], ['7 pm'], [''], ['ab:cd']];
+    }
+
+    #[DataProvider('horas_invalidas')]
+    public function test_rechaza_horas_que_no_son_hh_mm_de_24_horas(string $hora): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        clasificar_turno($hora);
+    }
+
+    public function test_etiqueta_del_turno_lleva_tilde(): void
+    {
+        $this->assertSame('MAÑANA', obtener_etiqueta_turno('MANANA'));
+        $this->expectException(InvalidArgumentException::class);
+        obtener_etiqueta_turno('MANANITA');
+    }
+
+    // --- calcular_horario_turno ---------------------------------------------
+
+    public function test_turno_en_el_mismo_dia(): void
+    {
+        $h = calcular_horario_turno('2026-10-17', '16:00', '18:00');
+        $this->assertSame('TARDE', $h['turno']);
+        $this->assertSame('2026-10-17 16:00:00', $h['inicio']->format(FORMATO_FECHA_HORA));
+        $this->assertSame('2026-10-17 18:00:00', $h['fin']->format(FORMATO_FECHA_HORA));
+    }
+
+    public function test_noche_que_cruza_la_medianoche_sigue_siendo_noche(): void
+    {
+        $h = calcular_horario_turno('2026-10-17', '20:00', '02:00');
+        $this->assertSame('NOCHE', $h['turno']);
+        $this->assertSame('2026-10-17 20:00:00', $h['inicio']->format(FORMATO_FECHA_HORA));
+        $this->assertSame('2026-10-18 02:00:00', $h['fin']->format(FORMATO_FECHA_HORA));
+    }
+
+    public function test_fin_a_la_medianoche_cae_al_dia_siguiente(): void
+    {
+        $h = calcular_horario_turno('2026-10-17', '18:00', '00:00');
+        $this->assertSame('2026-10-18 00:00:00', $h['fin']->format(FORMATO_FECHA_HORA));
+    }
+
+    public function test_madrugada_empieza_el_dia_siguiente_a_la_fecha_de_servicio(): void
+    {
+        $h = calcular_horario_turno('2026-10-17', '02:00', '05:00');
+        $this->assertSame('MADRUGADA', $h['turno']);
+        $this->assertSame('2026-10-18 02:00:00', $h['inicio']->format(FORMATO_FECHA_HORA));
+        $this->assertSame('2026-10-18 05:00:00', $h['fin']->format(FORMATO_FECHA_HORA));
+    }
+
+    public function test_madrugada_que_termina_en_la_manana(): void
+    {
+        $h = calcular_horario_turno('2026-10-17', '04:00', '08:00');
+        $this->assertSame('MADRUGADA', $h['turno']);
+        $this->assertSame('2026-10-18 08:00:00', $h['fin']->format(FORMATO_FECHA_HORA));
+    }
+
+    public function test_sin_duracion_maxima_el_fin_puede_caer_casi_24_horas_despues(): void
+    {
+        $h = calcular_horario_turno('2026-10-17', '08:00', '07:59');
+        $this->assertSame('MANANA', $h['turno']);
+        $this->assertSame('2026-10-18 07:59:00', $h['fin']->format(FORMATO_FECHA_HORA));
+    }
+
+    public function test_cruce_de_fin_de_ano(): void
+    {
+        $h = calcular_horario_turno('2026-12-31', '22:00', '03:00');
+        $this->assertSame('2027-01-01 03:00:00', $h['fin']->format(FORMATO_FECHA_HORA));
+
+        $m = calcular_horario_turno('2026-12-31', '01:00', '04:00');
+        $this->assertSame('2027-01-01 01:00:00', $m['inicio']->format(FORMATO_FECHA_HORA));
+    }
+
+    public function test_cruce_de_febrero_en_ano_bisiesto_y_no_bisiesto(): void
+    {
+        $this->assertSame(
+            '2028-02-29 01:00:00',
+            calcular_horario_turno('2028-02-28', '01:00', '03:00')['inicio']->format(FORMATO_FECHA_HORA),
+        );
+        $this->assertSame(
+            '2027-03-01 01:00:00',
+            calcular_horario_turno('2027-02-28', '01:00', '03:00')['inicio']->format(FORMATO_FECHA_HORA),
+        );
+    }
+
+    public function test_rechaza_inicio_igual_al_fin(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        calcular_horario_turno('2026-10-17', '16:00', '16:00');
+    }
+
+    public function test_rechaza_fechas_que_no_existen(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        calcular_horario_turno('2026-02-30', '16:00', '18:00');
+    }
+
+    // --- fecha_servicio_vigente ---------------------------------------------
+
+    public static function momentos_y_jornada(): array
+    {
+        return [
+            ['2026-10-18 00:00:00', '2026-10-17'],
+            ['2026-10-18 05:59:59', '2026-10-17'],
+            ['2026-10-18 06:00:00', '2026-10-18'],
+            ['2026-10-18 23:59:59', '2026-10-18'],
+            ['2027-01-01 03:00:00', '2026-12-31'],
+        ];
+    }
+
+    #[DataProvider('momentos_y_jornada')]
+    public function test_jornada_vigente_cambia_a_las_6(string $ahora, string $jornada): void
+    {
+        $this->assertSame($jornada, fecha_servicio_vigente(self::lima($ahora)));
+    }
+
+    public function test_jornada_vigente_convierte_desde_utc(): void
+    {
+        // 10:00 UTC son las 05:00 en Lima: todavía es la jornada anterior.
+        $this->assertSame('2026-10-17', fecha_servicio_vigente(new DateTimeImmutable('2026-10-18 10:00:00', new DateTimeZone('UTC'))));
+    }
+
+    // --- formatear_fecha_larga ----------------------------------------------
+
+    public function test_formatea_la_fecha_en_espanol(): void
+    {
+        $this->assertSame('sábado 17 de octubre de 2026', formatear_fecha_larga(validar_fecha('2026-10-17')));
+        $this->assertSame('miércoles 1 de enero de 2025', formatear_fecha_larga(validar_fecha('2025-01-01')));
+        $this->assertSame('domingo 1 de febrero de 2026', formatear_fecha_larga(validar_fecha('2026-02-01')));
+    }
+
+    // --- programacion_permitida ---------------------------------------------
+
+    public function test_la_unidad_no_programa_con_la_hora_pasada(): void
+    {
+        $inicio = self::lima('2026-10-17 16:00:00');
+        $this->assertTrue(programacion_permitida($inicio, self::lima('2026-10-17 15:59:59'), false));
+        $this->assertFalse(programacion_permitida($inicio, self::lima('2026-10-17 16:00:00'), false));
+        $this->assertFalse(programacion_permitida($inicio, self::lima('2026-10-17 16:00:01'), false));
+    }
+
+    public function test_admin_programa_con_la_hora_pasada(): void
+    {
+        $this->assertTrue(programacion_permitida(self::lima('2026-10-10 16:00:00'), self::lima('2026-10-17 16:00:00'), true));
+    }
+
+    // --- dentro_de_la_libertad ----------------------------------------------
+
+    public static function coordenadas_validas(): array
+    {
+        return [
+            'Plaza de Armas de Trujillo' => [-8.1116, -79.0288],
+            'Huanchaco'                  => [-8.0789, -79.1213],
+            'borde sur-oeste'            => [-9.00, -79.80],
+            'borde norte-este'           => [-6.90, -76.80],
+        ];
+    }
+
+    #[DataProvider('coordenadas_validas')]
+    public function test_acepta_coordenadas_dentro_de_la_libertad(float $lat, float $lng): void
+    {
+        $this->assertTrue(dentro_de_la_libertad($lat, $lng));
+    }
+
+    public static function coordenadas_invalidas(): array
+    {
+        return [
+            'ambos signos invertidos'       => [8.1116, 79.0288],
+            'latitud sin signo'             => [8.1116, -79.0288],
+            'longitud sin signo'            => [-8.1116, 79.0288],
+            'latitud sin punto decimal'     => [-81116000, -79.0288],
+            'longitud sin punto decimal'    => [-8.1116, -790288],
+            'lat y lng intercambiadas'      => [-79.0288, -8.1116],
+            'cero, cero'                    => [0.0, 0.0],
+            'apenas al sur del borde'       => [-9.0000001, -79.0],
+            'apenas al oeste del borde'     => [-8.0, -79.8000001],
+            'apenas al norte del borde'     => [-6.8999999, -78.0],
+            'apenas al este del borde'      => [-8.0, -76.7999999],
+            'Lima'                          => [-12.0464, -77.0428],
+            'no es un número'               => [NAN, -79.0],
+            'infinito'                      => [-8.0, INF],
+        ];
+    }
+
+    #[DataProvider('coordenadas_invalidas')]
+    public function test_rechaza_coordenadas_fuera_de_la_libertad(float $lat, float $lng): void
+    {
+        $this->assertFalse(dentro_de_la_libertad($lat, $lng));
+    }
+
+    // --- parsear_coordenadas ------------------------------------------------
+
+    public static function textos_de_google_maps(): array
+    {
+        return [
+            'clic derecho en la PC'      => ['-8.111600, -79.028700', [-8.1116, -79.0287]],
+            'sin espacio'                => ['-8.1116,-79.0287', [-8.1116, -79.0287]],
+            'separado por espacio'       => ['-8.1116 -79.0287', [-8.1116, -79.0287]],
+            'con espacios alrededor'     => ["  -8.1116 ,  -79.0287 \n", [-8.1116, -79.0287]],
+            'entre paréntesis'           => ['(-8.1116, -79.0287)', [-8.1116, -79.0287]],
+            'coma decimal'               => ['-8,1116; -79,0287', [-8.1116, -79.0287]],
+            'coma decimal y coma'        => ['-8,1116, -79,0287', [-8.1116, -79.0287]],
+            'muchos decimales'           => ['-8.11160012345, -79.02870098765', [-8.1116001, -79.028701]],
+            'URL con @'                  => ['https://www.google.com/maps/@-8.1116,-79.0287,17z', [-8.1116, -79.0287]],
+            'URL de lugar con !3d!4d'    => ['https://www.google.com/maps/place/Plaza/@-8.11,-79.02,17z/data=!3m1!4b1!4m6!3m5!1s0x0:0x0!8m2!3d-8.1116!4d-79.0287', [-8.1116, -79.0287]],
+            'URL con q='                 => ['https://maps.google.com/?q=-8.1116,-79.0287', [-8.1116, -79.0287]],
+            'URL codificada'             => ['https://www.google.com/maps/search/?api=1&query=-8.1116%2C-79.0287', [-8.1116, -79.0287]],
+            'URL de búsqueda con +'      => ['https://www.google.com/maps/search/-8.1116,+-79.0287', [-8.1116, -79.0287]],
+            'grados, minutos y segundos' => ['8°06\'41.8"S 79°01\'43.3"W', [-8.1116111, -79.0286944]],
+            'GMS con coma y oeste'       => ['8° 06\' 41,8" S, 79° 01\' 43,3" O', [-8.1116111, -79.0286944]],
+            'signos invertidos se parsean igual' => ['8.1116, 79.0287', [8.1116, 79.0287]],
+        ];
+    }
+
+    #[DataProvider('textos_de_google_maps')]
+    public function test_separa_coordenadas_copiadas_de_google_maps(string $texto, array $esperado): void
+    {
+        $resultado = parsear_coordenadas($texto);
+        $this->assertNotNull($resultado);
+        $this->assertEqualsWithDelta($esperado[0], $resultado[0], 0.0000001);
+        $this->assertEqualsWithDelta($esperado[1], $resultado[1], 0.0000001);
+    }
+
+    public static function textos_no_reconocidos(): array
+    {
+        return [
+            'vacío'                      => [''],
+            'solo espacios'              => ['   '],
+            'un solo número'             => ['-8.1116'],
+            'sin punto decimal'          => ['-81116000, -790287000'],
+            'tres números'               => ['-8.1, -79.0, 17'],
+            'texto'                      => ['Av. España con Jr. Grau'],
+            'latitud mayor a 90'         => ['-98.1116, -79.0287'],
+            'minutos de 60'              => ['8°60\'00.0"S 79°01\'43.3"W'],
+            'GMS sin hemisferio'         => ['8°06\'41.8" 79°01\'43.3"'],
+            'URL sin coordenadas'        => ['https://maps.app.goo.gl/AbCdEf123'],
+        ];
+    }
+
+    #[DataProvider('textos_no_reconocidos')]
+    public function test_devuelve_null_si_no_reconoce_el_texto(string $texto): void
+    {
+        $this->assertNull(parsear_coordenadas($texto));
+    }
+
+    // --- precision_aceptable ------------------------------------------------
+
+    public function test_precision_hasta_100_m_es_aceptable(): void
+    {
+        $this->assertTrue(precision_aceptable(8.0));
+        $this->assertTrue(precision_aceptable(100.0));
+        $this->assertFalse(precision_aceptable(100.1));
+        $this->assertFalse(precision_aceptable(2500.0));
+        $this->assertFalse(precision_aceptable(null));
+    }
+
+    // --- distancia_m --------------------------------------------------------
+
+    public function test_distancia_al_mismo_punto_es_cero(): void
+    {
+        $this->assertSame(0, distancia_m(-8.1116, -79.0288, -8.1116, -79.0288));
+    }
+
+    public function test_un_grado_de_latitud_mide_unos_111_km(): void
+    {
+        $this->assertEqualsWithDelta(111195, distancia_m(-8.0, -79.0, -9.0, -79.0), 1);
+    }
+
+    public function test_distancia_es_simetrica(): void
+    {
+        $this->assertSame(
+            distancia_m(-8.1116, -79.0288, -8.0789, -79.1213),
+            distancia_m(-8.0789, -79.1213, -8.1116, -79.0288),
+        );
+    }
+
+    public function test_distancia_corta_de_unos_11_m(): void
+    {
+        $this->assertEqualsWithDelta(11, distancia_m(-8.1116, -79.0288, -8.1117, -79.0288), 1);
+    }
+
+    // --- enlaces de Google Maps ---------------------------------------------
+
+    public function test_enlace_usa_punto_decimal_aunque_el_locale_use_coma(): void
+    {
+        $locale = setlocale(LC_NUMERIC, '0');
+        setlocale(LC_NUMERIC, 'es_PE.UTF-8', 'es_ES.UTF-8', 'Spanish_Peru', 'Spanish');
+        try {
+            $this->assertSame(
+                'https://www.google.com/maps/search/?api=1&query=-8.1116000,-79.0288000',
+                armar_enlace_google_maps(-8.1116, -79.0288),
+            );
+            $this->assertSame(
+                'https://www.google.com/maps/dir/?api=1&destination=-8.1116000,-79.0288000',
+                armar_enlace_como_llegar(-8.1116, -79.0288),
+            );
+        } finally {
+            setlocale(LC_NUMERIC, $locale);
+        }
+    }
+
+    // --- estado_visible -----------------------------------------------------
+
+    private function estado(array $operativo, string $ahora): string
+    {
+        return estado_visible($operativo, self::lima($ahora), self::TOLERANCIA_NO_INICIADO, self::TOLERANCIA_SIN_CIERRE);
+    }
+
+    public function test_programado_pasa_a_no_iniciado_despues_de_15_min(): void
+    {
+        $op = self::operativo('PROGRAMADO', '2026-10-17 16:00:00', '2026-10-17 18:00:00');
+        $this->assertSame('PROGRAMADO', $this->estado($op, '2026-10-17 16:14:59'));
+        $this->assertSame('PROGRAMADO', $this->estado($op, '2026-10-17 16:15:00'));
+        $this->assertSame('NO_INICIADO', $this->estado($op, '2026-10-17 16:15:01'));
+    }
+
+    public function test_no_iniciado_sigue_despues_de_la_hora_de_fin(): void
+    {
+        $op = self::operativo('PROGRAMADO', '2026-10-17 16:00:00', '2026-10-17 18:00:00');
+        $this->assertSame('NO_INICIADO', $this->estado($op, '2026-10-20 09:00:00'));
+    }
+
+    public function test_en_curso_pasa_a_sin_cierre_despues_de_30_min(): void
+    {
+        $op = self::operativo('EN_CURSO', '2026-10-17 16:00:00', '2026-10-17 18:00:00');
+        $this->assertSame('EN_CURSO', $this->estado($op, '2026-10-17 18:29:59'));
+        $this->assertSame('EN_CURSO', $this->estado($op, '2026-10-17 18:30:00'));
+        $this->assertSame('SIN_CIERRE', $this->estado($op, '2026-10-17 18:30:01'));
+    }
+
+    public function test_sin_cierre_de_un_turno_noche_despues_de_la_medianoche(): void
+    {
+        $op = self::operativo('EN_CURSO', '2026-10-17 20:00:00', '2026-10-18 02:00:00');
+        $this->assertSame('EN_CURSO', $this->estado($op, '2026-10-18 00:30:00'));
+        $this->assertSame('EN_CURSO', $this->estado($op, '2026-10-18 02:29:59'));
+        $this->assertSame('SIN_CIERRE', $this->estado($op, '2026-10-18 02:30:01'));
+    }
+
+    public function test_no_iniciado_de_una_madrugada(): void
+    {
+        $op = self::operativo('PROGRAMADO', '2026-10-18 02:00:00', '2026-10-18 05:00:00');
+        $this->assertSame('PROGRAMADO', $this->estado($op, '2026-10-17 23:00:00'));
+        $this->assertSame('NO_INICIADO', $this->estado($op, '2026-10-18 02:16:00'));
+    }
+
+    public function test_finalizado_no_cambia_con_la_hora(): void
+    {
+        $op = self::operativo('FINALIZADO', '2026-10-17 16:00:00', '2026-10-17 18:00:00');
+        $this->assertSame('FINALIZADO', $this->estado($op, '2026-10-30 10:00:00'));
+    }
+
+    public function test_las_tolerancias_se_reciben_por_parametro(): void
+    {
+        $op = self::operativo('PROGRAMADO', '2026-10-17 16:00:00', '2026-10-17 18:00:00');
+        $this->assertSame('NO_INICIADO', estado_visible($op, self::lima('2026-10-17 16:05:01'), 5, 30));
+        $this->assertSame('PROGRAMADO', estado_visible($op, self::lima('2026-10-17 16:05:01'), 10, 30));
+    }
+
+    public function test_acepta_objetos_fecha_ademas_de_textos(): void
+    {
+        $op = self::operativo('PROGRAMADO', '2026-10-17 16:00:00', '2026-10-17 18:00:00');
+        $op['inicio_programado'] = self::lima('2026-10-17 16:00:00');
+        $this->assertSame('NO_INICIADO', $this->estado($op, '2026-10-17 16:20:00'));
+    }
+
+    public function test_estado_desconocido_lanza_excepcion(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->estado(self::operativo('ANULADO', '2026-10-17 16:00:00', '2026-10-17 18:00:00'), '2026-10-17 16:00:00');
+    }
+
+    public function test_fecha_mal_formada_lanza_excepcion(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->estado(self::operativo('PROGRAMADO', '2026-10-17 16:00', '2026-10-17 18:00:00'), '2026-10-17 16:00:00');
+    }
+
+    // --- pendiente_nota y puede_agregar_nota --------------------------------
+
+    public function test_pendiente_nota_solo_en_finalizado_sin_nota(): void
+    {
+        $this->assertTrue(pendiente_nota(self::operativo('FINALIZADO', '2026-10-17 16:00:00', '2026-10-17 18:00:00')));
+        $this->assertTrue(pendiente_nota(self::operativo('FINALIZADO', '2026-10-17 16:00:00', '2026-10-17 18:00:00', '  ')));
+        $this->assertFalse(pendiente_nota(self::operativo('FINALIZADO', '2026-10-17 16:00:00', '2026-10-17 18:00:00', '202601802185')));
+        $this->assertFalse(pendiente_nota(self::operativo('EN_CURSO', '2026-10-17 16:00:00', '2026-10-17 18:00:00')));
+    }
+
+    public function test_la_unidad_agrega_la_nota_solo_si_falta(): void
+    {
+        $this->assertTrue(puede_agregar_nota(self::operativo('FINALIZADO', '2026-10-17 16:00:00', '2026-10-17 18:00:00')));
+        $this->assertFalse(puede_agregar_nota(self::operativo('FINALIZADO', '2026-10-17 16:00:00', '2026-10-17 18:00:00', '202601802185')));
+    }
+
+    // --- puede_iniciar ------------------------------------------------------
+
+    public function test_se_puede_iniciar_desde_60_min_antes(): void
+    {
+        $op = self::operativo('PROGRAMADO', '2026-10-17 16:00:00', '2026-10-17 18:00:00');
+        $this->assertFalse(puede_iniciar($op, self::lima('2026-10-17 14:59:59'), self::VENTANA_INICIO));
+        $this->assertTrue(puede_iniciar($op, self::lima('2026-10-17 15:00:00'), self::VENTANA_INICIO));
+    }
+
+    public function test_se_puede_iniciar_tarde_hasta_antes_de_la_hora_de_fin(): void
+    {
+        $op = self::operativo('PROGRAMADO', '2026-10-17 16:00:00', '2026-10-17 18:00:00');
+        $this->assertTrue(puede_iniciar($op, self::lima('2026-10-17 17:59:59'), self::VENTANA_INICIO));
+        $this->assertFalse(puede_iniciar($op, self::lima('2026-10-17 18:00:00'), self::VENTANA_INICIO));
+    }
+
+    public function test_iniciar_un_turno_noche_despues_de_la_medianoche(): void
+    {
+        $op = self::operativo('PROGRAMADO', '2026-10-17 20:00:00', '2026-10-18 02:00:00');
+        $this->assertTrue(puede_iniciar($op, self::lima('2026-10-18 01:00:00'), self::VENTANA_INICIO));
+    }
+
+    public function test_solo_se_inicia_desde_programado(): void
+    {
+        $op = self::operativo('EN_CURSO', '2026-10-17 16:00:00', '2026-10-17 18:00:00');
+        $this->assertFalse(puede_iniciar($op, self::lima('2026-10-17 16:00:00'), self::VENTANA_INICIO));
+    }
+
+    // --- puede_eliminar -----------------------------------------------------
+
+    public function test_eliminar_justo_antes_y_justo_despues_de_la_hora_de_inicio(): void
+    {
+        $op = self::operativo('PROGRAMADO', '2026-10-17 16:00:00', '2026-10-17 18:00:00');
+        $this->assertTrue(puede_eliminar($op, self::lima('2026-10-17 15:59:59'), false));
+        $this->assertFalse(puede_eliminar($op, self::lima('2026-10-17 16:00:00'), false));
+        $this->assertFalse(puede_eliminar($op, self::lima('2026-10-17 16:00:01'), false));
+    }
+
+    public function test_la_unidad_no_elimina_un_operativo_iniciado(): void
+    {
+        $op = self::operativo('EN_CURSO', '2026-10-17 16:00:00', '2026-10-17 18:00:00');
+        $this->assertFalse(puede_eliminar($op, self::lima('2026-10-17 15:30:00'), false));
+    }
+
+    public function test_admin_elimina_en_cualquier_momento(): void
+    {
+        $op = self::operativo('FINALIZADO', '2026-10-17 16:00:00', '2026-10-17 18:00:00');
+        $this->assertTrue(puede_eliminar($op, self::lima('2026-10-20 10:00:00'), true));
+    }
+
+    // --- paso_hora_inicio, puede_registrar_punto, puede_finalizar -----------
+
+    public function test_paso_hora_inicio_incluye_el_segundo_exacto(): void
+    {
+        $op = self::operativo('PROGRAMADO', '2026-10-17 16:00:00', '2026-10-17 18:00:00');
+        $this->assertFalse(paso_hora_inicio($op, self::lima('2026-10-17 15:59:59')));
+        $this->assertTrue(paso_hora_inicio($op, self::lima('2026-10-17 16:00:00')));
+    }
+
+    public function test_puntos_y_cierre_solo_en_curso(): void
+    {
+        foreach (['PROGRAMADO' => false, 'EN_CURSO' => true, 'FINALIZADO' => false] as $estado => $esperado) {
+            $op = self::operativo($estado, '2026-10-17 16:00:00', '2026-10-17 18:00:00');
+            $this->assertSame($esperado, puede_registrar_punto($op), $estado);
+            $this->assertSame($esperado, puede_finalizar($op), $estado);
+        }
+    }
+
+    // --- campos_editables ---------------------------------------------------
+
+    public function test_programado_antes_del_inicio_permite_editar_todo(): void
+    {
+        $campos = campos_editables('PROGRAMADO', false);
+        foreach (['fecha_servicio', 'hora_inicio', 'hora_fin', 'tipos', 'lugar_programado', 'fuerzas_propias'] as $campo) {
+            $this->assertContains($campo, $campos);
+        }
+    }
+
+    public function test_programado_despues_del_inicio_bloquea_fecha_y_horas(): void
+    {
+        $campos = campos_editables('PROGRAMADO', true);
+        foreach (['fecha_servicio', 'hora_inicio', 'hora_fin'] as $campo) {
+            $this->assertNotContains($campo, $campos);
+        }
+        $this->assertContains('lugar_programado', $campos);
+    }
+
+    public function test_en_curso_solo_fuerzas_jefe_y_observaciones(): void
+    {
+        $this->assertEqualsCanonicalizing(
+            ['jefe_grado', 'jefe_nombres', 'jefe_celular', 'fuerzas_propias', 'fuerzas_apoyo', 'unidades_moviles', 'observaciones'],
+            campos_editables('EN_CURSO', true),
+        );
+    }
+
+    public function test_finalizado_no_permite_editar_nada(): void
+    {
+        $this->assertSame([], campos_editables('FINALIZADO', true));
+    }
+
+    public function test_campos_de_estado_desconocido_lanza_excepcion(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        campos_editables('ANULADO', false);
+    }
+
+    // --- nota informativa ---------------------------------------------------
+
+    public static function notas(): array
+    {
+        return [
+            'solo dígitos'          => ['202601802185', '202601802185'],
+            'con el texto completo' => ['NOTA INFORMATIVA N° 202601802185', '202601802185'],
+            'con espacios y guiones' => [' 2026-018 02185 ', '202601802185'],
+            'vacía'                 => ['', null],
+            'sin dígitos'           => ['pendiente', null],
+            'exactamente 20 dígitos' => [str_repeat('1', 20), str_repeat('1', 20)],
+        ];
+    }
+
+    #[DataProvider('notas')]
+    public function test_normaliza_la_nota_informativa(string $texto, ?string $esperado): void
+    {
+        $this->assertSame($esperado, normalizar_nota_informativa($texto));
+    }
+
+    public function test_rechaza_notas_de_mas_de_20_digitos(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        normalizar_nota_informativa(str_repeat('1', 21));
+    }
+
+    public function test_formatea_la_nota_informativa(): void
+    {
+        $this->assertSame('NOTA INFORMATIVA N° 202601802185', formatear_nota_informativa('202601802185'));
+    }
+
+    // --- normalizar_celular -------------------------------------------------
+
+    public static function celulares(): array
+    {
+        return [
+            ['987654321', '987654321'],
+            ['987 654 321', '987654321'],
+            ['987-654-321', '987654321'],
+            ['+51 987 654 321', '987654321'],
+            ['51987654321', '987654321'],
+            ['87654321', null],
+            ['887654321', null],
+            ['9876543210', null],
+            ['044-123456', null],
+            ['', null],
+        ];
+    }
+
+    #[DataProvider('celulares')]
+    public function test_normaliza_el_celular(string $texto, ?string $esperado): void
+    {
+        $this->assertSame($esperado, normalizar_celular($texto));
+    }
+
+    // --- validar_entero -----------------------------------------------------
+
+    public function test_valida_enteros_de_formulario(): void
+    {
+        $this->assertSame(3, validar_entero('3', 0, 10));
+        $this->assertSame(0, validar_entero(' 0 ', 0, 10));
+        $this->assertNull(validar_entero('-1', 0, 10));
+        $this->assertNull(validar_entero('11', 0, 10));
+        $this->assertNull(validar_entero('2.5', 0, 10));
+        $this->assertNull(validar_entero('', 0, 10));
+        $this->assertNull(validar_entero(null, 0, 10));
+        $this->assertNull(validar_entero('tres', 0, 10));
+    }
+
+    // --- validar_programacion -----------------------------------------------
+
+    private static function entrada_valida(): array
+    {
+        return [
+            'tipos'            => ['1', '3'],
+            'nombre_plan'      => '  Saltamonte 2026 ',
+            'lugar_programado' => 'Av. España con Jr. Grau',
+            'jefe_grado'       => 'CAP',
+            'jefe_nombres'     => 'Juan Pérez Rodríguez',
+            'jefe_celular'     => '987 654 321',
+            'fuerzas_propias'  => '12',
+            'fuerzas_apoyo'    => '0',
+            'unidades_moviles' => '2',
+            'observaciones'    => '',
+        ];
+    }
+
+    public function test_programacion_valida_devuelve_datos_normalizados(): void
+    {
+        $r = validar_programacion(self::entrada_valida(), [1, 2, 3]);
+        $this->assertSame([], $r['errores']);
+        $this->assertSame([1, 3], $r['datos']['tipos']);
+        $this->assertSame('Saltamonte 2026', $r['datos']['nombre_plan']);
+        $this->assertSame('987654321', $r['datos']['jefe_celular']);
+        $this->assertSame(12, $r['datos']['fuerzas_propias']);
+        $this->assertNull($r['datos']['observaciones']);
+    }
+
+    public function test_nombre_del_plan_vacio_queda_null(): void
+    {
+        $entrada = ['nombre_plan' => '   '] + self::entrada_valida();
+        $this->assertNull(validar_programacion($entrada, [1, 2, 3])['datos']['nombre_plan']);
+    }
+
+    public function test_programacion_con_errores(): void
+    {
+        $entrada = [
+            'tipos'            => [],
+            'lugar_programado' => '  ',
+            'jefe_grado'       => 'SARGENTO',
+            'jefe_nombres'     => '',
+            'jefe_celular'     => '12345',
+            'fuerzas_propias'  => '0',
+            'fuerzas_apoyo'    => '-1',
+            'unidades_moviles' => 'dos',
+        ] + self::entrada_valida();
+        $errores = validar_programacion($entrada, [1, 2, 3])['errores'];
+        foreach (['tipos', 'lugar_programado', 'jefe_grado', 'jefe_nombres', 'jefe_celular', 'fuerzas_propias', 'fuerzas_apoyo', 'unidades_moviles'] as $campo) {
+            $this->assertArrayHasKey($campo, $errores, $campo);
+        }
+    }
+
+    public function test_rechaza_tipos_que_no_estan_en_el_catalogo(): void
+    {
+        $entrada = ['tipos' => ['1', '99']] + self::entrada_valida();
+        $this->assertArrayHasKey('tipos', validar_programacion($entrada, [1, 2, 3])['errores']);
+    }
+
+    public function test_rechaza_textos_demasiado_largos(): void
+    {
+        $entrada = ['lugar_programado' => str_repeat('á', 256), 'nombre_plan' => str_repeat('a', 151)] + self::entrada_valida();
+        $errores = validar_programacion($entrada, [1, 2, 3])['errores'];
+        $this->assertArrayHasKey('lugar_programado', $errores);
+        $this->assertArrayHasKey('nombre_plan', $errores);
+    }
+
+    public function test_255_caracteres_con_tilde_son_validos(): void
+    {
+        $entrada = ['lugar_programado' => str_repeat('á', 255)] + self::entrada_valida();
+        $this->assertArrayNotHasKey('lugar_programado', validar_programacion($entrada, [1, 2, 3])['errores']);
+    }
+
+    public function test_solo_valida_los_campos_indicados(): void
+    {
+        $r = validar_programacion(['fuerzas_propias' => '5'], [1], ['fuerzas_propias']);
+        $this->assertSame([], $r['errores']);
+        $this->assertSame(['fuerzas_propias' => 5], $r['datos']);
+    }
+
+    public function test_todos_los_grados_son_validos(): void
+    {
+        foreach (GRADOS as $grado) {
+            $entrada = ['jefe_grado' => $grado] + self::entrada_valida();
+            $this->assertArrayNotHasKey('jefe_grado', validar_programacion($entrada, [1, 3])['errores'], $grado);
+        }
+    }
+
+    // --- resultados ---------------------------------------------------------
+
+    public function test_cantidades_vacias_o_ausentes_son_cero(): void
+    {
+        $r = validar_cantidades_resultado([1 => '2', 2 => ''], [1, 2, 3]);
+        $this->assertSame([], $r['errores']);
+        $this->assertSame([1 => 2, 2 => 0, 3 => 0], $r['datos']);
+    }
+
+    public function test_cantidades_negativas_o_no_enteras_son_error(): void
+    {
+        $r = validar_cantidades_resultado([1 => '-1', 2 => '1.5', 3 => 'x'], [1, 2, 3]);
+        $this->assertSame([1, 2, 3], array_keys($r['errores']));
+    }
+
+    public function test_ignora_conceptos_que_no_estan_activos(): void
+    {
+        $r = validar_cantidades_resultado([1 => '2', 99 => '5'], [1]);
+        $this->assertSame([1 => 2], $r['datos']);
+    }
+
+    public function test_resultado_negativo_si_todo_es_cero(): void
+    {
+        $this->assertTrue(es_resultado_negativo([1 => 0, 2 => 0]));
+        $this->assertTrue(es_resultado_negativo([]));
+        $this->assertFalse(es_resultado_negativo([1 => 0, 2 => 1]));
+    }
+
+    // --- bloqueo de cuentas -------------------------------------------------
+
+    public function test_cuatro_intentos_fallidos_no_bloquean(): void
+    {
+        $r = calcular_intento_fallido(3, self::lima('2026-10-17 10:00:00'));
+        $this->assertSame(4, $r['intentos']);
+        $this->assertNull($r['bloqueado_hasta']);
+    }
+
+    public function test_el_quinto_intento_bloquea_15_min_y_reinicia_el_contador(): void
+    {
+        $r = calcular_intento_fallido(4, self::lima('2026-10-17 10:00:00'));
+        $this->assertSame(0, $r['intentos']);
+        $this->assertSame('2026-10-17 10:15:00', $r['bloqueado_hasta']->format(FORMATO_FECHA_HORA));
+    }
+
+    public function test_cuenta_bloqueada_hasta_la_hora_indicada(): void
+    {
+        $this->assertTrue(cuenta_bloqueada('2026-10-17 10:15:00', self::lima('2026-10-17 10:14:59')));
+        $this->assertFalse(cuenta_bloqueada('2026-10-17 10:15:00', self::lima('2026-10-17 10:15:00')));
+        $this->assertFalse(cuenta_bloqueada(null, self::lima('2026-10-17 10:00:00')));
+    }
+}

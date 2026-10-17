@@ -16,3 +16,8 @@ Thumbs.db
 
 # Claude Code (ajustes locales)
 .claude/settings.local.json
+
+# Datos de ejecución (sesiones y registros de errores)
+app/almacen/sesiones/*
+app/almacen/registros/*
+!app/almacen/*/.gitkeep

@@ -1,0 +1,36 @@
+/* Estilos propios. Bootstrap 5.3 con tema claro y tipografía del sistema (docs/04). */
+
+:root {
+    --bs-body-font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --color-institucional: #0b3d2e;
+    --color-naranja: #fd7e14;
+}
+
+.barra-principal {
+    background-color: var(--color-institucional);
+}
+
+/* Botones de acción: mínimo 48 px de alto y ancho completo en el celular. */
+.boton-accion {
+    min-height: 48px;
+}
+
+@media (max-width: 575.98px) {
+    .boton-accion {
+        width: 100%;
+    }
+}
+
+/* SIN_CIERRE usa naranja propio para no confundirse con el amarillo (warning) de SIN_PROGRAMAR. */
+.bg-naranja {
+    background-color: var(--color-naranja) !important;
+    color: #fff !important;
+}
+
+.text-naranja {
+    color: var(--color-naranja) !important;
+}
+
+.border-naranja {
+    border-color: var(--color-naranja) !important;
+}

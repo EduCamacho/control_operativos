@@ -27,6 +27,8 @@ control-operativos/
 ├── tests/                     # PHPUnit, solo en local
 ├── app/                       # FUERA del document root
 │   ├── config.php             # credenciales BD, API key, tolerancias (no versionar; usar config.ejemplo.php)
+│   ├── inicio.php             # arranque: config, zona horaria, errores, e(), armar_url(), responder_json()
+│   ├── rutas.php              # lista blanca de rutas → archivo de paginas/ o api/
 │   ├── db.php                 # conexión PDO + SET time_zone = '-05:00'
 │   ├── sesion.php             # configuración de sesión, login, CSRF
 │   ├── autorizacion.php       # requiere_rol(), unidad_de_sesion()
@@ -35,7 +37,7 @@ control-operativos/
 │   ├── paginas/               # un archivo por pantalla/acción (controlador + vista)
 │   ├── api/                   # endpoints JSON (mapa, ubicaciones)
 │   ├── vistas/                # layout, parciales
-│   └── almacen/sesiones/      # session.save_path propio
+│   └── almacen/               # sesiones/ (session.save_path propio) y registros/errores.log
 └── public/                    # DOCUMENT ROOT del subdominio
     ├── index.php              # front controller: enruta ?r= o path → app/paginas/*
     ├── .htaccess              # reescritura a index.php, fuerza HTTPS
@@ -88,7 +90,7 @@ Son funciones puras, sin acceso a la base de datos, y cada una tiene sus tests e
 
 ## Desarrollo y despliegue sin SSH
 
-1. **En local (Laragon)**: desarrollar y correr los tests. Composer se usa **solo en local** (`composer require --dev phpunit/phpunit`). La carpeta `vendor/` no se sube.
+1. **En local (Laragon)**: desarrollar y correr los tests. Composer se usa **solo en local** (`composer install` y luego `vendor/bin/phpunit`). La carpeta `vendor/` no se sube. Usar PHP 8.2 o superior: en Laragon, *Menú → PHP → versión 8.3*, o llamar directamente a `C:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php.exe`. Para probar sin configurar Apache: `php -S 127.0.0.1:8099 -t public public/index.php`, con `ENTORNO = 'local'` en `app/config.php`.
 2. **Base de datos**: importar `sql/001_esquema.sql` y `sql/002_datos_iniciales.sql` en phpMyAdmin. Cada cambio posterior va en un archivo nuevo numerado (`003_...sql`), que se aplica a mano en el mismo orden.
 3. **Primer ADMIN**: ejecutar en local `php herramientas/crear_admin.php usuario clave`, que imprime un `INSERT` con el hash, y ejecutar ese INSERT en phpMyAdmin.
 4. **Subir archivos**: por FTPS (FileZilla) o con el Administrador de archivos de cPanel. Si el plan incluye "Git Version Control", se puede desplegar desde el repositorio. `app/config.php` se crea una sola vez en el servidor y no se sobrescribe.
