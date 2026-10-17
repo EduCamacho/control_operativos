@@ -1,7 +1,7 @@
 <?php
 /**
  * Modal de captura de ubicación para iniciar el operativo o registrar un nuevo
- * punto (docs/04). Pantalla completa en el celular y centrado en la PC.
+ * punto (docs/04). Hoja inferior en el celular (sale desde abajo) y centrado en la PC.
  * Es estático (no se cierra al tocar fuera ni con Escape) y no se puede cerrar
  * mientras hay un envío pendiente, para no perder la ubicación capturada.
  * Va dentro de un elemento con x-data="capturaUbicacion(...)". Espera:
@@ -11,7 +11,7 @@ declare(strict_types=1);
 ?>
 <div class="modal fade modal-captura" tabindex="-1" x-ref="modal" data-bs-backdrop="static" data-bs-keyboard="false"
      x-id="['captura']" :aria-labelledby="$id('captura') + '-titulo'" aria-modal="true" role="dialog">
-    <div class="modal-dialog modal-fullscreen-sm-down modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-hoja-inferior">
         <div class="modal-content">
             <div class="modal-header encabezado-modal">
                 <h2 class="modal-title h5" :id="$id('captura') + '-titulo'"><i class="bi bi-geo-alt-fill"></i> <?= e($captura['titulo']) ?></h2>

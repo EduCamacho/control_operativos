@@ -607,3 +607,39 @@
     flex-wrap: nowrap;
     padding-bottom: calc(.75rem + env(safe-area-inset-bottom));
 }
+
+/* En el celular, el modal es una hoja inferior: sale desde abajo, ocupa solo lo
+   necesario (hasta 85 % de la altura) y deja ver la ficha detrás. En la PC queda centrado. */
+@media (max-width: 575.98px) {
+    .modal-hoja-inferior {
+        margin: 0;
+        width: 100%;
+        max-width: none;
+        min-height: 100%;
+        align-items: flex-end;
+    }
+
+    .modal-hoja-inferior.modal-dialog-scrollable {
+        height: 100%;
+    }
+
+    .modal-hoja-inferior .modal-content {
+        max-height: 85dvh;
+        border: 0;
+        border-radius: 1rem 1rem 0 0;
+    }
+
+    .modal-hoja-inferior .modal-header {
+        border-radius: 1rem 1rem 0 0;
+    }
+
+    /* Entra deslizándose desde abajo en vez de bajar desde arriba. */
+    .modal.fade .modal-hoja-inferior {
+        transform: translateY(100%);
+        transition: transform .25s ease-out;
+    }
+
+    .modal.show .modal-hoja-inferior {
+        transform: none;
+    }
+}
