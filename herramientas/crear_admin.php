@@ -17,8 +17,8 @@ $errores = [];
 if (!preg_match('/^[a-z0-9._-]{3,50}$/i', $usuario)) {
     $errores[] = 'El usuario debe tener de 3 a 50 caracteres: letras sin tilde, números, punto, guion o guion bajo.';
 }
-if (mb_strlen($clave) < 10) {
-    $errores[] = 'La clave debe tener al menos 10 caracteres.';
+if (mb_strlen($clave) < 8) {
+    $errores[] = 'La clave debe tener al menos 8 caracteres.';
 }
 if (trim($nombre) === '' || mb_strlen($nombre) > 150) {
     $errores[] = 'Indique el nombre completo (hasta 150 caracteres).';

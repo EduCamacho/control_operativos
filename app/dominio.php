@@ -80,7 +80,7 @@ const DIVISIONES = [
     'DUE'      => 'DUE',
     'DIVINCRI' => 'DIVINCRI La Libertad',
 ];
-const LARGO_MINIMO_CLAVE = 10;
+const LARGO_MINIMO_CLAVE = 8;
 const LARGO_CLAVE_TEMPORAL = 12;
 // Sin caracteres que se confunden al dictarlos o leerlos en el celular (0/o, 1/l/i).
 const ALFABETO_CLAVE_TEMPORAL = 'abcdefghjkmnpqrstuvwxyz23456789';

@@ -793,9 +793,9 @@ final class DominioTest extends TestCase
 
     public function test_valida_el_largo_de_la_clave(): void
     {
-        $this->assertNotNull(validar_clave('123456789'));
-        $this->assertNull(validar_clave('1234567890'));
-        $this->assertNull(validar_clave('ñandú-áéíó'));
+        $this->assertNotNull(validar_clave('1234567'));
+        $this->assertNull(validar_clave('12345678'));
+        $this->assertNull(validar_clave('ñandú-áé'));
         $this->assertNotNull(validar_clave(str_repeat('a', 73)));
     }
 
