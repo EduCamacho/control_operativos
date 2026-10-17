@@ -243,3 +243,95 @@
 .celda-tablero a:hover {
     filter: brightness(.92);
 }
+
+/* Asistente de programación por pasos. */
+.pasos-progreso {
+    gap: .25rem;
+}
+
+.paso-indicador {
+    border: 0;
+    background: none;
+    padding: .25rem 0 .5rem;
+    border-bottom: 4px solid var(--bs-border-color);
+    color: var(--bs-secondary-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .15rem;
+    font-size: .75rem;
+    line-height: 1.1;
+}
+
+.paso-indicador:disabled {
+    opacity: 1;
+    cursor: default;
+}
+
+.paso-numero {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    background: var(--bs-secondary-bg);
+}
+
+.paso-indicador.hecho {
+    border-bottom-color: var(--bs-success);
+    color: var(--bs-success);
+}
+
+.paso-indicador.hecho .paso-numero {
+    background: var(--bs-success);
+    color: #fff;
+}
+
+.paso-indicador.actual {
+    border-bottom-color: var(--color-institucional);
+    color: var(--bs-body-color);
+    font-weight: 600;
+}
+
+.paso-indicador.actual .paso-numero {
+    background: var(--color-institucional);
+    color: #fff;
+}
+
+.titulo-paso:focus {
+    outline: none;
+}
+
+/* Botones Atrás / Siguiente fijos al pie, por encima del teclado y del borde inferior del celular. */
+.barra-pasos {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    margin: 0 -.75rem;
+    padding: .75rem .75rem calc(.75rem + env(safe-area-inset-bottom));
+    background: var(--bs-body-bg);
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.turno-calculado {
+    background: var(--bs-tertiary-bg);
+}
+
+/* Tipos de operativo como botones que se marcan al tocarlos. */
+.boton-tipo {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.boton-tipo .icono-marcado,
+.btn-check:checked + .boton-tipo .icono-sin-marcar {
+    display: none;
+}
+
+.btn-check:checked + .boton-tipo .icono-marcado {
+    display: inline;
+}

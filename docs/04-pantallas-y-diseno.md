@@ -31,13 +31,14 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - Muestra el servicio diario vigente con **4 tarjetas fijas: MAÑANA, TARDE, NOCHE y MADRUGADA**.
    - Cada tarjeta tiene su estado y **un solo botón** con la acción que toca: *Programar*, *Iniciar*, *Nuevo punto / Finalizar* o *Agregar nota*.
    - Debajo, los operativos de los próximos días y el historial.
-2. **Programar / editar**
-   - Fecha de servicio, hora de inicio y hora de fin (formato de 24 horas). El turno no se elige: se muestra calculado al escribir la hora de inicio, junto con el día y la hora reales ("MADRUGADA · empieza el sáb 18/10 a las 02:00").
-   - Tipos de operativo, como casillas para marcar.
-   - Nombre del plan y lugar programado.
-   - Jefe: grado (lista desplegable), nombres y celular.
-   - Fuerzas propias, fuerzas de apoyo y unidades móviles, con campos numéricos que tengan botones − y +.
-   - Solo muestra editables los campos que permite el estado (RN-05).
+2. **Programar / editar**: asistente en **4 pasos**, con la barra de progreso arriba y los botones **Atrás** y **Siguiente** fijos al pie, al alcance del pulgar.
+   1. **Cuándo**: fecha de servicio, hora de inicio y hora de fin (24 horas). El turno no se elige: se muestra calculado al escribir la hora, junto con el día y la hora reales ("MADRUGADA · empieza el sáb 18/10 a las 02:00"). Avisa si la unidad ya tiene un operativo en ese turno.
+   2. **Qué y dónde**: tipos de operativo como botones grandes que se marcan al tocarlos, lugar programado y nombre del plan (opcional).
+   3. **Jefe y fuerzas**: grado (lista desplegable), nombres y celular, que se completan con el jefe del último operativo de la unidad; fuerzas propias, de apoyo y unidades móviles con botones − y +; observaciones.
+   4. **Revisar**: resumen de los tres bloques, cada uno con **Cambiar**, y el botón **Programar operativo**.
+   - Cada paso se valida antes de avanzar; el servidor vuelve a validar todo y, si rechaza algo, el asistente abre el paso con el error.
+   - **Al editar** abre directo en **Revisar**. Los bloques que el estado no permite cambiar (RN-05) muestran "No se puede cambiar"; en curso solo se cambia el bloque 3.
+   - El formulario del ADMIN usa los mismos bloques, pero en una sola página.
 3. **Operativo en curso**
    - Arriba, la ubicación actual en texto con el enlace **Ver en Google Maps**. No hay mapa.
    - Dos botones grandes: **Registrar nuevo punto** y **Finalizar operativo**.

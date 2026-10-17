@@ -58,12 +58,19 @@ if ($actual !== null) {
             $hora_inicio = formatear_hora($sugerida);
         }
     }
+    // El jefe suele repetirse: se completa con el del último operativo de la unidad.
+    $ultimo_jefe = consultar(
+        'SELECT jefe_grado, jefe_nombres, jefe_celular FROM operativos
+         WHERE unidad_id = :unidad_id ORDER BY creado_en DESC, id DESC LIMIT 1',
+        ['unidad_id' => $unidad_id],
+    )->fetch() ?: ['jefe_grado' => '', 'jefe_nombres' => '', 'jefe_celular' => ''];
     $valores = [
         'fecha_servicio' => $fecha, 'hora_inicio' => $hora_inicio, 'hora_fin' => '', 'tipos' => [],
-        'nombre_plan' => '', 'lugar_programado' => '', 'jefe_grado' => '', 'jefe_nombres' => '', 'jefe_celular' => '',
+        'nombre_plan' => '', 'lugar_programado' => '',
         'fuerzas_propias' => 1, 'fuerzas_apoyo' => 0, 'unidades_moviles' => 0, 'observaciones' => '',
-    ];
+    ] + $ultimo_jefe;
 }
+$jefe_sugerido = $actual === null && $valores['jefe_nombres'] !== '';
 
 $errores = [];
 if (es_post()) {
@@ -168,48 +175,67 @@ if (es_post()) {
     }
 }
 
+// Asistente por pasos (docs/04): 1 Cuándo · 2 Qué y dónde · 3 Jefe y fuerzas · 4 Revisar.
+const PASO_DE_CAMPO = [
+    'fecha_servicio' => 1, 'hora_inicio' => 1, 'hora_fin' => 1,
+    'tipos' => 2, 'nombre_plan' => 2, 'lugar_programado' => 2,
+    'jefe_grado' => 3, 'jefe_nombres' => 3, 'jefe_celular' => 3,
+    'fuerzas_propias' => 3, 'fuerzas_apoyo' => 3, 'unidades_moviles' => 3, 'observaciones' => 3,
+];
+$pasos_con_error = array_intersect_key(PASO_DE_CAMPO, $errores);
+$paso_inicial = match (true) {
+    $pasos_con_error !== [] => min($pasos_con_error),
+    $actual !== null        => 4,
+    default                 => 1,
+};
+$pasos_editables = array_values(array_unique(array_map(
+    static fn (string $campo): int => PASO_DE_CAMPO[$campo],
+    array_values(array_intersect(array_keys(PASO_DE_CAMPO), $editables)),
+)));
+
+// Turnos que la unidad ya tiene programados, para avisar en el paso 1 sin esperar al servidor (RN-01).
+$ocupados = array_map(
+    static fn (array $fila): string => $fila['fecha_servicio'] . '|' . $fila['turno'],
+    consultar(
+        'SELECT fecha_servicio, turno FROM operativos WHERE unidad_id = :unidad_id AND fecha_servicio >= :desde AND id <> :id',
+        ['unidad_id' => $unidad_id, 'desde' => $vigente, 'id' => $id ?? 0],
+    )->fetchAll(),
+);
+
 $tipos_formulario = obtener_tipos_para_formulario(array_map('intval', (array) $valores['tipos']));
 $titulo = $actual === null ? 'Programar operativo' : 'Editar operativo';
 $deshabilitado = static fn (string $campo): string => $editable($campo) ? '' : ' disabled';
+$fecha_minima = $vigente;
+$scripts = ['assets/js/programacion.js'];
 require RUTA_APP . '/vistas/cabecera.php';
 ?>
-<nav aria-label="Ruta de navegación">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="<?= e(armar_url()) ?>">Mis operativos</a></li>
-        <?php if ($actual !== null): ?>
-            <li class="breadcrumb-item"><a href="<?= e(armar_url('operativos/ver', ['id' => $id])) ?>">Operativo</a></li>
-        <?php endif; ?>
-        <li class="breadcrumb-item active" aria-current="page"><?= e($actual === null ? 'Programar' : 'Editar') ?></li>
-    </ol>
-</nav>
-<h1 class="h4 mb-3"><?= e($titulo) ?></h1>
-
-<?php if ($actual !== null && !$editable('hora_inicio')): ?>
-    <div class="alert alert-info py-2 formulario-angosto">
-        <i class="bi bi-lock"></i>
-        <?= $actual['estado'] === 'EN_CURSO'
-            ? 'El operativo está en curso: solo se pueden cambiar el jefe, las fuerzas, las unidades móviles y las observaciones.'
-            : 'Ya pasó la hora de inicio: la fecha y las horas no se pueden cambiar.' ?>
+<div class="formulario-angosto">
+    <div class="d-flex align-items-center gap-2 mb-2">
+        <h1 class="h4 mb-0 me-auto"><?= e($titulo) ?></h1>
+        <a href="<?= e($actual === null ? armar_url() : armar_url('operativos/ver', ['id' => $id])) ?>" class="btn btn-sm btn-link text-body-secondary">Cancelar</a>
     </div>
-<?php endif; ?>
 
-<form method="post" class="formulario-angosto" novalidate
-      x-data="formularioProgramacion(<?= e(json_encode([
-          'fecha'      => (string) $valores['fecha_servicio'],
-          'horaInicio' => (string) $valores['hora_inicio'],
-          'horaFin'    => (string) $valores['hora_fin'],
-      ])) ?>)">
-    <?= campo_csrf() ?>
+    <?php if ($actual !== null && !$editable('hora_inicio')): ?>
+        <div class="alert alert-info py-2 small">
+            <i class="bi bi-lock"></i>
+            <?= $actual['estado'] === 'EN_CURSO'
+                ? 'El operativo está en curso: solo se pueden cambiar el jefe, las fuerzas, las unidades móviles y las observaciones.'
+                : 'Ya pasó la hora de inicio: la fecha y las horas no se pueden cambiar.' ?>
+        </div>
+    <?php endif; ?>
 
-    <?php $fecha_minima = $vigente; ?>
-    <?php require RUTA_APP . '/vistas/formulario_programacion.php'; ?>
-
-    <div class="d-flex flex-wrap gap-2 mb-4">
-        <button type="submit" class="btn btn-success boton-accion px-4">
-            <i class="bi bi-check-lg"></i> <?= $actual === null ? 'Programar' : 'Guardar cambios' ?>
-        </button>
-        <a href="<?= e($actual === null ? armar_url() : armar_url('operativos/ver', ['id' => $id])) ?>" class="btn btn-outline-secondary boton-accion px-4">Cancelar</a>
-    </div>
-</form>
-
+    <form method="post" novalidate
+          x-data="asistenteProgramacion(<?= e(json_encode([
+              'fecha'          => (string) $valores['fecha_servicio'],
+              'horaInicio'     => (string) $valores['hora_inicio'],
+              'horaFin'        => (string) $valores['hora_fin'],
+              'pasoInicial'    => $paso_inicial,
+              'editando'       => $actual !== null,
+              'pasosEditables' => $pasos_editables,
+              'ocupados'       => $ocupados,
+          ])) ?>)">
+        <?= campo_csrf() ?>
+        <?php require RUTA_APP . '/vistas/asistente_programacion.php'; ?>
+    </form>
+</div>
 <?php require RUTA_APP . '/vistas/pie.php'; ?>

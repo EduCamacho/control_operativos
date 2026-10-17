@@ -206,6 +206,7 @@ $tipos_formulario = obtener_tipos_para_formulario(array_map('intval', (array) $v
 $deshabilitado = static fn (string $campo): string => '';
 $fecha_minima = null;
 $titulo = $actual === null ? 'Programar en nombre de una unidad' : 'Corregir operativo';
+$scripts = ['assets/js/programacion.js'];
 require RUTA_APP . '/vistas/cabecera.php';
 ?>
 <nav aria-label="Ruta de navegación">
