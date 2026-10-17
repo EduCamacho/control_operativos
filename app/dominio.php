@@ -65,6 +65,13 @@ const RANGOS_TURNO = [
     'MADRUGADA' => [0, 6 * 60 - 1],
 ];
 const ORIGENES_UBICACION = ['GPS', 'MANUAL'];
+
+// Resultado del control inopinado (RN-15).
+const RESULTADOS_CONTROL = [
+    'CONFORME'          => 'Conforme',
+    'CON_OBSERVACIONES' => 'Con observaciones',
+    'NO_ENCONTRADO'     => 'No encontrado',
+];
 const MAX_PRECISION_GUARDADA_M = 65535;
 
 const ROLES = ['ADMIN', 'SUPERVISOR', 'UNIDAD'];
@@ -500,6 +507,72 @@ function puede_registrar_punto(array $operativo): bool
 function puede_finalizar(array $operativo): bool
 {
     return $operativo['estado'] === 'EN_CURSO';
+}
+
+/**
+ * Estado de una celda del tablero (unidad × turno). Sin operativo, la celda es
+ * SIN_PROGRAMAR solo cuando ya pasó la última hora de inicio posible del turno;
+ * antes devuelve null porque todavía se puede programar.
+ */
+function calcular_estado_celda(
+    ?array $operativo,
+    string $fecha_servicio,
+    string $turno,
+    DateTimeImmutable $ahora,
+    int $tolerancia_no_iniciado_min,
+    int $tolerancia_sin_cierre_min,
+): ?string {
+    if ($operativo !== null) {
+        return estado_visible($operativo, $ahora, $tolerancia_no_iniciado_min, $tolerancia_sin_cierre_min);
+    }
+    return calcular_rango_turno($fecha_servicio, $turno)['hasta'] < $ahora ? 'SIN_PROGRAMAR' : null;
+}
+
+/**
+ * RN-15: el control se registra sobre operativos del servicio diario vigente.
+ * También sobre uno de un servicio anterior que sigue en curso, porque sigue en el mapa.
+ */
+function operativo_controlable(array $operativo, string $servicio_vigente): bool
+{
+    return $operativo['fecha_servicio'] === $servicio_vigente
+        || ($operativo['estado'] === 'EN_CURSO' && $operativo['fecha_servicio'] < $servicio_vigente);
+}
+
+/**
+ * Resultado y observación del control (RN-15). La observación es obligatoria
+ * salvo cuando el resultado es CONFORME.
+ *
+ * @return array{datos: array<string, mixed>, errores: array<string, string>}
+ */
+function validar_control(array $entrada): array
+{
+    $datos = [];
+    $errores = [];
+
+    $resultado = $entrada['resultado'] ?? null;
+    if (!is_string($resultado) || !array_key_exists($resultado, RESULTADOS_CONTROL)) {
+        $errores['resultado'] = 'Elija el resultado del control.';
+    } else {
+        $datos['resultado'] = $resultado;
+    }
+
+    $observacion = trim((string) ($entrada['observacion'] ?? ''));
+    if (mb_strlen($observacion) > 5000) {
+        $errores['observacion'] = 'La observación admite hasta 5000 caracteres.';
+    } elseif ($observacion === '' && $resultado !== null && $resultado !== 'CONFORME' && isset($datos['resultado'])) {
+        $errores['observacion'] = 'Describa lo observado.';
+    } else {
+        $datos['observacion'] = $observacion === '' ? null : $observacion;
+    }
+
+    $id_envio = $entrada['id_envio'] ?? null;
+    if (!is_string($id_envio) || !preg_match('/^[A-Za-z0-9-]{8,36}$/', $id_envio)) {
+        $errores['id_envio'] = 'Falta el identificador del envío.';
+    } else {
+        $datos['id_envio'] = $id_envio;
+    }
+
+    return ['datos' => $datos, 'errores' => $errores];
 }
 
 /** La unidad solo puede agregar la nota si falta; una vez guardada la cambia solo ADMIN (RN-13). */

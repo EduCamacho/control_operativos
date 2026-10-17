@@ -25,6 +25,12 @@ if (!puede_eliminar($operativo, obtener_ahora(), false)) {
     guardar_mensaje('warning', 'Ya no se puede eliminar: solo se elimina un operativo programado antes de su hora de inicio.');
     redirigir('operativos/ver', ['id' => $id]);
 }
+// Un control inopinado es evidencia de supervisión: el operativo controlado se conserva.
+if (contar_controles($id) > 0) {
+    $pdo->rollBack();
+    guardar_mensaje('warning', 'No se puede eliminar: el operativo ya tiene un control inopinado registrado.');
+    redirigir('operativos/ver', ['id' => $id]);
+}
 
 $tipos = array_column(obtener_tipos_de_operativo($id), 'nombre');
 consultar("DELETE FROM operativos WHERE id = :id AND unidad_id = :unidad_id AND estado = 'PROGRAMADO'", ['id' => $id, 'unidad_id' => $unidad_id]);

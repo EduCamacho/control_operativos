@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * Lista blanca de rutas: solo se carga un archivo que esté aquí.
- * Las de la fase 3 se agregan al crear cada pantalla.
+ * Cada pantalla nueva se agrega aquí.
  */
 const RUTAS = [
     ''       => 'paginas/inicio.php',
@@ -27,4 +27,11 @@ const RUTAS = [
     'api/ubicaciones'        => 'api/ubicaciones.php',
     'api/finalizar'          => 'api/finalizar.php',
     'api/coordenadas'        => 'api/coordenadas.php',
+
+    // SUPERVISOR (fase 3). Su pantalla principal es '' (supervisor_mapa.php).
+    'supervisor/tablero'     => 'paginas/supervisor_tablero.php',
+    'supervisor/operativo'   => 'paginas/supervisor_operativo.php',
+    'supervisor/control'     => 'paginas/supervisor_control.php',
+    'api/mapa'               => 'api/mapa.php',
+    'api/controles'          => 'api/controles.php',
 ];

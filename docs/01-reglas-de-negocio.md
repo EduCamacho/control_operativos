@@ -86,7 +86,7 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
   - `EN_CURSO`: fuerzas, unidades móviles, jefe y observaciones.
   - `FINALIZADO`: la unidad no puede modificar nada. Solo puede **agregar** la nota informativa si falta (RN-13).
   - ADMIN puede corregir cualquier dato en cualquier estado, eliminar operativos, reabrir uno `FINALIZADO` y programar en nombre de una unidad, también con la hora ya pasada. Cada corrección queda en bitácora con el valor anterior y el nuevo.
-- **RN-06** — La unidad solo puede **eliminar** un operativo `PROGRAMADO` **antes de su hora de inicio programada**. Después queda visible como `NO_INICIADO`, para que no se puedan ocultar incumplimientos.
+- **RN-06** — La unidad solo puede **eliminar** un operativo `PROGRAMADO` **antes de su hora de inicio programada**. Después queda visible como `NO_INICIADO`, para que no se puedan ocultar incumplimientos. Tampoco se puede eliminar un operativo que ya tiene un control inopinado: el control es evidencia de supervisión.
 
 **Ejecución en campo**
 
@@ -123,6 +123,8 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
   - **El GPS del supervisor no es obligatorio**, y a su ubicación no se le aplican el rectángulo de La Libertad ni la advertencia de precisión.
   - El sistema calcula la distancia a la última ubicación que el operativo registró antes del control. Si falta alguna de las dos ubicaciones, la distancia queda vacía.
   - Un operativo puede tener varios controles.
+  - La observación es obligatoria cuando el resultado es `CON_OBSERVACIONES` o `NO_ENCONTRADO`, y opcional cuando es `CONFORME`.
+  - Un reintento sin señal no duplica el control (`id_envio`, RN-11a).
 - **RN-16** — **Visibilidad**: una cuenta UNIDAD solo ve y modifica los operativos de su unidad. El filtro por la unidad de la sesión se aplica **en el servidor**, en cada consulta. SUPERVISOR y ADMIN ven todo.
 - **RN-21** — **El mapa interactivo es solo del SUPERVISOR.** En las vistas de UNIDAD y ADMIN, cada ubicación se muestra como un **enlace a Google Maps** armado con las coordenadas que guardó el sistema: `https://www.google.com/maps/search/?api=1&query=LAT,LNG`. Esos enlaces no consumen la API.
 
@@ -156,3 +158,5 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 - [x] Tolerancias (15 y 30 min) y ventana para iniciar (60 min antes): se configuran en `app/config.php` (`TOLERANCIA_NO_INICIADO_MIN`, `TOLERANCIA_SIN_CIERRE_MIN`, `VENTANA_INICIO_MIN`). No hay pantalla de ADMIN.
 - [x] El grado de Comandante se abrevia CMDTE (confirmado por Eduardo).
 - [x] Servicio diario de 06:00 a 05:59 y rangos horarios de los turnos (confirmado por Eduardo).
+- [ ] Observación del control inopinado opcional cuando el resultado es CONFORME (propuesta de Claude, por validar).
+- [ ] SUPERVISOR y ADMIN ven el tablero y la ficha de cualquier operativo; el mapa y el registro de controles son solo del SUPERVISOR (propuesta de Claude, por validar).

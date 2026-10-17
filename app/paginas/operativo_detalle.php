@@ -25,7 +25,7 @@ $actual = $ubicaciones === [] ? null : $ubicaciones[array_key_last($ubicaciones)
 $resultados = $operativo['estado'] === 'FINALIZADO' ? obtener_resultados($id) : [];
 
 $puede_iniciar = puede_iniciar($operativo, $ahora, VENTANA_INICIO_MIN);
-$puede_eliminar = puede_eliminar($operativo, $ahora, false);
+$puede_eliminar = puede_eliminar($operativo, $ahora, false) && contar_controles($id) === 0;
 $puede_editar = campos_editables($operativo['estado'], paso_hora_inicio($operativo, $ahora)) !== [];
 $desde_inicio = convertir_a_fecha_hora($operativo['inicio_programado'])->modify('-' . VENTANA_INICIO_MIN . ' minutes');
 

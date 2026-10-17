@@ -4,6 +4,7 @@
  *   $titulo    Título de la pestaña.
  *   $sin_menu  true para ocultar el menú (ingreso).
  *   $scripts   Rutas de JS propios de la página (se cargan antes de Alpine).
+ *   $pagina_completa  true para ocupar todo el espacio sin márgenes (mapa).
  *
  * Menú en barra lateral izquierda: fija desde pantallas grandes (lg) y,
  * en el celular, panel deslizable que se abre con el botón ☰ de la barra superior.
@@ -24,8 +25,12 @@ $menu = match ($usuario['rol'] ?? null) {
         'admin/usuarios'  => ['Usuarios', 'people'],
         'admin/catalogos' => ['Catálogos', 'list-check'],
         'admin/bitacora'  => ['Bitácora', 'journal-text'],
+        'supervisor/tablero' => ['Tablero', 'grid-3x3'],
     ],
-    'SUPERVISOR' => ['' => ['Inicio', 'house']],
+    'SUPERVISOR' => [
+        ''                   => ['Mapa', 'map'],
+        'supervisor/tablero' => ['Tablero', 'grid-3x3'],
+    ],
     'UNIDAD'     => [
         ''                     => ['Mis operativos', 'clipboard-check'],
         'operativos/programar' => ['Programar', 'calendar-plus'],
@@ -99,7 +104,7 @@ $menu = match ($usuario['rol'] ?? null) {
             </div>
         </header>
 <?php endif; ?>
-<main class="container-fluid contenedor-pagina py-3">
+<main class="<?= empty($pagina_completa) ? 'container-fluid contenedor-pagina py-3' : 'pagina-completa' ?>">
 <?php foreach (obtener_mensajes() as $mensaje): ?>
     <div class="alert alert-<?= e($mensaje['tipo']) ?> alert-dismissible fade show" role="alert">
         <?= e($mensaje['texto']) ?>

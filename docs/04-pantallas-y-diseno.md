@@ -56,6 +56,10 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
 
 ## Rol SUPERVISOR (General)
 
+- Su pantalla principal es el **mapa**. El menú tiene Mapa y Tablero.
+- El mapa tiene además una **vista de lista** con los mismos filtros, que funciona aunque falte la clave de Google Maps o no cargue el mapa.
+- Si `GOOGLE_MAPS_MAP_ID` está configurado, se usan marcadores avanzados con el nombre corto de la unidad; si no, círculos de color con la etiqueta debajo.
+
 1. **Mapa (pantalla principal)**
    - Ocupa toda la pantalla y muestra la fecha de servicio vigente.
    - Marcadores coloreados por estado, cada uno con el nombre corto de la unidad. Si la última ubicación es manual, el marcador lleva el distintivo "Manual".
@@ -71,8 +75,10 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - Pide una observación.
    - Al guardar, muestra la distancia calculada al último punto del operativo.
 4. **Tablero de cumplimiento**
-   - Matriz de **26 unidades × 4 turnos**, donde cada celda tiene el color de su estado. Las celdas sin operativo son SIN_PROGRAMAR (amarillo).
-   - Permite elegir la fecha.
+   - Matriz de **unidades activas × 4 turnos** de la fecha elegida (por defecto, el servicio diario vigente), con flechas para el día anterior y el siguiente y filtro por división. Cada celda tiene el color de su estado y abre la ficha.
+   - Una celda sin operativo es SIN_PROGRAMAR (amarillo) cuando ya pasó la última hora de inicio posible del turno; antes se muestra "—", porque todavía puede programarse.
+   - Arriba, los totales: ejecutados (en curso, sin cierre y finalizados) sobre el total de turnos, y la cantidad por estado.
+   - También lo ve ADMIN, porque no usa la API de Google Maps.
    - Sirve para ver de un vistazo quién no programó o no inició.
 
 ## Rol ADMIN

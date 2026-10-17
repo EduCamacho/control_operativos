@@ -10,13 +10,16 @@ if ($usuario['rol'] === 'UNIDAD') {
     require RUTA_APP . '/paginas/mis_operativos.php';
     return;
 }
+if ($usuario['rol'] === 'SUPERVISOR') {
+    require RUTA_APP . '/paginas/supervisor_mapa.php';
+    return;
+}
 $ahora = obtener_ahora();
 $fecha_servicio = fecha_servicio_vigente($ahora);
 $fecha_texto = formatear_fecha_larga(validar_fecha($fecha_servicio));
 
 $pantalla = match ($usuario['rol']) {
     'ADMIN'      => 'un resumen del día. Use el menú para administrar unidades, usuarios, catálogos y la bitácora',
-    'SUPERVISOR' => 'el mapa y el tablero de cumplimiento (fase 3)',
 };
 
 $titulo = 'Inicio';

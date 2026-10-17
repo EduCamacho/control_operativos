@@ -130,3 +130,84 @@ function mostrar_ubicacion(array $ubicacion, bool $con_referencia = true): strin
         . ' <a href="' . e($enlace) . '" target="_blank" rel="noopener" class="text-nowrap">'
         . '<i class="bi bi-geo-alt"></i> Ver en Google Maps</a>';
 }
+
+// ---------------------------------------------------------------------------
+// Supervisión (SUPERVISOR y ADMIN ven todas las unidades, RN-16)
+// ---------------------------------------------------------------------------
+
+/** Operativo de cualquier unidad, para SUPERVISOR y ADMIN. */
+function obtener_operativo(int $id): ?array
+{
+    $operativo = consultar(
+        'SELECT ' . COLUMNAS_OPERATIVO . ', un.nombre AS unidad_nombre_completo, un.division
+         FROM operativos o JOIN unidades un ON un.id = o.unidad_id
+         WHERE o.id = :id',
+        ['id' => $id],
+    )->fetch();
+    return $operativo ?: null;
+}
+
+/**
+ * Operativos del mapa: los del servicio diario indicado y los de servicios
+ * anteriores que siguen en curso (no hay duración máxima), con su última ubicación.
+ *
+ * @return list<array>
+ */
+function listar_operativos_para_mapa(string $servicio_diario): array
+{
+    return consultar(
+        'SELECT ' . COLUMNAS_OPERATIVO . ', un.division, un.orden AS unidad_orden,
+                ub.latitud, ub.longitud, ub.precision_m, ub.origen, ub.referencia, ub.registrado_en AS ubicacion_en,
+                (SELECT COUNT(*) FROM operativo_ubicaciones c WHERE c.operativo_id = o.id) AS puntos,
+                (SELECT COUNT(*) FROM controles_inopinados ci WHERE ci.operativo_id = o.id) AS controles
+         FROM operativos o
+         JOIN unidades un ON un.id = o.unidad_id
+         LEFT JOIN operativo_ubicaciones ub ON ub.id = (
+             SELECT id FROM operativo_ubicaciones
+             WHERE operativo_id = o.id
+             ORDER BY registrado_en DESC, id DESC LIMIT 1)
+         WHERE o.fecha_servicio = :servicio
+            OR (o.fecha_servicio BETWEEN :servicio_desde AND :servicio_anterior AND o.estado = \'EN_CURSO\')
+         ORDER BY un.orden, o.inicio_programado',
+        [
+            'servicio'          => $servicio_diario,
+            'servicio_desde'    => validar_fecha($servicio_diario)->modify('-7 days')->format('Y-m-d'),
+            'servicio_anterior' => validar_fecha($servicio_diario)->modify('-1 day')->format('Y-m-d'),
+        ],
+    )->fetchAll();
+}
+
+/** @return list<array> Unidades activas en el orden del tablero. */
+function listar_unidades_activas(): array
+{
+    return consultar('SELECT id, division, nombre, nombre_corto, orden FROM unidades WHERE activo = 1 ORDER BY orden, nombre_corto')->fetchAll();
+}
+
+/** @return list<array> Operativos de todas las unidades en un servicio diario. */
+function listar_operativos_del_servicio(string $servicio_diario): array
+{
+    return consultar(
+        'SELECT ' . COLUMNAS_OPERATIVO . '
+         FROM operativos o JOIN unidades un ON un.id = o.unidad_id
+         WHERE o.fecha_servicio = :servicio',
+        ['servicio' => $servicio_diario],
+    )->fetchAll();
+}
+
+/** @return list<array> Controles inopinados del operativo, del más reciente al más antiguo. */
+function obtener_controles(int $operativo_id): array
+{
+    return consultar(
+        'SELECT ci.id, ci.resultado, ci.observacion, ci.distancia_m, ci.latitud, ci.longitud, ci.origen, ci.registrado_en,
+                u.nombre AS supervisor
+         FROM controles_inopinados ci JOIN usuarios u ON u.id = ci.usuario_id
+         WHERE ci.operativo_id = :id
+         ORDER BY ci.registrado_en DESC, ci.id DESC',
+        ['id' => $operativo_id],
+    )->fetchAll();
+}
+
+function contar_controles(int $operativo_id): int
+{
+    return (int) consultar('SELECT COUNT(*) FROM controles_inopinados WHERE operativo_id = :id', ['id' => $operativo_id])->fetchColumn();
+}

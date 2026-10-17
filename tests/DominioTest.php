@@ -1034,4 +1034,71 @@ final class DominioTest extends TestCase
     {
         $this->assertArrayHasKey('id_envio', validar_ubicacion(self::ubicacion(['id_envio' => "x'; DROP--"]), true, true)['errores']);
     }
+
+    // --- calcular_estado_celda ----------------------------------------------
+
+    private function celda(?array $operativo, string $turno, string $ahora): ?string
+    {
+        return calcular_estado_celda($operativo, '2026-10-17', $turno, self::lima($ahora), self::TOLERANCIA_NO_INICIADO, self::TOLERANCIA_SIN_CIERRE);
+    }
+
+    public function test_celda_vacia_es_sin_programar_cuando_ya_no_se_puede_programar(): void
+    {
+        $this->assertNull($this->celda(null, 'MANANA', '2026-10-17 11:58:59'));
+        $this->assertNull($this->celda(null, 'MANANA', '2026-10-17 11:59:00'));
+        $this->assertSame('SIN_PROGRAMAR', $this->celda(null, 'MANANA', '2026-10-17 11:59:01'));
+    }
+
+    public function test_celda_vacia_de_madrugada_vence_al_dia_siguiente(): void
+    {
+        $this->assertNull($this->celda(null, 'MADRUGADA', '2026-10-17 23:00:00'));
+        $this->assertSame('SIN_PROGRAMAR', $this->celda(null, 'MADRUGADA', '2026-10-18 06:00:00'));
+    }
+
+    public function test_celda_con_operativo_usa_el_estado_visible(): void
+    {
+        $op = self::operativo('PROGRAMADO', '2026-10-17 16:00:00', '2026-10-17 18:00:00');
+        $this->assertSame('PROGRAMADO', $this->celda($op, 'TARDE', '2026-10-17 15:00:00'));
+        $this->assertSame('NO_INICIADO', $this->celda($op, 'TARDE', '2026-10-17 16:16:00'));
+    }
+
+    // --- operativo_controlable ----------------------------------------------
+
+    public function test_se_controlan_operativos_del_servicio_vigente(): void
+    {
+        $op = ['fecha_servicio' => '2026-10-17', 'estado' => 'FINALIZADO'];
+        $this->assertTrue(operativo_controlable($op, '2026-10-17'));
+        $this->assertFalse(operativo_controlable($op, '2026-10-18'));
+    }
+
+    public function test_se_controla_uno_anterior_que_sigue_en_curso(): void
+    {
+        $this->assertTrue(operativo_controlable(['fecha_servicio' => '2026-10-16', 'estado' => 'EN_CURSO'], '2026-10-17'));
+        $this->assertFalse(operativo_controlable(['fecha_servicio' => '2026-10-18', 'estado' => 'EN_CURSO'], '2026-10-17'));
+    }
+
+    // --- validar_control ----------------------------------------------------
+
+    public function test_control_conforme_sin_observacion(): void
+    {
+        $r = validar_control(['resultado' => 'CONFORME', 'observacion' => '  ', 'id_envio' => 'abcdef012345']);
+        $this->assertSame([], $r['errores']);
+        $this->assertNull($r['datos']['observacion']);
+    }
+
+    public function test_control_con_observaciones_exige_observacion(): void
+    {
+        foreach (['CON_OBSERVACIONES', 'NO_ENCONTRADO'] as $resultado) {
+            $this->assertArrayHasKey('observacion', validar_control(['resultado' => $resultado, 'observacion' => '', 'id_envio' => 'abcdef012345'])['errores'], $resultado);
+        }
+        $r = validar_control(['resultado' => 'NO_ENCONTRADO', 'observacion' => ' No estaban en el punto ', 'id_envio' => 'abcdef012345']);
+        $this->assertSame([], $r['errores']);
+        $this->assertSame('No estaban en el punto', $r['datos']['observacion']);
+    }
+
+    public function test_control_con_errores(): void
+    {
+        $r = validar_control(['resultado' => 'EXCELENTE', 'observacion' => str_repeat('a', 5001)]);
+        $this->assertEqualsCanonicalizing(['resultado', 'observacion', 'id_envio'], array_keys($r['errores']));
+    }
 }
