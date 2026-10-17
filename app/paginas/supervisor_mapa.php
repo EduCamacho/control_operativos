@@ -123,13 +123,14 @@ require RUTA_APP . '/vistas/cabecera.php';
             <template x-for="op in visibles" :key="op.id">
                 <button type="button" class="list-group-item list-group-item-action" @click="abrirFicha(op)">
                     <div class="d-flex flex-wrap align-items-center gap-2">
+                        <!-- Sin el nombre del turno: el horario ya lo dice (y está el filtro de turno). -->
                         <strong class="me-auto" x-text="op.unidad"></strong>
-                        <span class="badge text-bg-light border" x-text="op.turno_etiqueta + (op.servicio_anterior ? ' (servicio anterior)' : '')"></span>
+                        <span class="small fw-semibold" x-text="op.inicio_programado + '–' + op.fin_programado"></span>
                         <span class="badge" :class="config.clases[op.estado]" x-text="op.estado_etiqueta"></span>
                         <span class="badge text-bg-light border border-primary text-primary" x-show="op.pendiente_nota">Sin N.I</span>
+                        <span class="badge text-bg-light border" x-show="op.servicio_anterior">Servicio anterior</span>
                     </div>
                     <div class="small text-body-secondary">
-                        <span x-text="op.inicio_programado + '–' + op.fin_programado"></span> ·
                         <span x-text="op.ubicacion ? op.ubicacion.referencia : 'Lugar programado: ' + op.lugar_programado"></span>
                         <span class="badge text-bg-warning" x-show="op.ubicacion && op.ubicacion.origen === 'MANUAL'">Manual</span>
                     </div>
