@@ -142,23 +142,25 @@ require RUTA_APP . '/vistas/cabecera.php';
                     </h2>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                <div class="list-group list-group-flush lista-estado">
-                    <?php foreach ($listas[$estado] as ['unidad' => $nombre, 'turno' => $turno, 'operativo' => $operativo]): ?>
-                        <?php if ($operativo !== null): ?>
-                            <a class="list-group-item list-group-item-action fila-flex align-items-center gap-2"
-                               href="<?= e(armar_url('supervisor/operativo', ['id' => $operativo['id']])) ?>">
-                                <span class="me-auto"><?= e($nombre) ?></span>
-                                <span class="text-body-secondary small" title="<?= e(obtener_etiqueta_turno($turno)) ?>"><?= e(TURNOS_ABREVIADOS[$turno]) ?></span>
-                                <span class="fw-semibold"><?= e(formatear_hora($operativo['inicio_programado'])) ?></span>
-                                <i class="bi bi-chevron-right text-body-secondary"></i>
-                            </a>
-                        <?php else: ?>
-                            <div class="list-group-item fila-flex align-items-center gap-2">
-                                <span class="me-auto"><?= e($nombre) ?></span>
-                                <span class="text-body-secondary small"><?= e(obtener_etiqueta_turno($turno)) ?></span>
-                            </div>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
+                <div class="modal-body p-0">
+                    <div class="list-group list-group-flush lista-estado">
+                        <?php foreach ($listas[$estado] as ['unidad' => $nombre, 'turno' => $turno, 'operativo' => $operativo]): ?>
+                            <?php if ($operativo !== null): ?>
+                                <a class="list-group-item list-group-item-action fila-flex align-items-center gap-2"
+                                   href="<?= e(armar_url('supervisor/operativo', ['id' => $operativo['id']])) ?>">
+                                    <span class="me-auto"><?= e($nombre) ?></span>
+                                    <span class="text-body-secondary small" title="<?= e(obtener_etiqueta_turno($turno)) ?>"><?= e(TURNOS_ABREVIADOS[$turno]) ?></span>
+                                    <span class="fw-semibold"><?= e(formatear_hora($operativo['inicio_programado'])) ?></span>
+                                    <i class="bi bi-chevron-right text-body-secondary"></i>
+                                </a>
+                            <?php else: ?>
+                                <div class="list-group-item fila-flex align-items-center gap-2">
+                                    <span class="me-auto"><?= e($nombre) ?></span>
+                                    <span class="text-body-secondary small"><?= e(obtener_etiqueta_turno($turno)) ?></span>
+                                </div>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
             </div>
         </div>
