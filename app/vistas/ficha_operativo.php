@@ -2,7 +2,8 @@
 /**
  * Ficha del operativo para SUPERVISOR y ADMIN (docs/04). La usan el panel del
  * mapa (como fragmento HTML), la lista del mapa y el tablero.
- * Espera: $operativo, $tipos, $ubicaciones, $controles, $ahora y $puede_controlar.
+ * Espera: $operativo, $tipos, $ubicaciones, $ahora y $puede_controlar.
+ * Los controles inopinados se ven en la pantalla de registrar control.
  * El recorrido va en data-recorrido para que el mapa lo dibuje.
  */
 declare(strict_types=1);
@@ -86,22 +87,6 @@ $recorrido = array_map(static fn (array $u): array => [
             <dd class="col-8"><?= e(formatear_nota_informativa($operativo['nota_informativa'])) ?></dd>
         <?php endif; ?>
     </dl>
-
-    <?php if ($controles !== []): ?>
-        <h3 class="h6 text-uppercase text-body-secondary mt-3">Controles · <?= count($controles) ?></h3>
-        <ul class="list-group list-group-flush small mb-2">
-            <?php foreach ($controles as $control): ?>
-                <li class="list-group-item px-0">
-                    <span class="badge <?= $control['resultado'] === 'CONFORME' ? 'text-bg-success' : ($control['resultado'] === 'NO_ENCONTRADO' ? 'text-bg-danger' : 'text-bg-warning') ?>">
-                        <?= e(RESULTADOS_CONTROL[$control['resultado']]) ?>
-                    </span>
-                    <?= e(convertir_a_fecha_hora($control['registrado_en'])->format('d/m H:i')) ?> · <?= e($control['supervisor']) ?>
-                    <?php if ($control['distancia_m'] !== null): ?> · a <?= e($control['distancia_m']) ?> m del último punto<?php endif; ?>
-                    <?php if ($control['observacion'] !== null): ?><div class="text-body-secondary"><?= e($control['observacion']) ?></div><?php endif; ?>
-                </li>
-            <?php endforeach; ?>
-        </ul>
-    <?php endif; ?>
 
     <?php if ($ubicaciones !== []): ?>
         <!-- Con el mapa visible, el botón muestra el recorrido sobre el mapa (mapa.js);

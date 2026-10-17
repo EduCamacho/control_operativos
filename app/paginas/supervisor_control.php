@@ -23,6 +23,7 @@ if (!operativo_controlable($operativo, fecha_servicio_vigente($ahora))) {
 
 $ubicaciones = obtener_ubicaciones($id);
 $ultima = $ubicaciones === [] ? null : $ubicaciones[array_key_last($ubicaciones)];
+$controles = obtener_controles($id);
 $configuracion = [
     'operativoId'    => (int) $id,
     'urlEnvio'       => armar_url('api/controles'),
@@ -130,5 +131,24 @@ require RUTA_APP . '/vistas/cabecera.php';
             Guardar control
         </button>
     </form>
+
+    <?php if ($controles !== []): ?>
+        <!-- Los controles se consultan donde se registran (no en la ficha del mapa). -->
+        <div class="card card-body shadow-sm mb-4">
+            <h2 class="h6 titulo-tarjeta"><i class="bi bi-clipboard-check"></i> Controles anteriores · <?= count($controles) ?></h2>
+            <ul class="list-group list-group-flush small">
+                <?php foreach ($controles as $control): ?>
+                    <li class="list-group-item px-0">
+                        <span class="badge <?= $control['resultado'] === 'CONFORME' ? 'text-bg-success' : ($control['resultado'] === 'NO_ENCONTRADO' ? 'text-bg-danger' : 'text-bg-warning') ?>">
+                            <?= e(RESULTADOS_CONTROL[$control['resultado']]) ?>
+                        </span>
+                        <?= e(formatear_hora($control['registrado_en'])) ?> · <?= e($control['supervisor']) ?>
+                        <?php if ($control['distancia_m'] !== null): ?> · a <?= e($control['distancia_m']) ?> m<?php endif; ?>
+                        <?php if ($control['observacion'] !== null): ?><div class="text-body-secondary"><?= e($control['observacion']) ?></div><?php endif; ?>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    <?php endif; ?>
 </div>
 <?php require RUTA_APP . '/vistas/pie.php'; ?>

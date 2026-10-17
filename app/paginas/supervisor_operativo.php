@@ -23,7 +23,6 @@ if ($operativo === null) {
 
 $tipos = obtener_tipos_de_operativo($id);
 $ubicaciones = obtener_ubicaciones($id);
-$controles = obtener_controles($id);
 $puede_controlar = $usuario['rol'] === 'SUPERVISOR' && operativo_controlable($operativo, fecha_servicio_vigente($ahora));
 
 if ($es_fragmento) {
