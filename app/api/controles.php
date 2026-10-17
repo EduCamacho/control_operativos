@@ -39,7 +39,7 @@ $anterior = consultar(
     ['id_envio' => $control['id_envio'], 'operativo_id' => $operativo_id],
 )->fetch();
 if ($anterior) {
-    responder_json(['ok' => true, 'repetido' => true, 'distancia_m' => $anterior['distancia_m'] === null ? null : (int) $anterior['distancia_m']]);
+    responder_json(['ok' => true, 'repetido' => true, 'distancia_m' => $anterior['distancia_m'] === null ? null : (int) $anterior['distancia_m'], 'control' => presentar_control(obtener_control_por_envio($control['id_envio']))]);
 }
 
 $operativo = obtener_operativo($operativo_id);
@@ -75,7 +75,7 @@ try {
     );
 } catch (PDOException $error) {
     if (es_error_duplicado($error)) {
-        responder_json(['ok' => true, 'repetido' => true, 'distancia_m' => $distancia]);
+        responder_json(['ok' => true, 'repetido' => true, 'distancia_m' => $distancia, 'control' => presentar_control(obtener_control_por_envio($control['id_envio']))]);
     }
     throw $error;
 }
@@ -88,4 +88,9 @@ registrar_bitacora('CONTROL', 'operativos', $operativo_id, [
     'origen'      => $ubicacion['origen'],
 ]);
 
-responder_json(['ok' => true, 'distancia_m' => $distancia, 'mensaje' => 'Control registrado.']);
+responder_json([
+    'ok'          => true,
+    'distancia_m' => $distancia,
+    'mensaje'     => 'Control registrado.',
+    'control'     => presentar_control(obtener_control_por_envio($control['id_envio'])),
+]);

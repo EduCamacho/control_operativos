@@ -85,7 +85,7 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - Pide el resultado: CONFORME, CON OBSERVACIONES o NO ENCONTRADO.
    - Pide una observación.
    - Al guardar, muestra la distancia calculada al último punto del operativo.
-   - Al pie, **Controles anteriores** del operativo (resultado, hora, quién y distancia). Los controles se ven aquí, donde se registran, y no en la ficha del mapa.
+   - Al pie, **Controles anteriores** del operativo (resultado, hora, quién y distancia). Los controles se ven aquí, donde se registran, y no en la ficha del mapa. El recién registrado aparece arriba de inmediato, resaltado, sin recargar la página.
 4. **Tablero de cumplimiento**
    - Matriz de **unidades activas × 4 turnos** de la fecha elegida (por defecto, el servicio diario vigente), con flechas para el día anterior y el siguiente y filtro por división. Cada celda tiene el color de su estado y abre la ficha.
    - Una celda sin operativo es SIN_PROGRAMAR (amarillo) cuando ya pasó la última hora de inicio posible del turno; antes se muestra "—", porque todavía puede programarse.

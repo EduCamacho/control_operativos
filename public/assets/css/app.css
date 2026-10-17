@@ -859,3 +859,11 @@
 .fila-flex {
     display: flex;
 }
+
+/* Control recién registrado: resaltado en la lista de controles anteriores. */
+.control-nuevo {
+    background: rgba(var(--color-institucional-rgb), .08);
+    border-radius: .35rem;
+    padding-left: .5rem !important;
+    padding-right: .5rem !important;
+}

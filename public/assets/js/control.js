@@ -17,6 +17,14 @@ document.addEventListener('alpine:init', function () {
             observacion: '',
             errores: {},
             distancia: null,
+            controles: config.controles || [],   // "Controles anteriores", el más reciente primero
+            ultimoId: null,                      // el recién registrado se resalta en la lista
+
+            claseResultado(resultado) {
+                if (resultado === 'CONFORME') return 'text-bg-success';
+                if (resultado === 'NO_ENCONTRADO') return 'text-bg-danger';
+                return 'text-bg-warning';
+            },
             idEnvio: window.Envio.crearIdEnvio(),
             envio: null,
 
@@ -99,6 +107,12 @@ document.addEventListener('alpine:init', function () {
                     alTerminar: (resultado) => {
                         if (resultado.ok) {
                             this.distancia = resultado.datos.distancia_m;
+                            // El control recién guardado aparece arriba de la lista, sin recargar.
+                            const nuevo = resultado.datos.control;
+                            if (nuevo && !this.controles.some((c) => c.id === nuevo.id)) {
+                                this.controles.unshift(nuevo);
+                                this.ultimoId = nuevo.id;
+                            }
                             this.fase = 'hecho';
                         } else if (resultado.estado === 401) {
                             window.location.href = config.urlIngreso;

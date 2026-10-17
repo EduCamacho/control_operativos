@@ -30,6 +30,7 @@ $configuracion = [
     'urlCoordenadas' => armar_url('api/coordenadas'),
     'urlFicha'       => armar_url('supervisor/operativo', ['id' => $id]),
     'urlIngreso'     => armar_url('login'),
+    'controles'      => array_map('presentar_control', $controles),
 ];
 
 $titulo = 'Registrar control';
@@ -132,23 +133,19 @@ require RUTA_APP . '/vistas/cabecera.php';
         </button>
     </form>
 
-    <?php if ($controles !== []): ?>
-        <!-- Los controles se consultan donde se registran (no en la ficha del mapa). -->
-        <div class="card card-body shadow-sm mb-4">
-            <h2 class="h6 titulo-tarjeta"><i class="bi bi-clipboard-check"></i> Controles anteriores · <?= count($controles) ?></h2>
-            <ul class="list-group list-group-flush small">
-                <?php foreach ($controles as $control): ?>
-                    <li class="list-group-item px-0">
-                        <span class="badge <?= $control['resultado'] === 'CONFORME' ? 'text-bg-success' : ($control['resultado'] === 'NO_ENCONTRADO' ? 'text-bg-danger' : 'text-bg-warning') ?>">
-                            <?= e(RESULTADOS_CONTROL[$control['resultado']]) ?>
-                        </span>
-                        <?= e(formatear_hora($control['registrado_en'])) ?> · <?= e($control['supervisor']) ?>
-                        <?php if ($control['distancia_m'] !== null): ?> · a <?= e($control['distancia_m']) ?> m<?php endif; ?>
-                        <?php if ($control['observacion'] !== null): ?><div class="text-body-secondary"><?= e($control['observacion']) ?></div><?php endif; ?>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-    <?php endif; ?>
+    <!-- Los controles se consultan donde se registran (no en la ficha del mapa).
+         El recién guardado se agrega arriba sin recargar (control.js). -->
+    <div class="card card-body shadow-sm mb-4" x-show="controles.length" x-cloak>
+        <h2 class="h6 titulo-tarjeta"><i class="bi bi-clipboard-check"></i> Controles anteriores · <span x-text="controles.length"></span></h2>
+        <ul class="list-group list-group-flush small">
+            <template x-for="c in controles" :key="c.id">
+                <li class="list-group-item px-0" :class="c.id === ultimoId && 'control-nuevo'">
+                    <span class="badge" :class="claseResultado(c.resultado)" x-text="c.etiqueta"></span>
+                    <span x-text="c.hora + ' · ' + c.supervisor + (c.distancia_m !== null ? ' · a ' + c.distancia_m + ' m' : '')"></span>
+                    <div class="text-body-secondary" x-show="c.observacion" x-text="c.observacion"></div>
+                </li>
+            </template>
+        </ul>
+    </div>
 </div>
 <?php require RUTA_APP . '/vistas/pie.php'; ?>

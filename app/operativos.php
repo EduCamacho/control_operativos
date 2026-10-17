@@ -291,3 +291,29 @@ function obtener_cantidades(int $operativo_id): array
     }
     return $cantidades;
 }
+
+/** Control inopinado registrado con un id_envio (para responder al reintento sin duplicarlo). */
+function obtener_control_por_envio(string $id_envio): ?array
+{
+    $fila = consultar(
+        'SELECT ci.id, ci.resultado, ci.observacion, ci.distancia_m, ci.registrado_en, u.nombre AS supervisor
+         FROM controles_inopinados ci JOIN usuarios u ON u.id = ci.usuario_id
+         WHERE ci.id_envio = :id_envio',
+        ['id_envio' => $id_envio],
+    )->fetch();
+    return $fila ?: null;
+}
+
+/** Datos de un control para la lista "Controles anteriores" (se arma en el navegador). */
+function presentar_control(array $control): array
+{
+    return [
+        'id'          => (int) $control['id'],
+        'resultado'   => $control['resultado'],
+        'etiqueta'    => RESULTADOS_CONTROL[$control['resultado']],
+        'hora'        => formatear_hora($control['registrado_en']),
+        'supervisor'  => $control['supervisor'],
+        'distancia_m' => $control['distancia_m'] === null ? null : (int) $control['distancia_m'],
+        'observacion' => $control['observacion'],
+    ];
+}
