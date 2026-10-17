@@ -28,6 +28,7 @@ La Google Maps JS API se carga **solo en las pantallas del SUPERVISOR** (RN-21).
 - Las fechas y horas de los eventos las pone el servidor (RN-11).
 - Cada acción sobre operativos, usuarios o controles se registra en `bitacora`.
 - Los cambios de base de datos van en un archivo nuevo `sql/NNN_descripcion.sql`. Nunca se editan los archivos ya aplicados.
+- En elementos con `x-show` de Alpine no usar las clases `d-flex`, `d-grid`, `d-block`, etc. de Bootstrap (tienen `!important` y el elemento nunca se oculta): usar `.fila-flex` o envolver en otro elemento.
 
 ## Tests
 
