@@ -825,6 +825,28 @@ function validar_clave(string $clave): ?string
     return null;
 }
 
+/**
+ * Cambio de clave por el propio usuario: la nueva debe ser válida, distinta de
+ * la actual y coincidir con la confirmación. La clave actual se verifica aparte
+ * (password_verify), porque necesita la base de datos.
+ *
+ * @return array<string, string> Errores por campo; vacío si es válido.
+ */
+function validar_cambio_clave(string $actual, string $nueva, string $confirmacion): array
+{
+    $errores = [];
+    $error = validar_clave($nueva);
+    if ($error !== null) {
+        $errores['nueva'] = $error;
+    } elseif ($nueva === $actual) {
+        $errores['nueva'] = 'La clave nueva debe ser distinta de la actual.';
+    }
+    if ($confirmacion !== $nueva) {
+        $errores['confirmacion'] = 'La confirmación no coincide con la clave nueva.';
+    }
+    return $errores;
+}
+
 /** Clave que ADMIN entrega al crear una cuenta o resetear la clave (RN-19). */
 function generar_clave_temporal(): string
 {

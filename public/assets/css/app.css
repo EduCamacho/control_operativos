@@ -770,3 +770,15 @@
 .alerta-sistema .swal2-html-container {
     font-size: 1rem;
 }
+
+/* Enlace "Cambiar clave" al pie del menú lateral. */
+.barra-lateral .enlace-cuenta {
+    color: rgba(255, 255, 255, .85);
+    border: 1px solid rgba(255, 255, 255, .25);
+}
+
+.barra-lateral .enlace-cuenta:hover,
+.barra-lateral .enlace-cuenta.active {
+    color: #fff;
+    background: rgba(255, 255, 255, .12);
+}

@@ -88,6 +88,10 @@ $menu = match ($usuario['rol'] ?? null) {
                     <?= e($usuario['unidad_nombre'] ?? $usuario['nombre']) ?>
                     <span class="d-block opacity-75"><?= e($usuario['usuario']) ?> · <?= e($usuario['rol']) ?></span>
                 </div>
+                <a href="<?= e(armar_url('cuenta/clave')) ?>"
+                   class="btn btn-sm w-100 mb-2 enlace-cuenta<?= $ruta_actual === 'cuenta/clave' ? ' active' : '' ?>">
+                    <i class="bi bi-key" aria-hidden="true"></i> Cambiar clave
+                </a>
                 <form method="post" action="<?= e(armar_url('salir')) ?>">
                     <?= campo_csrf() ?>
                     <button type="submit" class="btn btn-outline-light btn-sm w-100">

@@ -6,6 +6,7 @@
 - Botones de acción grandes (mínimo 48 px de alto, de ancho completo en el celular).
 - **Menú en barra lateral izquierda**: fija en pantallas grandes (desde 992 px) y, en el celular, panel deslizable (offcanvas) que se abre con el botón ☰ de la barra superior, para no quitarle pantalla al jefe en campo.
 - Bootstrap 5.3 con tema claro. La tipografía es la del sistema (`system-ui`): carga rápido y se lee bien.
+- **Cambiar clave** (`/cuenta/clave`), para todas las cuentas, con el enlace al pie del menú lateral. Pide la clave actual, la nueva y su confirmación, y ofrece "Cerrar la sesión en los demás dispositivos" (desmarcado por defecto). En la cuenta de una unidad recuerda avisar la clave nueva a quienes la usan.
 - **Color institucional** (`#1f6f50`, el del menú lateral; se define una sola vez en `--color-institucional` de `app.css`) para los botones de acción de los formularios (`.btn-institucional`, `.btn-outline-institucional`) y el foco de los campos. El azul de Bootstrap (`primary`) se reserva para el estado FINALIZADO.
 - Los textos de la interfaz van en español y con la terminología de la PNP (ver 05-glosario).
 

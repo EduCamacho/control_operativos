@@ -9,6 +9,7 @@ const RUTAS = [
     ''       => 'paginas/inicio.php',
     'login'  => 'paginas/login.php',
     'salir'  => 'paginas/salir.php',
+    'cuenta/clave' => 'paginas/cuenta_clave.php',
 
     // ADMIN (fase 1)
     'admin/unidades'         => 'paginas/admin_unidades.php',

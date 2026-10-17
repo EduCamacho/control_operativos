@@ -799,6 +799,24 @@ final class DominioTest extends TestCase
         $this->assertNotNull(validar_clave(str_repeat('a', 73)));
     }
 
+    public function test_cambio_de_clave_valido(): void
+    {
+        $this->assertSame([], validar_cambio_clave('ClaveVieja2026', 'ClaveNueva2026', 'ClaveNueva2026'));
+    }
+
+    public function test_cambio_de_clave_con_errores(): void
+    {
+        $this->assertArrayHasKey('nueva', validar_cambio_clave('ClaveVieja2026', 'corta', 'corta'));
+        $this->assertSame(
+            ['nueva' => 'La clave nueva debe ser distinta de la actual.'],
+            validar_cambio_clave('ClaveVieja2026', 'ClaveVieja2026', 'ClaveVieja2026'),
+        );
+        $this->assertSame(
+            ['confirmacion' => 'La confirmación no coincide con la clave nueva.'],
+            validar_cambio_clave('ClaveVieja2026', 'ClaveNueva2026', 'ClaveNueva2025'),
+        );
+    }
+
     public function test_clave_temporal_sin_caracteres_confusos(): void
     {
         $claves = [];
