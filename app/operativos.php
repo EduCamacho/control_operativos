@@ -115,16 +115,19 @@ function mostrar_estado(string $estado_visible, bool $pendiente_nota = false): s
 }
 
 /** "Av. España · 16:52 · precisión 8 m" con enlace a Google Maps (RN-21). */
-function mostrar_ubicacion(array $ubicacion, bool $con_referencia = true): string
+function mostrar_ubicacion(array $ubicacion, bool $con_referencia = true, bool $con_precision = true): string
 {
     $partes = [];
     if ($con_referencia) {
         $partes[] = e($ubicacion['referencia']);
     }
     $partes[] = e(formatear_hora($ubicacion['registrado_en']));
-    $partes[] = $ubicacion['origen'] === 'MANUAL'
-        ? '<span class="badge text-bg-warning">Manual</span>'
-        : 'precisión ' . e($ubicacion['precision_m'] ?? '?') . ' m';
+    // La precisión se omite donde sobra texto (vistas del General); "Manual" siempre se muestra.
+    if ($ubicacion['origen'] === 'MANUAL') {
+        $partes[] = '<span class="badge text-bg-warning">Manual</span>';
+    } elseif ($con_precision) {
+        $partes[] = 'precisión ' . e($ubicacion['precision_m'] ?? '?') . ' m';
+    }
     $enlace = armar_enlace_google_maps((float) $ubicacion['latitud'], (float) $ubicacion['longitud']);
     return implode(' · ', $partes)
         . ' <a href="' . e($enlace) . '" target="_blank" rel="noopener" class="text-nowrap">'

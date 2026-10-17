@@ -46,7 +46,7 @@ $recorrido = array_map(static fn (array $u): array => [(float) $u['latitud'], (f
     <?php if ($ultima !== null): ?>
         <div class="alert alert-light border py-2 small">
             <div class="text-body-secondary">Posición actual</div>
-            <?= mostrar_ubicacion($ultima) ?>
+            <?= mostrar_ubicacion($ultima, true, false) ?>
         </div>
     <?php else: ?>
         <div class="alert alert-light border py-2 small">
