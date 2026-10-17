@@ -89,7 +89,7 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
 4. **Tablero de cumplimiento** (`/supervisor/tablero`), compacto y con poco texto:
    - **Tablero** y la fecha **‹ Sáb 17/10 ›**: las flechas cambian de día y al tocar la fecha se abre el calendario; **Hoy** aparece solo al ver otro día.
    - Chips de división (**Todas**, DIVOPUS, DUE, DIVINCRI) y **Solo alertas**, que deja solo las unidades con algo pendiente (no iniciado, sin cierre o turno sin programar).
-   - Resumen: barra de avance de **turnos cubiertos** (con al menos un operativo) y las cifras por estado con su punto de color, que hacen de leyenda (en el celular solo el número; el nombre al tocar o pasar el cursor).
+   - Resumen: las cifras por estado con su punto de color, que hacen de leyenda (en el celular solo el número; el nombre al tocar o pasar el cursor).
    - Matriz de unidades activas × turnos (**MAÑ**, **TAR**, **NOC**, **MAD**), con la fila de turnos y la columna de unidades **fijas** al desplazarse. Cada operativo es una píldora del color de su estado con su **hora de inicio** (varias si el turno tiene varios; un punto blanco si le falta la N.I); al tocarla se abre la ficha. Un turno sin operativos es un bloque **amarillo** (sin programar) o **·** (todavía puede programarse).
    - También lo ve ADMIN, porque no usa la API de Google Maps.
 

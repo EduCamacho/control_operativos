@@ -938,15 +938,8 @@
     border-color: var(--bs-danger);
 }
 
-/* Resumen: barra de avance y cifras por estado (hacen de leyenda). */
-.barra-avance {
-    background: var(--color-institucional);
-}
 
-.resumen-tablero .progress {
-    height: .55rem;
-}
-
+/* Resumen del tablero: cifras por estado (hacen de leyenda). */
 .cifras-estado {
     display: flex;
     flex-wrap: wrap;

@@ -38,7 +38,6 @@ foreach (listar_operativos_del_servicio($fecha) as $operativo) {
 $celdas = [];
 $con_alerta = [];
 $totales = array_fill_keys(array_keys(ETIQUETAS_ESTADO), 0);
-$turnos_cubiertos = 0;
 foreach ($unidades as $unidad) {
     foreach (TURNOS as $turno) {
         $operativos = [];
@@ -53,17 +52,13 @@ foreach ($unidades as $unidad) {
         $estado_vacio = $operativos === []
             ? calcular_estado_celda(null, $fecha, $turno, $ahora, TOLERANCIA_NO_INICIADO_MIN, TOLERANCIA_SIN_CIERRE_MIN)
             : null;
-        if ($operativos !== []) {
-            $turnos_cubiertos++;
-        } elseif ($estado_vacio !== null) {
+        if ($estado_vacio !== null) {
             $totales[$estado_vacio]++;
             $con_alerta[$unidad['id']] = true;
         }
         $celdas[$unidad['id']][$turno] = ['operativos' => $operativos, 'estado_vacio' => $estado_vacio];
     }
 }
-$total_turnos = count($unidades) * count(TURNOS);
-$avance = $total_turnos === 0 ? 0 : (int) round($turnos_cubiertos * 100 / $total_turnos);
 $filas = $solo_alertas
     ? array_values(array_filter($unidades, static fn (array $u): bool => isset($con_alerta[$u['id']])))
     : $unidades;
@@ -116,14 +111,8 @@ require RUTA_APP . '/vistas/cabecera.php';
     </a>
 </div>
 
-<!-- Resumen: avance y cifras por estado (que hacen de leyenda) -->
+<!-- Resumen: cifras por estado (hacen de leyenda) -->
 <div class="resumen-tablero mb-3">
-    <div class="d-flex align-items-center gap-2 small mb-2">
-        <div class="progress flex-fill" role="progressbar" aria-label="Turnos cubiertos" aria-valuenow="<?= $avance ?>" aria-valuemin="0" aria-valuemax="100">
-            <div class="progress-bar barra-avance" style="width: <?= $avance ?>%"></div>
-        </div>
-        <span class="text-nowrap"><strong><?= $turnos_cubiertos ?></strong>/<?= $total_turnos ?> turnos</span>
-    </div>
     <div class="cifras-estado">
         <?php foreach (['EN_CURSO', 'SIN_CIERRE', 'NO_INICIADO', 'PROGRAMADO', 'FINALIZADO', 'SIN_PROGRAMAR'] as $estado): ?>
             <span class="cifra-estado" title="<?= e(obtener_etiqueta_estado($estado)) ?>">
