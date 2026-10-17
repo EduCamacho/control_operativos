@@ -41,7 +41,7 @@ erDiagram
 - **Origen de la ubicación** (RN-09): `operativo_ubicaciones.origen` y `controles_inopinados.origen`, como `ENUM('GPS','MANUAL')`. Se agregan con `sql/003`. Las filas existentes quedan como `GPS`.
 - **Envíos sin duplicar** (RN-11a): `operativo_ubicaciones.id_envio` (único) lo genera el celular en cada captura. Si se corta la señal después de que el servidor guardó el punto, el reintento trae el mismo `id_envio` y se responde éxito sin duplicarlo. Se agrega con `sql/004`. El cierre es idempotente por estado: si el operativo ya está `FINALIZADO`, el reintento responde éxito.
 - **Controles sin duplicar**: `controles_inopinados.id_envio` (único), igual que en las ubicaciones. Se agrega con `sql/005`.
-- **Coordenadas del lugar programado**: `operativos.lugar_latitud` y `lugar_longitud`, `DECIMAL(10,7) NULL`. Se agregan con `sql/006`.
+- **Coordenadas del lugar programado**: `operativos.lugar_latitud` y `lugar_longitud`, `DECIMAL(10,7) NULL`. Se agregan con `sql/006`. La aplicación las exige al programar; la columna admite NULL solo por los operativos creados antes de `006`.
 - **Sin nombre del plan**: la columna `operativos.nombre_plan` se eliminó con `sql/007` (el campo dejó de pedirse al programar).
 - **Grado del jefe**: lista fija en la constante `GRADOS` de `app/dominio.php`. No se crea una tabla, porque no cambia. Se sigue guardando en `jefe_grado VARCHAR(30)`.
 - **Cierre de sesiones** (RN-19): `usuarios.version_sesion` (entero) se incrementa al resetear la clave o desactivar la cuenta. Cada petición compara el valor guardado en la sesión con el de la base de datos y cierra la sesión si no coinciden. Se agrega con `sql/003`.

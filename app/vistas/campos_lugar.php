@@ -1,6 +1,7 @@
 <?php
 /**
- * Bloque "Lugar del operativo": lugar programado y sus coordenadas (opcionales),
+ * Bloque "Lugar del operativo": lugar programado y sus coordenadas (obligatorias:
+ * ubican el operativo en el mapa antes de iniciarse),
  * con el botón para buscarlo en Google Maps y copiar las coordenadas.
  * Espera $valores, $errores y $deshabilitado.
  */
@@ -14,14 +15,14 @@ declare(strict_types=1);
     <?= mostrar_error($errores, 'lugar_programado') ?>
 </div>
 <div class="mb-1" x-data="coordenadasLugar(<?= e(json_encode(['url' => armar_url('api/coordenadas'), 'texto' => (string) ($valores['lugar_coordenadas'] ?? '')])) ?>)">
-    <label for="lugar_coordenadas" class="form-label">Coordenadas del lugar <span class="text-body-secondary">(opcional)</span></label>
+    <label for="lugar_coordenadas" class="form-label">Coordenadas del lugar</label>
     <?php $coordenadas_bloqueadas = $deshabilitado('lugar_coordenadas') !== ''; ?>
     <!-- El campo es lo principal; el botón de Google Maps va pegado a su derecha como ayuda. -->
     <div class="input-group input-group-lg has-validation">
         <input type="text" id="lugar_coordenadas" name="lugar_coordenadas" x-model="texto" inputmode="decimal" autocomplete="off"
                @paste="$nextTick(() => analizar())" @change="analizar()" :data-valido="estado === 'error' ? 'false' : 'true'"
                :class="{ 'is-invalid': estado === 'error', 'is-valid': estado === 'ok' }"
-               class="form-control<?= clase_error($errores, 'lugar_coordenadas') ?>" value="<?= e($valores['lugar_coordenadas'] ?? '') ?>"
+               required class="form-control<?= clase_error($errores, 'lugar_coordenadas') ?>" value="<?= e($valores['lugar_coordenadas'] ?? '') ?>"
                placeholder="Pegue aquí: -8.1116, -79.0288"<?= $deshabilitado('lugar_coordenadas') ?>
                <?= $coordenadas_bloqueadas ? '' : 'aria-describedby="ayuda-coordenadas"' ?>>
         <?php if (!$coordenadas_bloqueadas): ?>

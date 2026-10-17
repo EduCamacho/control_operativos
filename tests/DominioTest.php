@@ -623,6 +623,7 @@ final class DominioTest extends TestCase
         return [
             'tipos'            => ['1', '3'],
             'lugar_programado' => 'Av. España con Jr. Grau',
+            'lugar_coordenadas' => '-8.1116, -79.0288',
             'jefe_grado'       => 'CAP',
             'jefe_nombres'     => 'Juan Pérez Rodríguez',
             'jefe_celular'     => '987 654 321',
@@ -643,12 +644,18 @@ final class DominioTest extends TestCase
         $this->assertNull($r['datos']['observaciones']);
     }
 
-    public function test_coordenadas_del_lugar_son_opcionales(): void
+    public function test_coordenadas_del_lugar_son_obligatorias(): void
     {
         $r = validar_programacion(['lugar_coordenadas' => '  '] + self::entrada_valida(), [1, 2, 3]);
-        $this->assertSame([], $r['errores']);
-        $this->assertNull($r['datos']['lugar_latitud']);
-        $this->assertNull($r['datos']['lugar_longitud']);
+        $this->assertArrayHasKey('lugar_coordenadas', $r['errores']);
+        $this->assertArrayNotHasKey('lugar_latitud', $r['datos']);
+    }
+
+    public function test_programacion_valida_guarda_las_coordenadas_del_lugar(): void
+    {
+        $r = validar_programacion(self::entrada_valida(), [1, 2, 3]);
+        $this->assertSame(-8.1116, $r['datos']['lugar_latitud']);
+        $this->assertSame(-79.0288, $r['datos']['lugar_longitud']);
     }
 
     public function test_coordenadas_del_lugar_pegadas_de_google_maps(): void

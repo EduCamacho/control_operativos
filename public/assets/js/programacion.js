@@ -207,7 +207,10 @@
                         if (!this.$root.querySelector('[name="tipos[]"]:checked')) return this.fallar('Marque al menos un tipo de operativo.');
                         if (this.campo('lugar_programado').value.trim() === '') return this.fallar('Indique el lugar programado.', 'lugar_programado');
                         const coordenadas = this.campo('lugar_coordenadas');
-                        if (coordenadas && coordenadas.dataset.valido === 'false') return this.fallar('Revise las coordenadas del lugar o déjelas vacías.', 'lugar_coordenadas');
+                        if (coordenadas && !coordenadas.disabled) {
+                            if (coordenadas.value.trim() === '') return this.fallar('Pegue las coordenadas del lugar. Toque Buscar para obtenerlas en Google Maps.', 'lugar_coordenadas');
+                            if (coordenadas.dataset.valido === 'false') return this.fallar('Revise las coordenadas del lugar.', 'lugar_coordenadas');
+                        }
                     }
                     if (paso === 3 && this.activo('jefe_grado')) {
                         if (this.campo('jefe_grado').value === '') return this.fallar('Elija el grado del jefe.', 'jefe_grado');

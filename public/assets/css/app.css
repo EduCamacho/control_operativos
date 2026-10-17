@@ -436,3 +436,21 @@
     font-weight: 600;
     margin-right: .15rem;
 }
+
+/* Marcador en el lugar programado (operativo aún sin puntos): fondo blanco y borde
+   punteado del color del estado, para no confundirlo con una posición real. */
+.marcador-operativo.marcador-programado {
+    background: #fff;
+    color: var(--color-marcador);
+    border: 2px dashed var(--color-marcador);
+}
+
+.marcador-operativo.marcador-programado::after {
+    border-top-color: var(--color-marcador);
+}
+
+.mapa-punto-programado {
+    background: #fff;
+    border: 2px dashed var(--bs-secondary-color);
+    box-shadow: none;
+}

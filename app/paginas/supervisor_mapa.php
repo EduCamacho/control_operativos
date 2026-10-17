@@ -102,6 +102,7 @@ require RUTA_APP . '/vistas/cabecera.php';
             <template x-for="(color, estado) in config.colores" :key="estado">
                 <div><span class="mapa-punto" :style="'background:' + color"></span> <span x-text="etiquetaEstado(estado)"></span></div>
             </template>
+            <div class="border-top mt-1 pt-1"><span class="mapa-punto mapa-punto-programado"></span> Lugar programado (sin iniciar)</div>
         </div>
     </div>
 
@@ -119,7 +120,7 @@ require RUTA_APP . '/vistas/cabecera.php';
                     </div>
                     <div class="small text-body-secondary">
                         <span x-text="op.inicio_programado + '–' + op.fin_programado"></span> ·
-                        <span x-text="op.ubicacion ? op.ubicacion.referencia + ' · ' + op.ubicacion.hace : op.lugar_programado"></span>
+                        <span x-text="op.ubicacion ? op.ubicacion.referencia + ' · ' + op.ubicacion.hace : 'Lugar programado: ' + op.lugar_programado"></span>
                         <span class="badge text-bg-warning" x-show="op.ubicacion && op.ubicacion.origen === 'MANUAL'">Manual</span>
                     </div>
                 </button>

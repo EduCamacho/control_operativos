@@ -683,20 +683,19 @@ function validar_programacion(array $entrada, array $ids_tipos_activos, ?array $
         }
     }
 
-    // Coordenadas del lugar programado: opcionales, pegadas de Google Maps.
+    // Coordenadas del lugar programado: obligatorias (ubican el operativo en el mapa
+    // antes de iniciarse), pegadas de Google Maps.
     if (in_array('lugar_coordenadas', $campos, true)) {
         $texto_coordenadas = $texto('lugar_coordenadas');
-        $datos['lugar_latitud'] = null;
-        $datos['lugar_longitud'] = null;
-        if ($texto_coordenadas !== '') {
-            $coordenadas = parsear_coordenadas($texto_coordenadas);
-            if ($coordenadas === null) {
-                $errores['lugar_coordenadas'] = 'No se reconocen las coordenadas. Cópielas de Google Maps (por ejemplo: -8.1116, -79.0288).';
-            } elseif (!dentro_de_la_libertad($coordenadas[0], $coordenadas[1])) {
-                $errores['lugar_coordenadas'] = 'Esas coordenadas están fuera de La Libertad. Revise que las copió bien.';
-            } else {
-                [$datos['lugar_latitud'], $datos['lugar_longitud']] = $coordenadas;
-            }
+        $coordenadas = $texto_coordenadas === '' ? null : parsear_coordenadas($texto_coordenadas);
+        if ($texto_coordenadas === '') {
+            $errores['lugar_coordenadas'] = 'Pegue las coordenadas del lugar (toque Buscar para obtenerlas en Google Maps).';
+        } elseif ($coordenadas === null) {
+            $errores['lugar_coordenadas'] = 'No se reconocen las coordenadas. Cópielas de Google Maps (por ejemplo: -8.1116, -79.0288).';
+        } elseif (!dentro_de_la_libertad($coordenadas[0], $coordenadas[1])) {
+            $errores['lugar_coordenadas'] = 'Esas coordenadas están fuera de La Libertad. Revise que las copió bien.';
+        } else {
+            [$datos['lugar_latitud'], $datos['lugar_longitud']] = $coordenadas;
         }
     }
 

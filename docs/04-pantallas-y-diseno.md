@@ -34,7 +34,7 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - Debajo, los operativos de los próximos días y el historial.
 2. **Programar / editar**: asistente en **4 pasos**, con la barra de progreso arriba y los botones **Atrás** y **Siguiente** fijos al pie, al alcance del pulgar.
    1. **Cuándo**: fecha de servicio, hora de inicio y hora de fin (24 horas). El turno no se elige: se muestra calculado al escribir la hora, junto con el día y la hora reales ("MADRUGADA · empieza el sáb 18/10 a las 02:00"). Avisa si la unidad ya tiene un operativo en ese turno.
-   2. **Qué y dónde**: arriba, los tipos de operativo como casillas (fila completa tocable, una columna en el celular y dos en la PC); debajo, la tarjeta destacada **¿Dónde será el operativo?** con la dirección o referencia y las **coordenadas del lugar** (opcionales: el campo lleva pegado a su derecha el botón **Buscar**, que abre Google Maps con el lugar escrito; debajo, los 3 pasos: buscar, mantener presionado el punto, copiar y pegar).
+   2. **Qué y dónde**: arriba, los tipos de operativo como casillas (fila completa tocable, una columna en el celular y dos en la PC); debajo, la tarjeta destacada **¿Dónde será el operativo?** con la dirección o referencia y las **coordenadas del lugar** (obligatorias: el campo lleva pegado a su derecha el botón **Buscar**, que abre Google Maps con el lugar escrito; debajo, los 3 pasos: buscar, mantener presionado el punto, copiar y pegar).
    3. **Jefe y fuerzas**: grado (lista desplegable), nombres y celular, que se completan con el jefe del último operativo de la unidad; fuerzas propias, de apoyo y unidades móviles con botones − y +; observaciones.
    4. **Revisar**: resumen de los tres bloques, cada uno con **Cambiar**, y el botón **Programar operativo**.
    - Cada paso se valida antes de avanzar; el servidor vuelve a validar todo y, si rechaza algo, el asistente abre el paso con el error.
@@ -65,6 +65,7 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
 1. **Mapa (pantalla principal)**
    - Ocupa toda la pantalla y muestra la fecha de servicio vigente.
    - Marcadores coloreados por estado, cada uno con el nombre corto de la unidad. Si la última ubicación es manual, el marcador lleva el distintivo "Manual".
+   - Los operativos que todavía no registran puntos (programados y no iniciados) se marcan en su **lugar programado**, con un marcador de fondo blanco y borde punteado del color de su estado, para no confundirlos con una posición real. La leyenda lo explica.
    - Filtros por turno y por división. Los FINALIZADOS se pueden mostrar u ocultar.
    - Se actualiza cada 30 s e indica "Actualizado hace X s".
    - Una **barra de alertas** muestra cuántos operativos están NO_INICIADO y SIN_CIERRE. Al tocarla, despliega la lista con el lugar programado, porque los NO_INICIADO aún no tienen ubicación.
