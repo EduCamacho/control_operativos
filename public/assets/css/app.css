@@ -9,6 +9,34 @@
     --color-institucional-claro: #8fbfac;    /* borde de los campos con foco */
     --color-institucional-rgb: 31, 111, 80;
     --color-naranja: #fd7e14;
+
+    /* Enlaces en el verde institucional en vez del azul de Bootstrap. El azul
+       (primary) se reserva para el estado FINALIZADO. */
+    --bs-link-color: var(--color-institucional);
+    --bs-link-color-rgb: var(--color-institucional-rgb);
+    --bs-link-hover-color: var(--color-institucional-oscuro);
+    --bs-link-hover-color-rgb: 24, 90, 65;
+}
+
+/* Otros componentes de Bootstrap que usan azul sin significado de estado. */
+.pagination {
+    --bs-pagination-color: var(--color-institucional);
+    --bs-pagination-hover-color: var(--color-institucional-oscuro);
+    --bs-pagination-focus-color: var(--color-institucional-oscuro);
+    --bs-pagination-focus-box-shadow: 0 0 0 .25rem rgba(var(--color-institucional-rgb), .2);
+    --bs-pagination-active-bg: var(--color-institucional);
+    --bs-pagination-active-border-color: var(--color-institucional);
+}
+
+.list-group {
+    --bs-list-group-active-bg: var(--color-institucional);
+    --bs-list-group-active-border-color: var(--color-institucional);
+}
+
+.nav-tabs .nav-link,
+.nav-link {
+    --bs-nav-link-color: var(--color-institucional);
+    --bs-nav-link-hover-color: var(--color-institucional-oscuro);
 }
 
 .barra-principal {

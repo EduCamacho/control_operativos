@@ -26,21 +26,21 @@ $recorrido = array_map(static fn (array $u): array => [(float) $u['latitud'], (f
 
     <div class="d-grid gap-2 d-sm-flex mb-3">
         <?php if ($ultima !== null): ?>
-            <a class="btn btn-primary boton-accion" target="_blank" rel="noopener"
+            <a class="btn btn-institucional boton-accion" target="_blank" rel="noopener"
                href="<?= e(armar_enlace_como_llegar((float) $ultima['latitud'], (float) $ultima['longitud'])) ?>">
                 <i class="bi bi-sign-turn-right"></i> Cómo llegar
             </a>
         <?php elseif ($operativo['lugar_latitud'] !== null): ?>
-            <a class="btn btn-primary boton-accion" target="_blank" rel="noopener"
+            <a class="btn btn-institucional boton-accion" target="_blank" rel="noopener"
                href="<?= e(armar_enlace_como_llegar((float) $operativo['lugar_latitud'], (float) $operativo['lugar_longitud'])) ?>">
                 <i class="bi bi-sign-turn-right"></i> Cómo llegar al lugar programado
             </a>
         <?php endif; ?>
-        <a class="btn btn-outline-success boton-accion" href="tel:<?= e($operativo['jefe_celular']) ?>">
+        <a class="btn btn-outline-institucional boton-accion" href="tel:<?= e($operativo['jefe_celular']) ?>">
             <i class="bi bi-telephone"></i> Llamar al jefe
         </a>
         <?php if ($puede_controlar): ?>
-            <a class="btn btn-outline-dark boton-accion" href="<?= e(armar_url('supervisor/control', ['id' => $operativo['id']])) ?>">
+            <a class="btn btn-outline-institucional boton-accion" href="<?= e(armar_url('supervisor/control', ['id' => $operativo['id']])) ?>">
                 <i class="bi bi-clipboard-check"></i> Registrar control
             </a>
         <?php endif; ?>

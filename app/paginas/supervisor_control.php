@@ -64,8 +64,8 @@ require RUTA_APP . '/vistas/cabecera.php';
         <p class="mb-2" x-show="distancia !== null">Distancia al último punto del operativo: <strong x-text="textoDistancia"></strong>.</p>
         <p class="mb-2" x-show="distancia === null">Sin distancia: falta su ubicación o la del operativo.</p>
         <div class="d-grid gap-2 d-sm-flex">
-            <a href="<?= e(armar_url()) ?>" class="btn btn-success boton-accion"><i class="bi bi-map"></i> Volver al mapa</a>
-            <a :href="config.urlFicha" class="btn btn-outline-success boton-accion">Ver la ficha</a>
+            <a href="<?= e(armar_url()) ?>" class="btn btn-institucional boton-accion"><i class="bi bi-map"></i> Volver al mapa</a>
+            <a :href="config.urlFicha" class="btn btn-outline-institucional boton-accion">Ver la ficha</a>
         </div>
     </div>
 
@@ -92,7 +92,7 @@ require RUTA_APP . '/vistas/cabecera.php';
                 <label for="coordenadas-pegadas" class="form-label">Pegar coordenadas de Google Maps</label>
                 <div class="input-group">
                     <input type="text" id="coordenadas-pegadas" class="form-control" x-model="textoPegado" placeholder="-8.111600, -79.028800">
-                    <button type="button" class="btn btn-outline-success" @click="usarTextoPegado()">Usar</button>
+                    <button type="button" class="btn btn-outline-institucional" @click="usarTextoPegado()">Usar</button>
                 </div>
                 <div class="text-danger mt-1" x-show="errorManual" x-text="errorManual"></div>
                 <button type="button" class="btn btn-link btn-sm p-0 mt-1" @click="obtenerGps()">Volver a intentar con GPS</button>
@@ -125,7 +125,7 @@ require RUTA_APP . '/vistas/cabecera.php';
         </div>
         <div x-show="errores.general" x-cloak class="alert alert-danger" x-text="errores.general"></div>
 
-        <button type="submit" class="btn btn-dark btn-lg w-100 boton-accion mb-4" :disabled="fase === 'enviando' || fase === 'sin_conexion'">
+        <button type="submit" class="btn btn-institucional btn-lg w-100 boton-accion mb-4" :disabled="fase === 'enviando' || fase === 'sin_conexion'">
             <span x-show="fase === 'enviando'" class="spinner-border spinner-border-sm" role="status"></span>
             Guardar control
         </button>

@@ -80,7 +80,7 @@ require RUTA_APP . '/vistas/cabecera.php';
             <?php endforeach; ?>
         </select>
         <?php if ($fecha !== $vigente): ?>
-            <a class="btn btn-sm btn-outline-primary" href="<?= e($url_fecha($vigente)) ?>">Hoy</a>
+            <a class="btn btn-sm btn-outline-institucional" href="<?= e($url_fecha($vigente)) ?>">Hoy</a>
         <?php endif; ?>
     </form>
 </div>

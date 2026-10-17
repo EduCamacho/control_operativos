@@ -58,10 +58,10 @@ require RUTA_APP . '/vistas/cabecera.php';
             <label class="form-check-label" for="ver-finalizados">Finalizados</label>
         </div>
         <div class="btn-group btn-group-sm" role="group" aria-label="Vista">
-            <button type="button" class="btn" :class="vista === 'mapa' ? 'btn-dark' : 'btn-outline-dark'" @click="cambiarVista('mapa')">
+            <button type="button" class="btn" :class="vista === 'mapa' ? 'btn-institucional' : 'btn-outline-institucional'" @click="cambiarVista('mapa')">
                 <i class="bi bi-map"></i> Mapa
             </button>
-            <button type="button" class="btn" :class="vista === 'lista' ? 'btn-dark' : 'btn-outline-dark'" @click="cambiarVista('lista')">
+            <button type="button" class="btn" :class="vista === 'lista' ? 'btn-institucional' : 'btn-outline-institucional'" @click="cambiarVista('lista')">
                 <i class="bi bi-list-ul"></i> Lista
             </button>
         </div>
@@ -69,7 +69,7 @@ require RUTA_APP . '/vistas/cabecera.php';
 
     <!-- Barra de alertas (RN-14) -->
     <button type="button" class="mapa-alertas btn w-100 rounded-0 text-start d-flex align-items-center gap-2"
-            :class="alertas.length ? 'btn-danger' : 'btn-success'" @click="alertasAbiertas = !alertasAbiertas"
+            :class="alertas.length ? 'btn-danger' : 'btn-institucional'" @click="alertasAbiertas = !alertasAbiertas"
             :aria-expanded="alertasAbiertas">
         <i class="bi" :class="alertas.length ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill'"></i>
         <span class="me-auto" x-show="alertas.length">
@@ -96,7 +96,7 @@ require RUTA_APP . '/vistas/cabecera.php';
         <div class="mapa-aviso position-absolute top-50 start-50 translate-middle text-center p-3" x-show="avisoMapa" x-cloak>
             <i class="bi bi-map display-5 text-body-secondary"></i>
             <p class="mt-2 mb-2" x-text="avisoMapa"></p>
-            <button type="button" class="btn btn-dark" @click="cambiarVista('lista')"><i class="bi bi-list-ul"></i> Ver la lista</button>
+            <button type="button" class="btn btn-institucional" @click="cambiarVista('lista')"><i class="bi bi-list-ul"></i> Ver la lista</button>
         </div>
         <div class="mapa-leyenda position-absolute bottom-0 start-0 m-2 p-2 bg-body rounded shadow-sm small">
             <template x-for="(color, estado) in config.colores" :key="estado">
