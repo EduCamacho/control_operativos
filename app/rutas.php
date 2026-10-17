@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * Lista blanca de rutas: solo se carga un archivo que esté aquí.
- * Las de las fases 2 y 3 se agregan al crear cada pantalla.
+ * Las de la fase 3 se agregan al crear cada pantalla.
  */
 const RUTAS = [
     ''       => 'paginas/inicio.php',
@@ -17,4 +17,14 @@ const RUTAS = [
     'admin/usuarios/editar'  => 'paginas/admin_usuario_formulario.php',
     'admin/catalogos'        => 'paginas/admin_catalogos.php',
     'admin/bitacora'         => 'paginas/admin_bitacora.php',
+
+    // UNIDAD (fase 2). La pantalla principal de la unidad es '' (mis_operativos.php).
+    'operativos/programar'   => 'paginas/operativo_programar.php',
+    'operativos/ver'         => 'paginas/operativo_detalle.php',
+    'operativos/eliminar'    => 'paginas/operativo_eliminar.php',
+    'operativos/finalizar'   => 'paginas/operativo_finalizar.php',
+    'operativos/nota'        => 'paginas/operativo_nota.php',
+    'api/ubicaciones'        => 'api/ubicaciones.php',
+    'api/finalizar'          => 'api/finalizar.php',
+    'api/coordenadas'        => 'api/coordenadas.php',
 ];

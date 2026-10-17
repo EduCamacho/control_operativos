@@ -96,3 +96,33 @@
 .contenedor-pagina {
     max-width: 1200px;
 }
+
+/* Tarjetas de turno (Mis operativos): borde izquierdo con el color del estado. */
+.tarjeta-turno {
+    border-left-width: 5px;
+}
+.tarjeta-sin_programar { border-left-color: var(--bs-warning); }
+.tarjeta-programado { border-left-color: var(--bs-secondary); }
+.tarjeta-en_curso { border-left-color: var(--bs-success); }
+.tarjeta-no_iniciado { border-left-color: var(--bs-danger); }
+.tarjeta-sin_cierre { border-left-color: var(--color-naranja); }
+.tarjeta-finalizado { border-left-color: var(--bs-primary); }
+
+/* El botón de la tarjeta queda por encima del enlace que cubre toda la tarjeta. */
+.tarjeta-turno .card-footer {
+    z-index: 2;
+}
+
+/* Contador − / +: sin flechas del navegador, número centrado. */
+.campo-contador input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+.campo-contador input[type=number]::-webkit-inner-spin-button,
+.campo-contador input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.campo-contador .btn {
+    min-width: 3.25rem;
+}

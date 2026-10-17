@@ -27,6 +27,7 @@ require RUTA_APP . '/bitacora.php';
 require RUTA_APP . '/sesion.php';
 require RUTA_APP . '/autorizacion.php';
 require RUTA_APP . '/formularios.php';
+require RUTA_APP . '/operativos.php';
 
 set_exception_handler(static function (Throwable $error): void {
     error_log((string) $error);
@@ -79,6 +80,36 @@ function obtener_ruta_actual(): string
     }
     $camino = trim($camino, '/');
     return $camino === 'index.php' ? '' : $camino;
+}
+
+/** true si todos los textos (también dentro de listas) son UTF-8 válido. */
+function entrada_es_utf8_valida(array $valores): bool
+{
+    foreach ($valores as $clave => $valor) {
+        if (!mb_check_encoding((string) $clave, 'UTF-8')) {
+            return false;
+        }
+        if (is_array($valor) ? !entrada_es_utf8_valida($valor) : !mb_check_encoding((string) $valor, 'UTF-8')) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/** Cuerpo JSON de la petición (la API recibe JSON desde fetch). */
+function leer_json(): array
+{
+    $datos = json_decode((string) file_get_contents('php://input'), true);
+    return is_array($datos) ? $datos : [];
+}
+
+/** La API solo acepta POST con token CSRF. */
+function requiere_post_api(): void
+{
+    if (!es_post()) {
+        responder_json(['error' => 'Método no permitido.'], 405);
+    }
+    verificar_csrf();
 }
 
 function responder_json(array $datos, int $codigo = 200): never

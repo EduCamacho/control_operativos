@@ -39,6 +39,34 @@ const MAX_FUERZAS = 9999;
 const MAX_CANTIDAD_RESULTADO = 9999;
 const MAX_DIGITOS_NOTA = 20;
 
+// Estados visibles: etiqueta y clase de color (docs/04). SIN_CIERRE usa el naranja propio.
+const ETIQUETAS_ESTADO = [
+    'SIN_PROGRAMAR' => 'Sin programar',
+    'PROGRAMADO'    => 'Programado',
+    'EN_CURSO'      => 'En curso',
+    'NO_INICIADO'   => 'No iniciado',
+    'SIN_CIERRE'    => 'Sin cierre',
+    'FINALIZADO'    => 'Finalizado',
+];
+const CLASES_ESTADO = [
+    'SIN_PROGRAMAR' => 'text-bg-warning',
+    'PROGRAMADO'    => 'text-bg-secondary',
+    'EN_CURSO'      => 'text-bg-success',
+    'NO_INICIADO'   => 'text-bg-danger',
+    'SIN_CIERRE'    => 'bg-naranja',
+    'FINALIZADO'    => 'text-bg-primary',
+];
+
+// Rango de la hora de inicio de cada turno, en minutos desde la medianoche (RN-02).
+const RANGOS_TURNO = [
+    'MANANA'    => [6 * 60, 12 * 60 - 1],
+    'TARDE'     => [12 * 60, 18 * 60 - 1],
+    'NOCHE'     => [18 * 60, 24 * 60 - 1],
+    'MADRUGADA' => [0, 6 * 60 - 1],
+];
+const ORIGENES_UBICACION = ['GPS', 'MANUAL'];
+const MAX_PRECISION_GUARDADA_M = 65535;
+
 const ROLES = ['ADMIN', 'SUPERVISOR', 'UNIDAD'];
 const DIVISIONES = [
     'DIVOPUS'  => 'DIVOPUS Trujillo',
@@ -147,6 +175,34 @@ function calcular_horario_turno(string $fecha_servicio, string $hora_inicio, str
     }
 
     return ['turno' => $turno, 'inicio' => $inicio, 'fin' => $fin];
+}
+
+/**
+ * Primera y última hora de inicio posibles de un turno dentro de un servicio diario.
+ * Sirve para saber si todavía se puede programar ese turno (RN-03) y para sugerir la hora.
+ *
+ * @return array{desde: DateTimeImmutable, hasta: DateTimeImmutable}
+ */
+function calcular_rango_turno(string $fecha_servicio, string $turno): array
+{
+    if (!isset(RANGOS_TURNO[$turno])) {
+        throw new InvalidArgumentException("Turno desconocido: $turno");
+    }
+    $dia = validar_fecha($fecha_servicio);
+    if ($turno === 'MADRUGADA') {
+        $dia = $dia->modify('+1 day');
+    }
+    [$desde, $hasta] = RANGOS_TURNO[$turno];
+    return [
+        'desde' => $dia->setTime(intdiv($desde, 60), $desde % 60),
+        'hasta' => $dia->setTime(intdiv($hasta, 60), $hasta % 60),
+    ];
+}
+
+/** 'HH:MM' de una fecha y hora. */
+function formatear_hora(string|DateTimeInterface $fecha_hora): string
+{
+    return convertir_a_fecha_hora($fecha_hora)->format('H:i');
 }
 
 /** Servicio diario vigente: hoy desde las 06:00, ayer entre las 00:00 y las 05:59. */
@@ -267,6 +323,71 @@ function armar_coordenadas(float $latitud, float $longitud): ?array
     return [round($latitud, 7), round($longitud, 7)];
 }
 
+/**
+ * Valida una ubicación que llega del navegador (RN-08 a RN-10).
+ * Solo se aceptan latitud, longitud, precisión, origen, referencia e id_envio:
+ * la hora la pone el servidor (RN-11).
+ *
+ * @param bool $exigir_la_libertad false para la ubicación del supervisor (RN-15).
+ * @return array{datos: array<string, mixed>, errores: array<string, string>}
+ */
+function validar_ubicacion(array $entrada, bool $exigir_la_libertad, bool $con_referencia): array
+{
+    $datos = [];
+    $errores = [];
+
+    $latitud = filter_var($entrada['latitud'] ?? null, FILTER_VALIDATE_FLOAT);
+    $longitud = filter_var($entrada['longitud'] ?? null, FILTER_VALIDATE_FLOAT);
+    if ($latitud === false || $longitud === false || abs($latitud) > 90 || abs($longitud) > 180) {
+        $errores['ubicacion'] = 'La ubicación no es válida.';
+    } elseif ($exigir_la_libertad && !dentro_de_la_libertad($latitud, $longitud)) {
+        $errores['ubicacion'] = 'La ubicación está fuera de La Libertad. Revise las coordenadas.';
+    } else {
+        $datos['latitud'] = round($latitud, 7);
+        $datos['longitud'] = round($longitud, 7);
+    }
+
+    $origen = $entrada['origen'] ?? null;
+    if (!in_array($origen, ORIGENES_UBICACION, true)) {
+        $errores['origen'] = 'Falta el origen de la ubicación.';
+    } else {
+        $datos['origen'] = $origen;
+    }
+
+    // Las ubicaciones manuales no tienen precisión (RN-09).
+    $precision = $entrada['precision_m'] ?? null;
+    if ($origen === 'MANUAL' || $precision === null || $precision === '') {
+        $datos['precision_m'] = null;
+    } else {
+        $precision = filter_var($precision, FILTER_VALIDATE_FLOAT);
+        if ($precision === false || $precision < 0) {
+            $errores['precision_m'] = 'La precisión no es válida.';
+        } else {
+            $datos['precision_m'] = (int) min(MAX_PRECISION_GUARDADA_M, round($precision));
+        }
+    }
+
+    if ($con_referencia) {
+        $referencia = trim((string) ($entrada['referencia'] ?? ''));
+        if ($referencia === '') {
+            $errores['referencia'] = 'Indique la referencia: calle, avenida o sector.';
+        } elseif (mb_strlen($referencia) > 255) {
+            $errores['referencia'] = 'La referencia admite hasta 255 caracteres.';
+        } else {
+            $datos['referencia'] = $referencia;
+        }
+    }
+
+    $id_envio = $entrada['id_envio'] ?? null;
+    if (!is_string($id_envio) || !preg_match('/^[A-Za-z0-9-]{8,36}$/', $id_envio)) {
+        $errores['id_envio'] = 'Falta el identificador del envío.';
+    } else {
+        $datos['id_envio'] = $id_envio;
+    }
+
+    return ['datos' => $datos, 'errores' => $errores];
+}
+
 /** Distancia en metros con la fórmula de Haversine (RN-15). */
 function distancia_m(float $lat1, float $lng1, float $lat2, float $lng2): int
 {
@@ -327,6 +448,16 @@ function estado_visible(
         }
     }
     return $estado;
+}
+
+function obtener_etiqueta_estado(string $estado): string
+{
+    return ETIQUETAS_ESTADO[$estado] ?? throw new InvalidArgumentException("Estado desconocido: $estado");
+}
+
+function obtener_clase_estado(string $estado): string
+{
+    return CLASES_ESTADO[$estado] ?? throw new InvalidArgumentException("Estado desconocido: $estado");
 }
 
 /** FINALIZADO sin número de nota informativa (RN-13). */

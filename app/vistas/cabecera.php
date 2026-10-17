@@ -3,6 +3,7 @@
  * Inicio del layout. Variables opcionales de la página:
  *   $titulo    Título de la pestaña.
  *   $sin_menu  true para ocultar el menú (ingreso).
+ *   $scripts   Rutas de JS propios de la página (se cargan antes de Alpine).
  *
  * Menú en barra lateral izquierda: fija desde pantallas grandes (lg) y,
  * en el celular, panel deslizable que se abre con el botón ☰ de la barra superior.
@@ -25,7 +26,10 @@ $menu = match ($usuario['rol'] ?? null) {
         'admin/bitacora'  => ['Bitácora', 'journal-text'],
     ],
     'SUPERVISOR' => ['' => ['Inicio', 'house']],
-    'UNIDAD'     => ['' => ['Mis operativos', 'clipboard-check']],
+    'UNIDAD'     => [
+        ''                     => ['Mis operativos', 'clipboard-check'],
+        'operativos/programar' => ['Programar', 'calendar-plus'],
+    ],
     default      => [],
 };
 ?>
@@ -39,6 +43,12 @@ $menu = match ($usuario['rol'] ?? null) {
     <link rel="stylesheet" href="<?= e(armar_url('assets/vendor/bootstrap/bootstrap.min.css')) ?>">
     <link rel="stylesheet" href="<?= e(armar_url('assets/vendor/bootstrap-icons/bootstrap-icons.min.css')) ?>">
     <link rel="stylesheet" href="<?= e(armar_url('assets/css/app.css')) ?>">
+    <?php if ($usuario !== null): ?>
+        <meta name="csrf" content="<?= e(obtener_token_csrf()) ?>">
+    <?php endif; ?>
+    <?php foreach ($scripts ?? [] as $script): // Antes de Alpine, para que registren sus componentes. ?>
+        <script defer src="<?= e(armar_url($script)) ?>"></script>
+    <?php endforeach; ?>
     <script defer src="<?= e(armar_url('assets/vendor/alpinejs/alpine.min.js')) ?>"></script>
 </head>
 <body>

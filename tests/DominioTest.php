@@ -908,4 +908,130 @@ final class DominioTest extends TestCase
     {
         $this->assertSame(['activo' => ['antes' => null, 'despues' => 1]], calcular_cambios([], ['activo' => 1]));
     }
+
+    // --- calcular_rango_turno -----------------------------------------------
+
+    public static function rangos_de_turno(): array
+    {
+        return [
+            ['MANANA', '2026-10-17 06:00:00', '2026-10-17 11:59:00'],
+            ['TARDE', '2026-10-17 12:00:00', '2026-10-17 17:59:00'],
+            ['NOCHE', '2026-10-17 18:00:00', '2026-10-17 23:59:00'],
+            ['MADRUGADA', '2026-10-18 00:00:00', '2026-10-18 05:59:00'],
+        ];
+    }
+
+    #[DataProvider('rangos_de_turno')]
+    public function test_rango_de_inicio_de_cada_turno(string $turno, string $desde, string $hasta): void
+    {
+        $rango = calcular_rango_turno('2026-10-17', $turno);
+        $this->assertSame($desde, $rango['desde']->format(FORMATO_FECHA_HORA));
+        $this->assertSame($hasta, $rango['hasta']->format(FORMATO_FECHA_HORA));
+    }
+
+    public function test_los_limites_del_rango_coinciden_con_clasificar_turno(): void
+    {
+        foreach (TURNOS as $turno) {
+            $rango = calcular_rango_turno('2026-10-17', $turno);
+            $this->assertSame($turno, clasificar_turno($rango['desde']->format('H:i')));
+            $this->assertSame($turno, clasificar_turno($rango['hasta']->format('H:i')));
+            $this->assertEquals($rango['desde'], calcular_horario_turno('2026-10-17', $rango['desde']->format('H:i'), '23:00')['inicio']);
+        }
+    }
+
+    public function test_rango_de_turno_desconocido_lanza_excepcion(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        calcular_rango_turno('2026-10-17', 'MEDIODIA');
+    }
+
+    public function test_formatea_la_hora(): void
+    {
+        $this->assertSame('02:05', formatear_hora('2026-10-18 02:05:59'));
+    }
+
+    // --- etiquetas y colores de estado --------------------------------------
+
+    public function test_cada_estado_visible_tiene_etiqueta_y_color(): void
+    {
+        foreach (['SIN_PROGRAMAR', 'PROGRAMADO', 'EN_CURSO', 'NO_INICIADO', 'SIN_CIERRE', 'FINALIZADO'] as $estado) {
+            $this->assertNotSame('', obtener_etiqueta_estado($estado));
+            $this->assertNotSame('', obtener_clase_estado($estado));
+        }
+        $this->assertSame('bg-naranja', obtener_clase_estado('SIN_CIERRE'));
+        $this->assertSame('text-bg-warning', obtener_clase_estado('SIN_PROGRAMAR'));
+        $this->expectException(InvalidArgumentException::class);
+        obtener_clase_estado('ANULADO');
+    }
+
+    // --- validar_ubicacion --------------------------------------------------
+
+    private static function ubicacion(array $cambios = []): array
+    {
+        return $cambios + [
+            'latitud'     => -8.1116,
+            'longitud'    => -79.0288,
+            'precision_m' => 8.4,
+            'origen'      => 'GPS',
+            'referencia'  => ' Av. España con Jr. Grau ',
+            'id_envio'    => '3f2b8c1e-7a4d-4e1f-9b0a-2c5d6e7f8a9b',
+        ];
+    }
+
+    public function test_ubicacion_gps_valida(): void
+    {
+        $r = validar_ubicacion(self::ubicacion(), true, true);
+        $this->assertSame([], $r['errores']);
+        $this->assertSame(8, $r['datos']['precision_m']);
+        $this->assertSame('Av. España con Jr. Grau', $r['datos']['referencia']);
+    }
+
+    public function test_coordenadas_como_texto_del_formulario(): void
+    {
+        $r = validar_ubicacion(self::ubicacion(['latitud' => '-8.1116', 'longitud' => '-79.0288']), true, true);
+        $this->assertSame([], $r['errores']);
+        $this->assertSame(-8.1116, $r['datos']['latitud']);
+    }
+
+    public function test_ubicacion_manual_no_guarda_precision(): void
+    {
+        $r = validar_ubicacion(self::ubicacion(['origen' => 'MANUAL', 'precision_m' => 25]), true, true);
+        $this->assertSame([], $r['errores']);
+        $this->assertNull($r['datos']['precision_m']);
+    }
+
+    public function test_precision_muy_grande_se_recorta(): void
+    {
+        $r = validar_ubicacion(self::ubicacion(['precision_m' => 120000]), true, true);
+        $this->assertSame(MAX_PRECISION_GUARDADA_M, $r['datos']['precision_m']);
+    }
+
+    public function test_rechaza_ubicacion_fuera_de_la_libertad_para_un_operativo(): void
+    {
+        $r = validar_ubicacion(self::ubicacion(['latitud' => 8.1116, 'longitud' => 79.0288]), true, true);
+        $this->assertArrayHasKey('ubicacion', $r['errores']);
+    }
+
+    public function test_el_supervisor_puede_estar_fuera_del_rectangulo_y_sin_referencia(): void
+    {
+        $r = validar_ubicacion(self::ubicacion(['latitud' => -12.0464, 'longitud' => -77.0428, 'referencia' => '']), false, false);
+        $this->assertSame([], $r['errores']);
+        $this->assertArrayNotHasKey('referencia', $r['datos']);
+    }
+
+    public function test_ubicacion_con_errores(): void
+    {
+        $r = validar_ubicacion(['latitud' => 'abc', 'origen' => 'MAPA', 'precision_m' => -5, 'referencia' => '  '], true, true);
+        $this->assertEqualsCanonicalizing(['ubicacion', 'origen', 'precision_m', 'referencia', 'id_envio'], array_keys($r['errores']));
+    }
+
+    public function test_latitud_imposible_es_error_aunque_no_se_exija_la_libertad(): void
+    {
+        $this->assertArrayHasKey('ubicacion', validar_ubicacion(self::ubicacion(['latitud' => -95]), false, false)['errores']);
+    }
+
+    public function test_id_de_envio_con_caracteres_raros_es_error(): void
+    {
+        $this->assertArrayHasKey('id_envio', validar_ubicacion(self::ubicacion(['id_envio' => "x'; DROP--"]), true, true)['errores']);
+    }
 }

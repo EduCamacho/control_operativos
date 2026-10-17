@@ -34,14 +34,16 @@ control-operativos/
 │   ├── autorizacion.php       # requiere_rol(), unidad_de_sesion()
 │   ├── dominio.php            # funciones puras (ver "Lógica de dominio")
 │   ├── bitacora.php
+│   ├── formularios.php        # ayudas para formularios (errores, marcar, ids de la URL)
+│   ├── operativos.php         # consultas de operativos compartidas por páginas y API
 │   ├── paginas/               # un archivo por pantalla/acción (controlador + vista)
-│   ├── api/                   # endpoints JSON (mapa, ubicaciones)
+│   ├── api/                   # endpoints JSON: ubicaciones, finalizar, coordenadas (y mapa en la fase 3)
 │   ├── vistas/                # layout, parciales
 │   └── almacen/               # sesiones/ (session.save_path propio) y registros/errores.log
 └── public/                    # DOCUMENT ROOT del subdominio
     ├── index.php              # front controller: enruta ?r= o path → app/paginas/*
     ├── .htaccess              # reescritura a index.php, fuerza HTTPS
-    └── assets/ (css, js, img, vendor/)
+    └── assets/ (css, js, img, vendor/)  # js/envio.js (reintento sin conexión), js/ubicacion.js (GPS e ingreso manual)
 ```
 
 En cPanel, crear un subdominio (por ejemplo `operativos.tudominio.com`) con el **document root apuntando a `control-operativos/public`**, de modo que `app/` quede fuera del alcance web.
