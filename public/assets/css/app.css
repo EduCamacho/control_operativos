@@ -373,21 +373,29 @@
     border-color: var(--color-institucional);
 }
 
-/* Tipos de operativo: píldoras pequeñas que se marcan al tocarlas. */
-.boton-tipo {
-    min-height: 36px;
-    display: inline-flex;
+/* Tipos de operativo: casillas con la fila completa tocable (mínimo 44 px). */
+.casilla-tipo {
+    display: flex;
     align-items: center;
-    gap: .3rem;
-    padding: .3rem .85rem;
+    gap: .6rem;
+    min-height: 44px;
+    margin: 0;
+    padding-left: 0;
+    border-bottom: 1px solid var(--bs-border-color-translucent);
 }
 
-.boton-tipo .icono-marcado {
-    display: none;
+.casilla-tipo .form-check-input {
+    float: none;
+    margin: 0;
+    width: 1.3em;
+    height: 1.3em;
+    flex-shrink: 0;
 }
 
-.btn-check:checked + .boton-tipo .icono-marcado {
-    display: inline;
+.casilla-tipo .form-check-label {
+    flex: 1;
+    padding: .55rem 0;
+    cursor: pointer;
 }
 
 /* El lugar es lo principal del paso 2: tarjeta con borde institucional. */
