@@ -29,9 +29,12 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
 ## Rol UNIDAD
 
 1. **Mis operativos (inicio)**
-   - Muestra el servicio diario vigente con **4 tarjetas fijas: MAÑANA, TARDE, NOCHE y MADRUGADA**.
-   - Cada tarjeta tiene su estado y **un solo botón** con la acción que toca: *Programar*, *Iniciar*, *Nuevo punto / Finalizar* o *Agregar nota*.
-   - Debajo, los operativos de los próximos días y el historial.
+   - Encabezado con el nombre de la unidad, la fecha y la hora, y el botón **Programar** a la derecha.
+   - Los **4 turnos** del servicio diario vigente (MAÑANA, TARDE, NOCHE y MADRUGADA), en una columna en el celular y en cuatro en la PC, con el borde izquierdo del color del estado. El **turno actual** se resalta con "● AHORA".
+     - Turno vacío: una sola línea con el rango de inicio y **+ Programar**; si ya no se puede programar, "Sin programar" en amarillo.
+     - Turno programado: horario, lugar, jefe y **un solo botón** con la acción que toca: *Iniciar operativo*, *Nuevo punto / Finalizar* (verde institucional) o *Agregar nota* (contorno).
+   - Si un operativo del servicio anterior sigue en curso, aparece arriba como aviso naranja con su acción.
+   - Debajo, pestañas **Próximos** (con la cantidad) e **Historial**, con los operativos agrupados por día ("Domingo 18/10"). El historial muestra los últimos 7 días con operativos y **Ver más** llega hasta 30.
 2. **Programar / editar**: asistente en **4 pasos**, con la barra de progreso arriba y los botones **Atrás** y **Siguiente** fijos al pie, al alcance del pulgar.
    1. **Cuándo**: fecha de servicio, hora de inicio y hora de fin (24 horas). El turno no se elige: se muestra calculado al escribir la hora, junto con el día y la hora reales ("MADRUGADA · empieza el sáb 18/10 a las 02:00"). Avisa si la unidad ya tiene un operativo en ese turno.
    2. **Qué y dónde**: arriba, los tipos de operativo como casillas (fila completa tocable, una columna en el celular y dos en la PC); debajo, la tarjeta destacada **¿Dónde será el operativo?** con la dirección o referencia y las **coordenadas del lugar** (obligatorias: el campo lleva pegado a su derecha el botón **Buscar**, que abre Google Maps con el lugar escrito; debajo, un recuadro "¿Cómo obtener las coordenadas?" con la lista de 4 pasos: buscar, mantener presionado el punto, copiar y pegar).
