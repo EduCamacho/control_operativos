@@ -939,36 +939,50 @@
 }
 
 
-/* Resumen del tablero: cifras por estado (hacen de leyenda). */
+/* Resumen del tablero: una tarjeta pequeña por estado (hace de leyenda).
+   3 por fila en el celular y 6 en la PC; la franja inferior lleva el color del estado. */
 .cifras-estado {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .35rem .9rem;
-    font-size: .9rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .4rem;
+}
+
+@media (min-width: 768px) {
+    .cifras-estado {
+        grid-template-columns: repeat(6, 1fr);
+    }
 }
 
 .cifra-estado {
-    display: inline-flex;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: .3rem;
+    justify-content: center;
+    padding: .35rem .25rem .5rem;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    text-align: center;
+    line-height: 1.15;
 }
 
-.punto-estado {
-    display: inline-block;
-    width: .8rem;
-    height: .8rem;
-    border-radius: 50%;
+.cifra-estado strong {
+    font-size: 1.25rem;
 }
 
 .etiqueta-estado {
     color: var(--bs-secondary-color);
-    font-size: .8rem;
+    font-size: .72rem;
 }
 
-@media (max-width: 575.98px) {
-    .etiqueta-estado {
-        display: none;
-    }
+.franja-estado {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: .25rem;
 }
 
 /* Matriz con encabezado y columna de unidades fijos al desplazar. */

@@ -111,17 +111,15 @@ require RUTA_APP . '/vistas/cabecera.php';
     </a>
 </div>
 
-<!-- Resumen: cifras por estado (hacen de leyenda) -->
-<div class="resumen-tablero mb-3">
-    <div class="cifras-estado">
-        <?php foreach (['EN_CURSO', 'SIN_CIERRE', 'NO_INICIADO', 'PROGRAMADO', 'FINALIZADO', 'SIN_PROGRAMAR'] as $estado): ?>
-            <span class="cifra-estado" title="<?= e(obtener_etiqueta_estado($estado)) ?>">
-                <span class="punto-estado <?= e(obtener_clase_estado($estado)) ?>"></span>
-                <strong><?= $totales[$estado] ?></strong>
-                <span class="etiqueta-estado"><?= e(obtener_etiqueta_estado($estado)) ?></span>
-            </span>
-        <?php endforeach; ?>
-    </div>
+<!-- Resumen: una tarjeta pequeña por estado (hace de leyenda); 3 por fila en el celular, 6 en la PC -->
+<div class="cifras-estado mb-3">
+    <?php foreach (['EN_CURSO', 'SIN_CIERRE', 'NO_INICIADO', 'PROGRAMADO', 'FINALIZADO', 'SIN_PROGRAMAR'] as $estado): ?>
+        <div class="cifra-estado">
+            <strong><?= $totales[$estado] ?></strong>
+            <span class="etiqueta-estado"><?= e(obtener_etiqueta_estado($estado)) ?></span>
+            <span class="franja-estado <?= e(obtener_clase_estado($estado)) ?>"></span>
+        </div>
+    <?php endforeach; ?>
 </div>
 
 <!-- Matriz: encabezado y columna de unidades fijos -->
