@@ -1,0 +1,13 @@
+# Finales de línea LF en el repositorio y en la copia de trabajo (servidor Linux en cPanel)
+* text=auto eol=lf
+
+# Binarios
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.xlsx binary
+*.woff binary
+*.woff2 binary
