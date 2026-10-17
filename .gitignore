@@ -1,0 +1,18 @@
+# Configuración local con credenciales
+config.php
+app/config.php
+.env
+
+# Dependencias y artefactos locales (PHPUnit solo en local)
+vendor/
+.phpunit.result.cache
+.phpunit.cache/
+
+# Editores y sistema
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Claude Code (ajustes locales)
+.claude/settings.local.json
