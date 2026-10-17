@@ -905,6 +905,25 @@
 }
 
 
+/* --- Usuarios (admin) --- */
+
+/* Cuenta inactiva: la fila se ve atenuada. */
+.usuario-inactivo {
+    opacity: .6;
+}
+
+/* Cuenta creada que nunca ingresó. */
+.acceso-nunca {
+    color: var(--bs-warning-text-emphasis);
+    font-weight: 600;
+}
+
+/* "N unidades sin cuenta": se despliega al tocar. */
+.unidades-sin-cuenta summary {
+    cursor: pointer;
+}
+
+
 /* --- Tablero de cumplimiento (compacto, poco texto) --- */
 
 .selector-fecha {

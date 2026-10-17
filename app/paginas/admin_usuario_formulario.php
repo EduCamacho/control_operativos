@@ -31,6 +31,10 @@ $hay_otro_admin = static fn (int $excepto): bool => (bool) consultar(
 
 $errores = [];
 $valores = $actual ?? ['usuario' => '', 'nombre' => '', 'rol' => 'UNIDAD', 'unidad_id' => null, 'activo' => 1];
+// "Crear cuenta" desde la lista de unidades sin cuenta llega con la unidad ya elegida.
+if ($actual === null && ($unidad_elegida = obtener_id_get('unidad_id')) !== null) {
+    $valores['unidad_id'] = $unidad_elegida;
+}
 
 // La clave generada se muestra una sola vez, después de redirigir (así recargar no la vuelve a generar).
 $clave_entregada = null;
@@ -188,7 +192,7 @@ require RUTA_APP . '/vistas/cabecera.php';
         <select id="rol" name="rol" x-model="rol" class="form-select<?= clase_error($errores, 'rol') ?>"
                 required<?= $es_propia ? ' disabled' : '' ?>>
             <?php foreach (ROLES as $opcion): ?>
-                <option value="<?= e($opcion) ?>"<?= marcar($valores['rol'] === $opcion, 'selected') ?>><?= e($opcion) ?></option>
+                <option value="<?= e($opcion) ?>"<?= marcar($valores['rol'] === $opcion, 'selected') ?>><?= e(obtener_etiqueta_rol($opcion)) ?></option>
             <?php endforeach; ?>
         </select>
         <?php if ($es_propia): ?>

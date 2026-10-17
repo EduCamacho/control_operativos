@@ -66,6 +66,16 @@ final class DominioTest extends TestCase
         obtener_etiqueta_turno('MANANITA');
     }
 
+    public function test_cada_rol_tiene_etiqueta_legible(): void
+    {
+        foreach (ROLES as $rol) {
+            $this->assertNotSame($rol, obtener_etiqueta_rol($rol));
+        }
+        $this->assertSame('Administrador', obtener_etiqueta_rol('ADMIN'));
+        $this->expectException(InvalidArgumentException::class);
+        obtener_etiqueta_rol('GENERAL');
+    }
+
     // --- calcular_horario_turno ---------------------------------------------
 
     public function test_turno_en_el_mismo_dia(): void

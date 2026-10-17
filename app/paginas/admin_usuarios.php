@@ -1,76 +1,119 @@
 <?php
 /**
  * ADMIN: lista de cuentas con su rol, unidad, estado y último acceso (docs/04).
+ * La búsqueda y los chips de rol filtran en el navegador, sin recargar.
+ * Arriba, las unidades activas sin cuenta, cada una con "Crear cuenta".
  */
 declare(strict_types=1);
 
 requiere_rol('ADMIN');
 
 $ahora = obtener_ahora();
-$rol = in_array($_GET['rol'] ?? '', ROLES, true) ? $_GET['rol'] : '';
+$rol_inicial = in_array($_GET['rol'] ?? '', ROLES, true) ? $_GET['rol'] : '';
 
 $usuarios = consultar(
     "SELECT u.id, u.usuario, u.nombre, u.rol, u.activo, u.bloqueado_hasta, u.ultimo_acceso,
             un.nombre_corto AS unidad
      FROM usuarios u
      LEFT JOIN unidades un ON un.id = u.unidad_id
-     WHERE :rol = '' OR u.rol = :rol_filtro
      ORDER BY FIELD(u.rol, 'ADMIN', 'SUPERVISOR', 'UNIDAD'), un.orden, u.usuario",
-    ['rol' => $rol, 'rol_filtro' => $rol],
 )->fetchAll();
 
-$sin_cuenta = (int) consultar(
-    'SELECT COUNT(*) FROM unidades un LEFT JOIN usuarios u ON u.unidad_id = un.id WHERE un.activo = 1 AND u.id IS NULL',
-)->fetchColumn();
+$sin_cuenta = consultar(
+    'SELECT un.id, un.nombre_corto FROM unidades un LEFT JOIN usuarios u ON u.unidad_id = un.id
+     WHERE un.activo = 1 AND u.id IS NULL ORDER BY un.orden',
+)->fetchAll();
+
+// Cantidad por rol, para los chips.
+$por_rol = array_fill_keys(ROLES, 0);
+foreach ($usuarios as $fila) {
+    $por_rol[$fila['rol']]++;
+}
+
+// Lo que la lista muestra (Alpine lo pinta con x-text, que escapa el texto).
+$filas = array_map(static function (array $fila) use ($ahora): array {
+    $bloqueado = cuenta_bloqueada($fila['bloqueado_hasta'], $ahora);
+    return [
+        'id'        => (int) $fila['id'],
+        'url'       => armar_url('admin/usuarios/editar', ['id' => $fila['id']]),
+        'usuario'   => $fila['usuario'],
+        'rol'       => $fila['rol'],
+        'etiqueta'  => obtener_etiqueta_rol($fila['rol']),
+        'detalle'   => $fila['unidad'] ?? $fila['nombre'],
+        'buscar'    => $fila['usuario'] . ' ' . $fila['nombre'] . ' ' . ($fila['unidad'] ?? ''),
+        'activo'    => (bool) $fila['activo'],
+        'bloqueado' => $bloqueado ? 'Bloqueado hasta ' . convertir_a_fecha_hora($fila['bloqueado_hasta'])->format('H:i') : null,
+        'acceso'    => formatear_hace($fila['ultimo_acceso'], $ahora),
+        'nunca'     => $fila['ultimo_acceso'] === null,
+    ];
+}, $usuarios);
 
 $titulo = 'Usuarios';
+$scripts = ['assets/js/usuarios.js'];
 require RUTA_APP . '/vistas/cabecera.php';
 ?>
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-    <h1 class="h4 mb-0">Usuarios <span class="badge text-bg-light"><?= count($usuarios) ?></span></h1>
-    <a href="<?= e(armar_url('admin/usuarios/editar')) ?>" class="btn btn-success boton-accion">
-        <i class="bi bi-person-plus"></i> Nuevo usuario
-    </a>
-</div>
-
-<?php if ($sin_cuenta > 0): ?>
-    <div class="alert alert-warning py-2">
-        <i class="bi bi-exclamation-triangle"></i>
-        <?= $sin_cuenta === 1 ? 'Hay 1 unidad activa sin cuenta.' : "Hay $sin_cuenta unidades activas sin cuenta." ?>
-    </div>
-<?php endif; ?>
-
-<div class="btn-group btn-group-sm flex-wrap mb-3" role="group" aria-label="Filtrar por rol">
-    <a href="<?= e(armar_url('admin/usuarios')) ?>" class="btn btn-outline-secondary<?= $rol === '' ? ' active' : '' ?>">Todos</a>
-    <?php foreach (ROLES as $opcion): ?>
-        <a href="<?= e(armar_url('admin/usuarios', ['rol' => $opcion])) ?>"
-           class="btn btn-outline-secondary<?= $rol === $opcion ? ' active' : '' ?>"><?= e($opcion) ?></a>
-    <?php endforeach; ?>
-</div>
-
-<div class="list-group">
-    <?php foreach ($usuarios as $fila): ?>
-        <?php $bloqueado = cuenta_bloqueada($fila['bloqueado_hasta'], $ahora); ?>
-        <a href="<?= e(armar_url('admin/usuarios/editar', ['id' => $fila['id']])) ?>"
-           class="list-group-item list-group-item-action d-flex flex-wrap align-items-center gap-2<?= $fila['activo'] ? '' : ' list-group-item-light' ?>">
-            <div class="me-auto">
-                <div class="fw-semibold">
-                    <?= e($fila['usuario']) ?>
-                    <span class="badge text-bg-<?= $fila['rol'] === 'ADMIN' ? 'dark' : ($fila['rol'] === 'SUPERVISOR' ? 'primary' : 'light') ?>"><?= e($fila['rol']) ?></span>
-                    <?php if (!$fila['activo']): ?><span class="badge text-bg-secondary">Inactivo</span><?php endif; ?>
-                    <?php if ($bloqueado): ?>
-                        <span class="badge text-bg-danger"><i class="bi bi-lock"></i> Bloqueado hasta <?= e(convertir_a_fecha_hora($fila['bloqueado_hasta'])->format('H:i')) ?></span>
-                    <?php endif; ?>
-                </div>
-                <div class="small text-body-secondary">
-                    <?= e($fila['unidad'] ?? $fila['nombre']) ?> · Último acceso: <?= e(formatear_hace($fila['ultimo_acceso'], $ahora)) ?>
-                </div>
-            </div>
-            <i class="bi bi-chevron-right text-body-secondary"></i>
+<div x-data="listaUsuarios(<?= e(json_encode(['filas' => $filas, 'rol' => $rol_inicial])) ?>)">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0">Usuarios</h1>
+        <a href="<?= e(armar_url('admin/usuarios/editar')) ?>" class="btn btn-institucional boton-accion">
+            <i class="bi bi-person-plus"></i> Nuevo usuario
         </a>
-    <?php endforeach; ?>
-    <?php if ($usuarios === []): ?>
-        <div class="list-group-item text-body-secondary">No hay usuarios con ese rol.</div>
+    </div>
+
+    <!-- Búsqueda y chips de rol (filtran sin recargar) -->
+    <div class="input-group mb-2">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input type="search" class="form-control" placeholder="Buscar usuario o unidad" x-model="busqueda" aria-label="Buscar usuario o unidad">
+    </div>
+    <div class="chips mb-3" role="group" aria-label="Filtrar por rol">
+        <button type="button" class="chip" :class="rol === '' && 'activo'" @click="rol = ''">Todos <?= count($usuarios) ?></button>
+        <?php foreach (['UNIDAD', 'SUPERVISOR', 'ADMIN'] as $opcion): ?>
+            <button type="button" class="chip" :class="rol === <?= e(json_encode($opcion)) ?> && 'activo'" @click="rol = <?= e(json_encode($opcion)) ?>">
+                <?= e(obtener_etiqueta_rol($opcion)) ?> <?= $por_rol[$opcion] ?>
+            </button>
+        <?php endforeach; ?>
+    </div>
+
+    <?php if ($sin_cuenta !== []): ?>
+        <!-- Unidades activas sin cuenta: se despliega la lista, cada una con su botón -->
+        <details class="alert alert-warning py-2 unidades-sin-cuenta">
+            <summary class="fw-semibold">
+                <i class="bi bi-exclamation-triangle"></i>
+                <?= count($sin_cuenta) === 1 ? '1 unidad sin cuenta' : count($sin_cuenta) . ' unidades sin cuenta' ?>
+            </summary>
+            <ul class="list-unstyled mb-0 mt-2">
+                <?php foreach ($sin_cuenta as $unidad): ?>
+                    <li class="d-flex align-items-center gap-2 py-1">
+                        <span class="me-auto"><?= e($unidad['nombre_corto']) ?></span>
+                        <a class="btn btn-sm btn-institucional" href="<?= e(armar_url('admin/usuarios/editar', ['unidad_id' => $unidad['id']])) ?>">
+                            Crear cuenta
+                        </a>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </details>
     <?php endif; ?>
+
+    <div class="list-group">
+        <template x-for="f in visibles" :key="f.id">
+            <a :href="f.url" class="list-group-item list-group-item-action fila-flex align-items-center gap-2" :class="!f.activo && 'usuario-inactivo'">
+                <div class="me-auto">
+                    <div class="fila-flex flex-wrap align-items-center gap-2">
+                        <span class="fw-semibold" x-text="f.usuario"></span>
+                        <span class="badge text-bg-light border fw-normal" x-text="f.etiqueta"></span>
+                        <span class="badge text-bg-secondary" x-show="!f.activo">Inactivo</span>
+                        <span class="badge text-bg-danger" x-show="f.bloqueado"><i class="bi bi-lock"></i> <span x-text="f.bloqueado"></span></span>
+                    </div>
+                    <div class="small text-body-secondary">
+                        <span x-text="f.detalle"></span> ·
+                        <span :class="f.nunca && 'acceso-nunca'" x-text="f.nunca ? 'Nunca ingresó' : f.acceso"></span>
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right text-body-secondary"></i>
+            </a>
+        </template>
+        <div class="list-group-item text-body-secondary" x-show="!visibles.length" x-cloak>Sin resultados.</div>
+    </div>
 </div>
+
 <?php require RUTA_APP . '/vistas/pie.php'; ?>

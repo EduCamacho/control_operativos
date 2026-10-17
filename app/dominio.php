@@ -75,6 +75,7 @@ const RESULTADOS_CONTROL = [
 const MAX_PRECISION_GUARDADA_M = 65535;
 
 const ROLES = ['ADMIN', 'SUPERVISOR', 'UNIDAD'];
+const ETIQUETAS_ROL = ['ADMIN' => 'Administrador', 'SUPERVISOR' => 'Supervisor', 'UNIDAD' => 'Unidad'];
 const DIVISIONES = [
     'DIVOPUS'  => 'DIVOPUS Trujillo',
     'DUE'      => 'DUE',
@@ -155,6 +156,11 @@ function clasificar_turno(string $hora_inicio): string
 function obtener_etiqueta_turno(string $turno): string
 {
     return ETIQUETAS_TURNO[$turno] ?? throw new InvalidArgumentException("Turno desconocido: $turno");
+}
+
+function obtener_etiqueta_rol(string $rol): string
+{
+    return ETIQUETAS_ROL[$rol] ?? throw new InvalidArgumentException("Rol desconocido: $rol");
 }
 
 /**
