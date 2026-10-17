@@ -90,6 +90,7 @@ $menu = match ($usuario['rol'] ?? null) {
                         <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Salir
                     </button>
                 </form>
+                <div class="small opacity-50 mt-2 text-center">versión <?= e(obtener_version() ?? 'de desarrollo') ?></div>
             </div>
         </div>
     </aside>

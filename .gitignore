@@ -21,3 +21,7 @@ Thumbs.db
 app/almacen/sesiones/*
 app/almacen/registros/*
 !app/almacen/*/.gitkeep
+
+# Paquetes para el hosting (herramientas/empaquetar.php)
+/dist/
+app/version.txt

@@ -121,6 +121,13 @@ function responder_json(array $datos, int $codigo = 200): never
     exit;
 }
 
+/** Versión instalada ("abc1234 · 2026-10-17 13:20"), que escribe herramientas/empaquetar.php. null en desarrollo. */
+function obtener_version(): ?string
+{
+    $archivo = RUTA_APP . '/version.txt';
+    return is_file($archivo) ? trim((string) file_get_contents($archivo)) : null;
+}
+
 /** Hora actual del servidor en Lima (RN-11). */
 function obtener_ahora(): DateTimeImmutable
 {
