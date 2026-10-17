@@ -141,143 +141,179 @@ if (es_post()) {
 
 // Unidades para elegir, marcando las que ya tienen otra cuenta.
 $unidades = consultar(
-    'SELECT un.id, un.division, un.nombre_corto, un.activo, us.id AS usuario_id, us.usuario
+    'SELECT un.id, un.division, un.nombre, un.nombre_corto, un.activo, us.id AS usuario_id, us.usuario
      FROM unidades un
      LEFT JOIN usuarios us ON us.unidad_id = un.id
      ORDER BY un.orden, un.nombre_corto',
 )->fetchAll();
 
-$titulo = $actual === null ? 'Nuevo usuario' : 'Usuario ' . $actual['usuario'];
+$bloqueada = $actual !== null && cuenta_bloqueada($actual['bloqueado_hasta'], $ahora);
+// Al crear una cuenta de unidad, elegir la unidad sugiere el usuario y el nombre (usuario_formulario.js).
+$configuracion = [
+    'rol'      => (string) $valores['rol'],
+    'unidadId' => (string) ($valores['unidad_id'] ?? ''),
+    'usuario'  => (string) $valores['usuario'],
+    'nombre'   => (string) $valores['nombre'],
+    'sugerir'  => $actual === null,
+    'unidades' => array_column(array_map(static fn (array $u): array => [
+        'id' => (string) $u['id'], 'corto' => $u['nombre_corto'], 'nombre' => $u['nombre'],
+    ], $unidades), null, 'id'),
+];
+
+$titulo = $actual === null ? 'Nuevo usuario' : $actual['usuario'];
+$scripts = ['assets/js/usuario_formulario.js'];
 require RUTA_APP . '/vistas/cabecera.php';
 ?>
-<nav aria-label="Ruta de navegación">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="<?= e(armar_url('admin/usuarios')) ?>">Usuarios</a></li>
-        <li class="breadcrumb-item active" aria-current="page"><?= e($actual === null ? 'Nuevo' : $actual['usuario']) ?></li>
-    </ol>
-</nav>
-<h1 class="h4 mb-3"><?= e($titulo) ?></h1>
-
-<?php if ($clave_entregada !== null): ?>
-    <div class="alert alert-success formulario-angosto" role="alert">
-        <div class="fw-semibold mb-1"><i class="bi bi-key"></i> Clave de <?= e($actual['usuario']) ?></div>
-        <div class="fs-4 font-monospace user-select-all mb-1"><?= e($clave_entregada) ?></div>
-        <div class="small">Entréguela al responsable de la cuenta. No se volverá a mostrar.
-            Si la cuenta tenía sesiones abiertas, se cerraron.</div>
-    </div>
-<?php endif; ?>
-
-<form method="post" class="card card-body shadow-sm formulario-angosto mb-3" novalidate
-      x-data="{ rol: <?= e(json_encode($valores['rol'])) ?> }">
-    <?= campo_csrf() ?>
-    <input type="hidden" name="accion" value="guardar">
-
-    <div class="mb-3">
-        <label for="usuario" class="form-label">Usuario</label>
-        <input type="text" id="usuario" name="usuario" maxlength="50" required autocapitalize="none" spellcheck="false"
-               class="form-control<?= clase_error($errores, 'usuario') ?>" value="<?= e($valores['usuario']) ?>"
-               placeholder="com.ayacucho" aria-describedby="ayuda-usuario">
-        <div id="ayuda-usuario" class="form-text">Letras sin tilde, números, punto, guion o guion bajo.</div>
-        <?= mostrar_error($errores, 'usuario') ?>
-    </div>
-    <div class="mb-3">
-        <label for="nombre" class="form-label">Nombre</label>
-        <input type="text" id="nombre" name="nombre" maxlength="150" required
-               class="form-control<?= clase_error($errores, 'nombre') ?>" value="<?= e($valores['nombre']) ?>"
-               placeholder="Comisaría PNP Ayacucho / CRNL PNP Juan Pérez">
-        <?= mostrar_error($errores, 'nombre') ?>
-    </div>
-    <div class="mb-3">
-        <label for="rol" class="form-label">Rol</label>
-        <select id="rol" name="rol" x-model="rol" class="form-select<?= clase_error($errores, 'rol') ?>"
-                required<?= $es_propia ? ' disabled' : '' ?>>
-            <?php foreach (ROLES as $opcion): ?>
-                <option value="<?= e($opcion) ?>"<?= marcar($valores['rol'] === $opcion, 'selected') ?>><?= e(obtener_etiqueta_rol($opcion)) ?></option>
-            <?php endforeach; ?>
-        </select>
-        <?php if ($es_propia): ?>
-            <input type="hidden" name="rol" value="ADMIN">
-            <div class="form-text">No puede cambiar el rol de su propia cuenta.</div>
+<div class="formulario-angosto mx-auto">
+    <a href="<?= e(armar_url('admin/usuarios')) ?>" class="d-inline-block small text-body-secondary text-decoration-none mb-2">
+        <i class="bi bi-arrow-left"></i> Usuarios
+    </a>
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0 me-auto"><?= e($titulo) ?></h1>
+        <?php if ($actual !== null): ?>
+            <span class="badge text-bg-light border fw-normal"><?= e(obtener_etiqueta_rol($actual['rol'])) ?></span>
+            <?php if (!$actual['activo']): ?><span class="badge text-bg-secondary">Inactiva</span><?php endif; ?>
         <?php endif; ?>
-        <?= mostrar_error($errores, 'rol') ?>
     </div>
-    <div class="mb-3" x-show="rol === 'UNIDAD'" x-cloak>
-        <label for="unidad_id" class="form-label">Unidad</label>
-        <select id="unidad_id" name="unidad_id" class="form-select<?= clase_error($errores, 'unidad_id') ?>" :required="rol === 'UNIDAD'">
-            <option value="">Elija la unidad…</option>
-            <?php foreach (DIVISIONES as $division => $etiqueta): ?>
-                <optgroup label="<?= e($etiqueta) ?>">
-                    <?php foreach ($unidades as $unidad): ?>
-                        <?php if ($unidad['division'] !== $division) continue; ?>
-                        <?php $ocupada = $unidad['usuario_id'] !== null && (int) $unidad['usuario_id'] !== (int) ($actual['id'] ?? 0); ?>
-                        <option value="<?= e($unidad['id']) ?>"
-                            <?= marcar((string) $valores['unidad_id'] === (string) $unidad['id'], 'selected') ?>
-                            <?= $ocupada ? ' disabled' : '' ?>>
-                            <?= e($unidad['nombre_corto']) ?><?= $ocupada ? ' — ya tiene cuenta (' . e($unidad['usuario']) . ')' : '' ?><?= $unidad['activo'] ? '' : ' — inactiva' ?>
-                        </option>
-                    <?php endforeach; ?>
-                </optgroup>
-            <?php endforeach; ?>
-        </select>
-        <div class="form-text">Cada unidad tiene una sola cuenta, compartida (RN-17, RN-20).</div>
-        <?= mostrar_error($errores, 'unidad_id') ?>
-    </div>
-    <?php if ($actual === null): ?>
-        <div class="mb-3" x-data="{ visible: false }">
-            <label for="clave" class="form-label">Clave <span class="text-body-secondary">(opcional)</span></label>
-            <div class="input-group">
-                <input :type="visible ? 'text' : 'password'" type="password" id="clave" name="clave" autocomplete="new-password"
-                       class="form-control<?= clase_error($errores, 'clave') ?>" aria-describedby="ayuda-clave">
-                <button type="button" class="btn btn-outline-secondary" @click="visible = !visible" aria-label="Mostrar u ocultar la clave">
-                    <i class="bi" :class="visible ? 'bi-eye-slash' : 'bi-eye'"></i>
+
+    <?php if ($clave_entregada !== null): ?>
+        <!-- Clave generada: se muestra una sola vez -->
+        <div class="alert alert-success" role="alert" x-data="{ copiada: false }">
+            <div class="fw-semibold mb-1"><i class="bi bi-key"></i> Clave de <?= e($actual['usuario']) ?></div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="fs-4 font-monospace user-select-all me-auto" x-ref="clave"><?= e($clave_entregada) ?></span>
+                <button type="button" class="btn btn-sm btn-outline-success"
+                        @click="navigator.clipboard && navigator.clipboard.writeText($refs.clave.textContent.trim()).then(() => copiada = true)">
+                    <i class="bi" :class="copiada ? 'bi-check-lg' : 'bi-clipboard'"></i> <span x-text="copiada ? 'Copiada' : 'Copiar'">Copiar</span>
                 </button>
-                <?= mostrar_error($errores, 'clave') ?>
             </div>
-            <div id="ayuda-clave" class="form-text">
-                Si la deja vacía, el sistema genera una de <?= LARGO_CLAVE_TEMPORAL ?> caracteres y se la muestra una sola vez.
-                Mínimo <?= LARGO_MINIMO_CLAVE ?> caracteres.
+            <div class="small">Entréguela al responsable de la cuenta. No se volverá a mostrar.
+                Si la cuenta tenía sesiones abiertas, se cerraron.</div>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($actual !== null): ?>
+        <!-- Acceso: lo que más se busca al abrir una cuenta (bloqueo y clave olvidada) -->
+        <div class="card shadow-sm mb-3<?= $bloqueada ? ' border-danger' : '' ?>">
+            <div class="card-body py-2">
+                <?php if ($bloqueada): ?>
+                    <div class="text-danger fw-semibold mb-1">
+                        <i class="bi bi-lock-fill"></i> Bloqueada hasta las <?= e(convertir_a_fecha_hora($actual['bloqueado_hasta'])->format('H:i')) ?>
+                    </div>
+                <?php endif; ?>
+                <div class="small text-body-secondary mb-2">
+                    Último acceso: <span class="<?= $actual['ultimo_acceso'] === null ? 'acceso-nunca' : '' ?>"><?= e($actual['ultimo_acceso'] === null ? 'Nunca ingresó' : formatear_hace($actual['ultimo_acceso'], $ahora)) ?></span>
+                    <?php if ($actual['intentos_fallidos'] > 0): ?>· Intentos fallidos: <?= e($actual['intentos_fallidos']) ?><?php endif; ?>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <?php if ($bloqueada || $actual['intentos_fallidos'] > 0): ?>
+                        <form method="post">
+                            <?= campo_csrf() ?>
+                            <input type="hidden" name="accion" value="desbloquear">
+                            <button type="submit" class="btn btn-sm <?= $bloqueada ? 'btn-danger' : 'btn-outline-institucional' ?>">
+                                <i class="bi bi-unlock"></i> Desbloquear
+                            </button>
+                        </form>
+                    <?php endif; ?>
+                    <form method="post" data-confirmar-titulo="¿Resetear la clave de <?= e($actual['usuario']) ?>?"
+                          data-confirmar="Se generará una clave nueva y se cerrarán las sesiones abiertas de la cuenta."
+                          data-confirmar-boton="Sí, resetear" data-confirmar-tipo="peligro">
+                        <?= campo_csrf() ?>
+                        <input type="hidden" name="accion" value="resetear_clave">
+                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-key"></i> Resetear clave</button>
+                    </form>
+                </div>
             </div>
         </div>
     <?php endif; ?>
-    <div class="form-check form-switch mb-4">
-        <input class="form-check-input" type="checkbox" role="switch" id="activo" name="activo" value="1"
-               <?= marcar((bool) $valores['activo']) ?><?= $es_propia ? ' disabled' : '' ?>>
-        <?php if ($es_propia): ?><input type="hidden" name="activo" value="1"><?php endif; ?>
-        <label class="form-check-label" for="activo">Activa</label>
-        <div class="form-text">Al desactivarla se cierran sus sesiones abiertas.</div>
-    </div>
-    <div class="d-flex flex-wrap gap-2">
-        <button type="submit" class="btn btn-success boton-accion px-4"><i class="bi bi-check-lg"></i> Guardar</button>
-        <a href="<?= e(armar_url('admin/usuarios')) ?>" class="btn btn-outline-secondary boton-accion px-4">Volver</a>
-    </div>
-</form>
 
-<?php if ($actual !== null): ?>
-    <div class="card card-body shadow-sm formulario-angosto">
-        <h2 class="h6">Acceso</h2>
-        <p class="small text-body-secondary mb-3">
-            Último acceso: <?= e(formatear_hace($actual['ultimo_acceso'], $ahora)) ?>
-            · Intentos fallidos: <?= e($actual['intentos_fallidos']) ?>
-            <?php if (cuenta_bloqueada($actual['bloqueado_hasta'], $ahora)): ?>
-                · <span class="text-danger fw-semibold">Bloqueada hasta las <?= e(convertir_a_fecha_hora($actual['bloqueado_hasta'])->format('H:i')) ?></span>
+    <form method="post" class="card card-body shadow-sm mb-3" novalidate x-data="formularioUsuario(<?= e(json_encode($configuracion)) ?>)">
+        <?= campo_csrf() ?>
+        <input type="hidden" name="accion" value="guardar">
+
+        <!-- Rol primero: decide si hay que elegir unidad -->
+        <fieldset class="mb-3">
+            <legend class="form-label fs-6 mb-1">Rol</legend>
+            <div class="selector-rol" role="group">
+                <?php foreach (['UNIDAD', 'SUPERVISOR', 'ADMIN'] as $opcion): ?>
+                    <input type="radio" class="btn-check" name="rol" id="rol-<?= e(strtolower($opcion)) ?>" value="<?= e($opcion) ?>"
+                           x-model="rol"<?= $es_propia ? ' disabled' : '' ?>>
+                    <label class="btn btn-outline-institucional" for="rol-<?= e(strtolower($opcion)) ?>"><?= e(obtener_etiqueta_rol($opcion)) ?></label>
+                <?php endforeach; ?>
+            </div>
+            <?php if ($es_propia): ?>
+                <input type="hidden" name="rol" value="ADMIN">
+                <div class="form-text">No puede cambiar el rol de su propia cuenta.</div>
             <?php endif; ?>
-        </p>
-        <div class="d-flex flex-wrap gap-2">
-            <form method="post" data-confirmar-titulo="¿Resetear la clave de <?= e($actual['usuario']) ?>?"
-                  data-confirmar="Se generará una clave nueva y se cerrarán las sesiones abiertas de la cuenta."
-                  data-confirmar-boton="Sí, resetear" data-confirmar-tipo="peligro">
-                <?= campo_csrf() ?>
-                <input type="hidden" name="accion" value="resetear_clave">
-                <button type="submit" class="btn btn-outline-danger boton-accion"><i class="bi bi-key"></i> Resetear clave</button>
-            </form>
-            <?php if (cuenta_bloqueada($actual['bloqueado_hasta'], $ahora) || $actual['intentos_fallidos'] > 0): ?>
-                <form method="post">
-                    <?= campo_csrf() ?>
-                    <input type="hidden" name="accion" value="desbloquear">
-                    <button type="submit" class="btn btn-outline-primary boton-accion"><i class="bi bi-unlock"></i> Desbloquear</button>
-                </form>
-            <?php endif; ?>
+            <?php if (isset($errores['rol'])): ?><div class="text-danger small mt-1"><?= e($errores['rol']) ?></div><?php endif; ?>
+        </fieldset>
+
+        <div class="mb-3" x-show="rol === 'UNIDAD'" x-cloak>
+            <label for="unidad_id" class="form-label">Unidad</label>
+            <select id="unidad_id" name="unidad_id" class="form-select<?= clase_error($errores, 'unidad_id') ?>" :required="rol === 'UNIDAD'"
+                    x-model="unidadId" @change="sugerir()">
+                <option value="">Elija la unidad…</option>
+                <?php foreach (DIVISIONES as $division => $etiqueta): ?>
+                    <optgroup label="<?= e($etiqueta) ?>">
+                        <?php foreach ($unidades as $unidad): ?>
+                            <?php if ($unidad['division'] !== $division) continue; ?>
+                            <?php $ocupada = $unidad['usuario_id'] !== null && (int) $unidad['usuario_id'] !== (int) ($actual['id'] ?? 0); ?>
+                            <option value="<?= e($unidad['id']) ?>"<?= $ocupada ? ' disabled' : '' ?>>
+                                <?= e($unidad['nombre_corto']) ?><?= $ocupada ? ' — ya tiene cuenta (' . e($unidad['usuario']) . ')' : '' ?><?= $unidad['activo'] ? '' : ' — inactiva' ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </optgroup>
+                <?php endforeach; ?>
+            </select>
+            <div class="form-text">Cada unidad tiene una sola cuenta, compartida (RN-17, RN-20).</div>
+            <?= mostrar_error($errores, 'unidad_id') ?>
         </div>
-    </div>
-<?php endif; ?>
+
+        <div class="mb-3">
+            <label for="usuario" class="form-label">Usuario</label>
+            <input type="text" id="usuario" name="usuario" maxlength="50" required autocapitalize="none" spellcheck="false"
+                   class="form-control<?= clase_error($errores, 'usuario') ?>" x-model="usuario"
+                   placeholder="com.ayacucho" aria-describedby="ayuda-usuario">
+            <div id="ayuda-usuario" class="form-text">Letras sin tilde, números, punto, guion o guion bajo.</div>
+            <?= mostrar_error($errores, 'usuario') ?>
+        </div>
+        <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre</label>
+            <input type="text" id="nombre" name="nombre" maxlength="150" required
+                   class="form-control<?= clase_error($errores, 'nombre') ?>" x-model="nombre"
+                   placeholder="Comisaría PNP Ayacucho / CRNL PNP Juan Pérez">
+            <?= mostrar_error($errores, 'nombre') ?>
+        </div>
+        <?php if ($actual === null): ?>
+            <div class="mb-3" x-data="{ visible: false }">
+                <label for="clave" class="form-label">Clave <span class="text-body-secondary">(opcional)</span></label>
+                <div class="input-group">
+                    <input :type="visible ? 'text' : 'password'" type="password" id="clave" name="clave" autocomplete="new-password"
+                           class="form-control<?= clase_error($errores, 'clave') ?>" aria-describedby="ayuda-clave">
+                    <button type="button" class="btn btn-outline-secondary" @click="visible = !visible" aria-label="Mostrar u ocultar la clave">
+                        <i class="bi" :class="visible ? 'bi-eye-slash' : 'bi-eye'"></i>
+                    </button>
+                    <?= mostrar_error($errores, 'clave') ?>
+                </div>
+                <div id="ayuda-clave" class="form-text">
+                    Vacía: el sistema genera una de <?= LARGO_CLAVE_TEMPORAL ?> caracteres y la muestra una sola vez.
+                    Mínimo <?= LARGO_MINIMO_CLAVE ?> caracteres.
+                </div>
+            </div>
+        <?php endif; ?>
+        <div class="form-check form-switch mb-4">
+            <input class="form-check-input" type="checkbox" role="switch" id="activo" name="activo" value="1"
+                   <?= marcar((bool) $valores['activo']) ?><?= $es_propia ? ' disabled' : '' ?>>
+            <?php if ($es_propia): ?><input type="hidden" name="activo" value="1"><?php endif; ?>
+            <label class="form-check-label" for="activo">Activa</label>
+            <div class="form-text">Al desactivarla se cierran sus sesiones abiertas.</div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="submit" class="btn btn-institucional boton-accion px-4 flex-grow-1 flex-sm-grow-0">
+                <i class="bi bi-check-lg"></i> <?= $actual === null ? 'Crear cuenta' : 'Guardar' ?>
+            </button>
+            <a href="<?= e(armar_url('admin/usuarios')) ?>" class="btn btn-outline-secondary boton-accion px-4">Cancelar</a>
+        </div>
+    </form>
+</div>
 <?php require RUTA_APP . '/vistas/pie.php'; ?>

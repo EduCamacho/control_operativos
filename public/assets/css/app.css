@@ -918,6 +918,18 @@
     font-weight: 600;
 }
 
+/* Rol de la cuenta: tres botones del mismo ancho en una fila. */
+.selector-rol {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .4rem;
+}
+
+.selector-rol .btn {
+    padding-left: .25rem;
+    padding-right: .25rem;
+}
+
 /* Número de orden de la unidad, discreto a la izquierda. */
 .orden-unidad {
     min-width: 1.6rem;
