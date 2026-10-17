@@ -75,8 +75,9 @@ foreach ($archivos as $archivo) {
     }
 }
 
-$fecha = (new DateTimeImmutable('now', new DateTimeZone('America/Lima')))->format('Y-m-d H:i');
-$destino = $raiz . '/dist/control_operativos_' . date('Ymd_Hi') . "_$commit.zip";
+$ahora = new DateTimeImmutable('now', new DateTimeZone('America/Lima'));
+$fecha = $ahora->format('Y-m-d H:i');
+$destino = $raiz . '/dist/control_operativos_' . $ahora->format('Ymd_Hi') . "_$commit.zip";
 @mkdir(dirname($destino), 0775, true);
 
 // git archive arma el zip con el contenido exacto del commit (finales de línea LF, binarios intactos).
