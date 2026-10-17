@@ -19,9 +19,6 @@ $recorrido = array_map(static fn (array $u): array => [(float) $u['latitud'], (f
     <p class="text-body-secondary small mb-2">
         Turno <?= e(obtener_etiqueta_turno($operativo['turno'])) ?>
         · servicio del <?= e(validar_fecha($operativo['fecha_servicio'])->format('d/m/Y')) ?>
-        <?php if ($ultima !== null): ?>
-            · actualizado <strong><?= e(formatear_hace($ultima['registrado_en'], $ahora)) ?></strong>
-        <?php endif; ?>
     </p>
 
     <div class="d-grid gap-2 d-sm-flex mb-3">

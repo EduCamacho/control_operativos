@@ -85,7 +85,7 @@ require RUTA_APP . '/vistas/cabecera.php';
                 <span class="badge" :class="config.clases[op.estado]" x-text="op.estado_etiqueta"></span>
                 <strong x-text="op.unidad"></strong> · <span x-text="op.turno_etiqueta"></span>
                 <span x-text="op.inicio_programado + '–' + op.fin_programado"></span>
-                <div class="text-body-secondary" x-text="op.ubicacion ? op.ubicacion.referencia + ' (' + op.ubicacion.hace + ')' : 'Lugar programado: ' + op.lugar_programado"></div>
+                <div class="text-body-secondary" x-text="op.ubicacion ? op.ubicacion.referencia : 'Lugar programado: ' + op.lugar_programado"></div>
             </button>
         </template>
     </div>
@@ -120,7 +120,7 @@ require RUTA_APP . '/vistas/cabecera.php';
                     </div>
                     <div class="small text-body-secondary">
                         <span x-text="op.inicio_programado + '–' + op.fin_programado"></span> ·
-                        <span x-text="op.ubicacion ? op.ubicacion.referencia + ' · ' + op.ubicacion.hace : 'Lugar programado: ' + op.lugar_programado"></span>
+                        <span x-text="op.ubicacion ? op.ubicacion.referencia : 'Lugar programado: ' + op.lugar_programado"></span>
                         <span class="badge text-bg-warning" x-show="op.ubicacion && op.ubicacion.origen === 'MANUAL'">Manual</span>
                     </div>
                 </button>

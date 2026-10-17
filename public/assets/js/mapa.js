@@ -177,7 +177,7 @@ document.addEventListener('alpine:init', function () {
             tituloMarcador(op) {
                 const base = op.unidad + ' · ' + op.estado_etiqueta + ' · ';
                 return op.ubicacion
-                    ? base + op.ubicacion.referencia + ' (' + op.ubicacion.hace + ')'
+                    ? base + op.ubicacion.referencia
                     : base + 'lugar programado: ' + op.lugar_programado;
             },
 
