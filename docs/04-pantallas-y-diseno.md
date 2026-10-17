@@ -86,12 +86,12 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - **Observación**, que aparece solo al elegir Con observaciones o No encontrado (y ahí es obligatoria), y **Guardar control** fijo al pie.
    - Al guardar: ✓ **Control registrado** y **Volver al mapa**. No usa el GPS del supervisor ni calcula distancias (RN-15: a veces controla con un dron).
    - Al pie, **Controles anteriores** del operativo (resultado y hora; el nombre del supervisor solo si es otro). Los controles se ven aquí, donde se registran, y no en la ficha del mapa. El recién registrado aparece arriba de inmediato, resaltado, sin recargar la página.
-4. **Tablero de cumplimiento**
-   - Matriz de **unidades activas × 4 turnos** de la fecha elegida (por defecto, el servicio diario vigente), con flechas para el día anterior y el siguiente y filtro por división. Cada celda tiene el color de su estado y abre la ficha.
-   - Una celda sin operativo es SIN_PROGRAMAR (amarillo) cuando ya pasó la última hora de inicio posible del turno; antes se muestra "—", porque todavía puede programarse.
-   - Cada celda muestra **todos** los operativos de esa unidad y turno, uno debajo del otro. Arriba, los totales: turnos con al menos un operativo sobre el total de turnos, cantidad de operativos y ejecutados (en curso, sin cierre y finalizados), y la cantidad por estado.
+4. **Tablero de cumplimiento** (`/supervisor/tablero`), compacto y con poco texto:
+   - **Tablero** y la fecha **‹ Sáb 17/10 ›**: las flechas cambian de día y al tocar la fecha se abre el calendario; **Hoy** aparece solo al ver otro día.
+   - Chips de división (**Todas**, DIVOPUS, DUE, DIVINCRI) y **Solo alertas**, que deja solo las unidades con algo pendiente (no iniciado, sin cierre o turno sin programar).
+   - Resumen: barra de avance de **turnos cubiertos** (con al menos un operativo) y las cifras por estado con su punto de color, que hacen de leyenda (en el celular solo el número; el nombre al tocar o pasar el cursor).
+   - Matriz de unidades activas × turnos (**MAÑ**, **TAR**, **NOC**, **MAD**), con la fila de turnos y la columna de unidades **fijas** al desplazarse. Cada operativo es una píldora del color de su estado con su **hora de inicio** (varias si el turno tiene varios; un punto blanco si le falta la N.I); al tocarla se abre la ficha. Un turno sin operativos es un bloque **amarillo** (sin programar) o **·** (todavía puede programarse).
    - También lo ve ADMIN, porque no usa la API de Google Maps.
-   - Sirve para ver de un vistazo quién no programó o no inició.
 
 ## Rol ADMIN
 

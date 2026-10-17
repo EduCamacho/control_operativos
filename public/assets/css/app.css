@@ -364,18 +364,6 @@
     text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 3px #fff;
 }
 
-/* Tablero de cumplimiento. */
-.tablero th[scope=row] {
-    min-width: 9rem;
-}
-
-.celda-tablero {
-    min-width: 6.5rem;
-}
-
-.celda-tablero a:hover {
-    filter: brightness(.92);
-}
 
 /* Asistente de programación por pasos. */
 .pasos-progreso {
@@ -818,10 +806,6 @@
     margin-top: .5rem;
 }
 
-/* Tablero: varios operativos en una misma celda, separados por una línea blanca. */
-.operativo-celda + .operativo-celda {
-    border-top: 2px solid #fff;
-}
 
 /* "Ver recorrido" en el mapa del supervisor: puntos numerados (magenta, como la línea) y barra para volver. */
 .punto-recorrido {
@@ -895,3 +879,204 @@
     font-size: 1.6rem;
 }
 
+
+/* --- Tablero de cumplimiento (compacto, poco texto) --- */
+
+.selector-fecha {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+}
+
+/* La fecha se ve como texto; encima hay un input date invisible que abre el calendario. */
+.fecha-tocable {
+    position: relative;
+    padding: .25rem .6rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .375rem;
+    min-width: 6.5rem;
+    text-align: center;
+}
+
+.fecha-tocable input[type=date] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Chips de división y "Solo alertas". */
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .3rem .75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 999px;
+    font-size: .85rem;
+    color: var(--bs-body-color);
+    text-decoration: none;
+    background: var(--bs-body-bg);
+}
+
+.chip.activo {
+    background: var(--color-institucional);
+    border-color: var(--color-institucional);
+    color: #fff;
+}
+
+.chip-alertas.activo {
+    background: var(--bs-danger);
+    border-color: var(--bs-danger);
+}
+
+/* Resumen: barra de avance y cifras por estado (hacen de leyenda). */
+.barra-avance {
+    background: var(--color-institucional);
+}
+
+.resumen-tablero .progress {
+    height: .55rem;
+}
+
+.cifras-estado {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem .9rem;
+    font-size: .9rem;
+}
+
+.cifra-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+}
+
+.punto-estado {
+    display: inline-block;
+    width: .8rem;
+    height: .8rem;
+    border-radius: 50%;
+}
+
+.etiqueta-estado {
+    color: var(--bs-secondary-color);
+    font-size: .8rem;
+}
+
+@media (max-width: 575.98px) {
+    .etiqueta-estado {
+        display: none;
+    }
+}
+
+/* Matriz con encabezado y columna de unidades fijos al desplazar. */
+.tablero-contenedor {
+    max-height: calc(100dvh - 15rem);
+    overflow: auto;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+}
+
+.tablero-compacto {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: .85rem;
+}
+
+.tablero-compacto th,
+.tablero-compacto td {
+    padding: .35rem .3rem;
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+    text-align: center;
+    vertical-align: middle;
+}
+
+.tablero-compacto thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--bs-tertiary-bg);
+    font-size: .75rem;
+    letter-spacing: .04em;
+    color: var(--bs-secondary-color);
+}
+
+.tablero-compacto .col-unidad {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--bs-body-bg);
+    text-align: left;
+    white-space: nowrap;
+    font-weight: 600;
+    max-width: 11rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tablero-compacto thead .col-unidad {
+    z-index: 3;
+    background: var(--bs-tertiary-bg);
+}
+
+.tablero-compacto .fila-division th {
+    position: sticky;
+    left: 0;
+    text-align: left;
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--bs-secondary-color);
+    background: var(--bs-body-bg);
+    padding-top: .7rem;
+}
+
+/* Cada operativo: una píldora del color de su estado con la hora de inicio. */
+.pildora-operativo {
+    display: inline-block;
+    min-width: 3.1rem;
+    padding: .2rem .35rem;
+    margin: .1rem 0;
+    border-radius: .35rem;
+    font-weight: 600;
+    font-size: .8rem;
+    text-decoration: none;
+    position: relative;
+}
+
+.pildora-operativo + .pildora-operativo {
+    margin-left: .15rem;
+}
+
+.pildora-operativo.vacia {
+    height: 1.4rem;
+    vertical-align: middle;
+}
+
+/* Finalizado sin N.I: un punto blanco en la esquina. */
+.pildora-operativo.sin-ni::after {
+    content: "";
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--bs-primary);
+}
+
+.celda-pendiente {
+    color: var(--bs-secondary-color);
+    font-weight: 700;
+}
