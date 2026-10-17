@@ -590,6 +590,31 @@
     border-left-width: 5px;
 }
 
+/* Ficha del General: acciones como botones cuadrados en una fila (2 o 3, del mismo ancho). */
+.acciones-ficha {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: .5rem;
+}
+
+.boton-cuadrado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .25rem;
+    min-height: 72px;
+    padding: .5rem .25rem;
+    font-weight: 600;
+    font-size: .85rem;
+    line-height: 1.15;
+}
+
+.boton-cuadrado .bi {
+    font-size: 1.4rem;
+}
+
 .titulo-tarjeta {
     color: var(--color-institucional);
     font-weight: 600;
