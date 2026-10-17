@@ -58,10 +58,10 @@ require RUTA_APP . '/vistas/cabecera.php';
             <label class="form-check-label" for="ver-finalizados">Finalizados</label>
         </div>
         <div class="btn-group btn-group-sm" role="group" aria-label="Vista">
-            <button type="button" class="btn" :class="vista === 'mapa' ? 'btn-dark' : 'btn-outline-dark'" @click="cambiarVista('mapa')">
+            <button type="button" class="btn" :class="vista === 'mapa' ? 'btn-institucional' : 'btn-outline-institucional'" @click="cambiarVista('mapa')">
                 <i class="bi bi-map"></i> Mapa
             </button>
-            <button type="button" class="btn" :class="vista === 'lista' ? 'btn-dark' : 'btn-outline-dark'" @click="cambiarVista('lista')">
+            <button type="button" class="btn" :class="vista === 'lista' ? 'btn-institucional' : 'btn-outline-institucional'" @click="cambiarVista('lista')">
                 <i class="bi bi-list-ul"></i> Lista
             </button>
         </div>
@@ -69,7 +69,7 @@ require RUTA_APP . '/vistas/cabecera.php';
 
     <!-- Barra de alertas (RN-14) -->
     <button type="button" class="mapa-alertas btn w-100 rounded-0 text-start d-flex align-items-center gap-2"
-            :class="alertas.length ? 'btn-danger' : 'btn-success'" @click="alertasAbiertas = !alertasAbiertas"
+            :class="alertas.length ? 'btn-danger' : 'btn-institucional'" @click="alertasAbiertas = !alertasAbiertas"
             :aria-expanded="alertasAbiertas">
         <i class="bi" :class="alertas.length ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill'"></i>
         <span class="me-auto" x-show="alertas.length">
@@ -85,7 +85,7 @@ require RUTA_APP . '/vistas/cabecera.php';
                 <span class="badge" :class="config.clases[op.estado]" x-text="op.estado_etiqueta"></span>
                 <strong x-text="op.unidad"></strong> · <span x-text="op.turno_etiqueta"></span>
                 <span x-text="op.inicio_programado + '–' + op.fin_programado"></span>
-                <div class="text-body-secondary" x-text="op.ubicacion ? op.ubicacion.referencia + ' (' + op.ubicacion.hace + ')' : 'Lugar programado: ' + op.lugar_programado"></div>
+                <div class="text-body-secondary" x-text="op.ubicacion ? op.ubicacion.referencia : 'Lugar programado: ' + op.lugar_programado"></div>
             </button>
         </template>
     </div>
@@ -93,15 +93,26 @@ require RUTA_APP . '/vistas/cabecera.php';
     <!-- Mapa -->
     <div class="mapa-contenedor position-relative" x-show="vista === 'mapa'">
         <div x-ref="mapa" class="mapa-google"></div>
+        <!-- Mientras se ve el recorrido de un operativo (botón "Ver recorrido" de la ficha) -->
+        <div class="barra-recorrido position-absolute top-0 start-50 translate-middle-x mt-2 fila-flex gap-2"
+             x-show="viendoRecorrido && vista === 'mapa'" x-cloak>
+            <button type="button" class="btn btn-institucional shadow" @click="volverAFicha()">
+                <i class="bi bi-arrow-left"></i> Volver a la ficha
+            </button>
+            <button type="button" class="btn btn-light border shadow" @click="cerrarRecorrido()" aria-label="Cerrar el recorrido">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
         <div class="mapa-aviso position-absolute top-50 start-50 translate-middle text-center p-3" x-show="avisoMapa" x-cloak>
             <i class="bi bi-map display-5 text-body-secondary"></i>
             <p class="mt-2 mb-2" x-text="avisoMapa"></p>
-            <button type="button" class="btn btn-dark" @click="cambiarVista('lista')"><i class="bi bi-list-ul"></i> Ver la lista</button>
+            <button type="button" class="btn btn-institucional" @click="cambiarVista('lista')"><i class="bi bi-list-ul"></i> Ver la lista</button>
         </div>
         <div class="mapa-leyenda position-absolute bottom-0 start-0 m-2 p-2 bg-body rounded shadow-sm small">
             <template x-for="(color, estado) in config.colores" :key="estado">
                 <div><span class="mapa-punto" :style="'background:' + color"></span> <span x-text="etiquetaEstado(estado)"></span></div>
             </template>
+            <div class="border-top mt-1 pt-1"><span class="mapa-punto mapa-punto-programado"></span> Lugar programado (sin iniciar)</div>
         </div>
     </div>
 
@@ -112,14 +123,15 @@ require RUTA_APP . '/vistas/cabecera.php';
             <template x-for="op in visibles" :key="op.id">
                 <button type="button" class="list-group-item list-group-item-action" @click="abrirFicha(op)">
                     <div class="d-flex flex-wrap align-items-center gap-2">
+                        <!-- Sin el nombre del turno: el horario ya lo dice (y está el filtro de turno). -->
                         <strong class="me-auto" x-text="op.unidad"></strong>
-                        <span class="badge text-bg-light border" x-text="op.turno_etiqueta + (op.servicio_anterior ? ' (servicio anterior)' : '')"></span>
+                        <span class="small fw-semibold" x-text="op.inicio_programado + '–' + op.fin_programado"></span>
                         <span class="badge" :class="config.clases[op.estado]" x-text="op.estado_etiqueta"></span>
-                        <span class="badge text-bg-light border border-primary text-primary" x-show="op.pendiente_nota">Sin nota</span>
+                        <span class="badge text-bg-light border border-primary text-primary" x-show="op.pendiente_nota">Sin N.I</span>
+                        <span class="badge text-bg-light border" x-show="op.servicio_anterior">Servicio anterior</span>
                     </div>
                     <div class="small text-body-secondary">
-                        <span x-text="op.inicio_programado + '–' + op.fin_programado"></span> ·
-                        <span x-text="op.ubicacion ? op.ubicacion.referencia + ' · ' + op.ubicacion.hace : op.lugar_programado"></span>
+                        <span x-text="op.ubicacion ? op.ubicacion.referencia : 'Lugar programado: ' + op.lugar_programado"></span>
                         <span class="badge text-bg-warning" x-show="op.ubicacion && op.ubicacion.origen === 'MANUAL'">Manual</span>
                     </div>
                 </button>
@@ -134,7 +146,7 @@ require RUTA_APP . '/vistas/cabecera.php';
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
         </div>
         <div class="offcanvas-body pt-0">
-            <div x-show="cargandoFicha" class="d-flex align-items-center gap-2 text-body-secondary">
+            <div x-show="cargandoFicha" class="fila-flex align-items-center gap-2 text-body-secondary">
                 <div class="spinner-border spinner-border-sm" role="status"></div> Cargando…
             </div>
             <div x-ref="contenidoFicha"></div>

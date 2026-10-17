@@ -5,7 +5,7 @@
  */
 declare(strict_types=1);
 
-const COLUMNAS_OPERATIVO = 'o.id, o.unidad_id, o.fecha_servicio, o.turno, o.nombre_plan, o.lugar_programado,
+const COLUMNAS_OPERATIVO = 'o.id, o.unidad_id, o.fecha_servicio, o.turno, o.lugar_programado, o.lugar_latitud, o.lugar_longitud,
     o.inicio_programado, o.fin_programado, o.jefe_grado, o.jefe_nombres, o.jefe_celular,
     o.fuerzas_propias, o.fuerzas_apoyo, o.unidades_moviles, o.estado, o.inicio_real, o.fin_real,
     o.nota_informativa, o.observaciones, o.creado_en, o.actualizado_en,
@@ -104,27 +104,30 @@ function calcular_estado_visible(array $operativo, DateTimeImmutable $ahora): st
     return estado_visible($operativo, $ahora, TOLERANCIA_NO_INICIADO_MIN, TOLERANCIA_SIN_CIERRE_MIN);
 }
 
-/** Badge del estado visible, con el distintivo "Sin nota" sobre FINALIZADO (docs/04). */
+/** Badge del estado visible, con el distintivo "Sin N.I" sobre FINALIZADO (docs/04). */
 function mostrar_estado(string $estado_visible, bool $pendiente_nota = false): string
 {
     $html = '<span class="badge ' . e(obtener_clase_estado($estado_visible)) . '">' . e(obtener_etiqueta_estado($estado_visible)) . '</span>';
     if ($pendiente_nota) {
-        $html .= ' <span class="badge text-bg-light border border-primary text-primary"><i class="bi bi-file-earmark-x"></i> Sin nota</span>';
+        $html .= ' <span class="badge text-bg-light border border-primary text-primary"><i class="bi bi-file-earmark-x"></i> Sin N.I</span>';
     }
     return $html;
 }
 
 /** "Av. España · 16:52 · precisión 8 m" con enlace a Google Maps (RN-21). */
-function mostrar_ubicacion(array $ubicacion, bool $con_referencia = true): string
+function mostrar_ubicacion(array $ubicacion, bool $con_referencia = true, bool $con_precision = true): string
 {
     $partes = [];
     if ($con_referencia) {
         $partes[] = e($ubicacion['referencia']);
     }
     $partes[] = e(formatear_hora($ubicacion['registrado_en']));
-    $partes[] = $ubicacion['origen'] === 'MANUAL'
-        ? '<span class="badge text-bg-warning">Manual</span>'
-        : 'precisión ' . e($ubicacion['precision_m'] ?? '?') . ' m';
+    // La precisión se omite donde sobra texto (vistas del General); "Manual" siempre se muestra.
+    if ($ubicacion['origen'] === 'MANUAL') {
+        $partes[] = '<span class="badge text-bg-warning">Manual</span>';
+    } elseif ($con_precision) {
+        $partes[] = 'precisión ' . e($ubicacion['precision_m'] ?? '?') . ' m';
+    }
     $enlace = armar_enlace_google_maps((float) $ubicacion['latitud'], (float) $ubicacion['longitud']);
     return implode(' · ', $partes)
         . ' <a href="' . e($enlace) . '" target="_blank" rel="noopener" class="text-nowrap">'
@@ -287,4 +290,30 @@ function obtener_cantidades(int $operativo_id): array
         $cantidades[(int) $fila['concepto_resultado_id']] = (int) $fila['cantidad'];
     }
     return $cantidades;
+}
+
+/** Control inopinado registrado con un id_envio (para responder al reintento sin duplicarlo). */
+function obtener_control_por_envio(string $id_envio): ?array
+{
+    $fila = consultar(
+        'SELECT ci.id, ci.resultado, ci.observacion, ci.distancia_m, ci.registrado_en, u.nombre AS supervisor
+         FROM controles_inopinados ci JOIN usuarios u ON u.id = ci.usuario_id
+         WHERE ci.id_envio = :id_envio',
+        ['id_envio' => $id_envio],
+    )->fetch();
+    return $fila ?: null;
+}
+
+/** Datos de un control para la lista "Controles anteriores" (se arma en el navegador). */
+function presentar_control(array $control): array
+{
+    return [
+        'id'          => (int) $control['id'],
+        'resultado'   => $control['resultado'],
+        'etiqueta'    => RESULTADOS_CONTROL[$control['resultado']],
+        'hora'        => formatear_hora($control['registrado_en']),
+        'supervisor'  => $control['supervisor'],
+        'distancia_m' => $control['distancia_m'] === null ? null : (int) $control['distancia_m'],
+        'observacion' => $control['observacion'],
+    ];
 }

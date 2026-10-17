@@ -80,14 +80,14 @@ const DIVISIONES = [
     'DUE'      => 'DUE',
     'DIVINCRI' => 'DIVINCRI La Libertad',
 ];
-const LARGO_MINIMO_CLAVE = 10;
+const LARGO_MINIMO_CLAVE = 8;
 const LARGO_CLAVE_TEMPORAL = 12;
 // Sin caracteres que se confunden al dictarlos o leerlos en el celular (0/o, 1/l/i).
 const ALFABETO_CLAVE_TEMPORAL = 'abcdefghjkmnpqrstuvwxyz23456789';
 
 const CAMPOS_HORARIO = ['fecha_servicio', 'hora_inicio', 'hora_fin'];
 const CAMPOS_DATOS = [
-    'tipos', 'nombre_plan', 'lugar_programado',
+    'tipos', 'lugar_programado', 'lugar_coordenadas',
     'jefe_grado', 'jefe_nombres', 'jefe_celular',
     'fuerzas_propias', 'fuerzas_apoyo', 'unidades_moviles',
     'observaciones',
@@ -405,6 +405,15 @@ function distancia_m(float $lat1, float $lng1, float $lat2, float $lng2): int
     return (int) round(2 * $radio_tierra_m * asin(min(1.0, sqrt($a))));
 }
 
+/** "-8.111600, -79.028800" para mostrar o volver a editar; '' si no hay coordenadas. */
+function formatear_coordenadas(string|float|null $latitud, string|float|null $longitud): string
+{
+    if ($latitud === null || $longitud === null || $latitud === '' || $longitud === '') {
+        return '';
+    }
+    return sprintf('%.6F, %.6F', (float) $latitud, (float) $longitud);
+}
+
 /** Enlace que no consume la API de Google Maps (RN-21). Siempre con punto decimal. */
 function armar_enlace_google_maps(float $latitud, float $longitud): string
 {
@@ -539,8 +548,9 @@ function operativo_controlable(array $operativo, string $servicio_vigente): bool
 }
 
 /**
- * Resultado y observación del control (RN-15). La observación es obligatoria
- * salvo cuando el resultado es CONFORME.
+ * Resultado y observación del control (RN-15). La observación solo se pide con
+ * CON_OBSERVACIONES y NO_ENCONTRADO, y ahí es obligatoria; con CONFORME no hay
+ * observación (si llega texto, se descarta).
  *
  * @return array{datos: array<string, mixed>, errores: array<string, string>}
  */
@@ -556,7 +566,7 @@ function validar_control(array $entrada): array
         $datos['resultado'] = $resultado;
     }
 
-    $observacion = trim((string) ($entrada['observacion'] ?? ''));
+    $observacion = $resultado === 'CONFORME' ? '' : trim((string) ($entrada['observacion'] ?? ''));
     if (mb_strlen($observacion) > 5000) {
         $errores['observacion'] = 'La observación admite hasta 5000 caracteres.';
     } elseif ($observacion === '' && $resultado !== null && $resultado !== 'CONFORME' && isset($datos['resultado'])) {
@@ -663,15 +673,6 @@ function validar_programacion(array $entrada, array $ids_tipos_activos, ?array $
         }
     }
 
-    if (in_array('nombre_plan', $campos, true)) {
-        $plan = $texto('nombre_plan');
-        if (mb_strlen($plan) > 150) {
-            $errores['nombre_plan'] = 'El nombre del plan admite hasta 150 caracteres.';
-        } else {
-            $datos['nombre_plan'] = $plan === '' ? null : $plan;
-        }
-    }
-
     if (in_array('lugar_programado', $campos, true)) {
         $lugar = $texto('lugar_programado');
         if ($lugar === '') {
@@ -680,6 +681,22 @@ function validar_programacion(array $entrada, array $ids_tipos_activos, ?array $
             $errores['lugar_programado'] = 'El lugar programado admite hasta 255 caracteres.';
         } else {
             $datos['lugar_programado'] = $lugar;
+        }
+    }
+
+    // Coordenadas del lugar programado: obligatorias (ubican el operativo en el mapa
+    // antes de iniciarse), pegadas de Google Maps.
+    if (in_array('lugar_coordenadas', $campos, true)) {
+        $texto_coordenadas = $texto('lugar_coordenadas');
+        $coordenadas = $texto_coordenadas === '' ? null : parsear_coordenadas($texto_coordenadas);
+        if ($texto_coordenadas === '') {
+            $errores['lugar_coordenadas'] = 'Pegue las coordenadas del lugar (toque Buscar para obtenerlas en Google Maps).';
+        } elseif ($coordenadas === null) {
+            $errores['lugar_coordenadas'] = 'No se reconocen las coordenadas. Cópielas de Google Maps (por ejemplo: -8.1116, -79.0288).';
+        } elseif (!dentro_de_la_libertad($coordenadas[0], $coordenadas[1])) {
+            $errores['lugar_coordenadas'] = 'Esas coordenadas están fuera de La Libertad. Revise que las copió bien.';
+        } else {
+            [$datos['lugar_latitud'], $datos['lugar_longitud']] = $coordenadas;
         }
     }
 
@@ -807,6 +824,28 @@ function validar_clave(string $clave): ?string
         return 'La clave admite hasta 72 caracteres.';
     }
     return null;
+}
+
+/**
+ * Cambio de clave por el propio usuario: la nueva debe ser válida, distinta de
+ * la actual y coincidir con la confirmación. La clave actual se verifica aparte
+ * (password_verify), porque necesita la base de datos.
+ *
+ * @return array<string, string> Errores por campo; vacío si es válido.
+ */
+function validar_cambio_clave(string $actual, string $nueva, string $confirmacion): array
+{
+    $errores = [];
+    $error = validar_clave($nueva);
+    if ($error !== null) {
+        $errores['nueva'] = $error;
+    } elseif ($nueva === $actual) {
+        $errores['nueva'] = 'La clave nueva debe ser distinta de la actual.';
+    }
+    if ($confirmacion !== $nueva) {
+        $errores['confirmacion'] = 'La confirmación no coincide con la clave nueva.';
+    }
+    return $errores;
 }
 
 /** Clave que ADMIN entrega al crear una cuenta o resetear la clave (RN-19). */

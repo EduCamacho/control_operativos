@@ -1,30 +1,35 @@
 <?php
 /**
- * Panel de captura de ubicación para iniciar o registrar un nuevo punto (docs/04).
+ * Modal de captura de ubicación para iniciar el operativo o registrar un nuevo
+ * punto (docs/04). Hoja inferior en el celular (sale desde abajo) y centrado en la PC.
+ * Es estático (no se cierra al tocar fuera ni con Escape) y no se puede cerrar
+ * mientras hay un envío pendiente, para no perder la ubicación capturada.
  * Va dentro de un elemento con x-data="capturaUbicacion(...)". Espera:
  *   $captura = ['titulo' => ..., 'boton' => ...]
  */
 declare(strict_types=1);
 ?>
-<div class="card shadow-sm border-success mb-3" x-show="fase !== 'inactiva'" x-cloak x-id="['captura']">
-    <div class="card-header d-flex justify-content-between align-items-center bg-success-subtle">
-        <span class="fw-semibold"><i class="bi bi-geo-alt-fill"></i> <?= e($captura['titulo']) ?></span>
-        <button type="button" class="btn-close" aria-label="Cerrar" @click="cancelar()"
-                x-show="fase !== 'enviando' && fase !== 'sin_conexion'"></button>
-    </div>
-    <div class="card-body">
-        <div class="mb-3">
-            <label class="form-label" :for="'referencia-' + $id('captura')">Referencia</label>
-            <input type="text" :id="'referencia-' + $id('captura')" x-ref="referencia" x-model="referencia" maxlength="255"
-                   class="form-control form-control-lg" :class="errores.referencia && 'is-invalid'"
-                   placeholder="Calle, avenida o sector" :disabled="fase === 'enviando' || fase === 'sin_conexion'">
-            <div class="invalid-feedback" x-text="errores.referencia"></div>
-        </div>
+<div class="modal fade modal-captura" tabindex="-1" x-ref="modal" data-bs-backdrop="static" data-bs-keyboard="false"
+     x-id="['captura']" :aria-labelledby="$id('captura') + '-titulo'" aria-modal="true" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-hoja-inferior">
+        <div class="modal-content">
+            <div class="modal-header encabezado-modal">
+                <h2 class="modal-title h5" :id="$id('captura') + '-titulo'"><i class="bi bi-geo-alt-fill"></i> <?= e($captura['titulo']) ?></h2>
+                <button type="button" class="btn-close btn-close-white" aria-label="Cerrar" @click="cancelar()" :disabled="bloqueado"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label" :for="'referencia-' + $id('captura')">Referencia</label>
+                    <input type="text" :id="'referencia-' + $id('captura')" x-ref="referencia" x-model="referencia" maxlength="255"
+                           class="form-control form-control-lg" :class="errores.referencia && 'is-invalid'"
+                           placeholder="Calle, avenida o sector" :disabled="bloqueado" @keydown.enter.prevent="fase === 'lista' && enviar()">
+                    <div class="invalid-feedback" x-text="errores.referencia"></div>
+                </div>
 
         <div aria-live="polite">
             <!-- Obteniendo el GPS -->
-            <div x-show="fase === 'obteniendo'" class="d-flex align-items-center gap-2 py-2">
-                <div class="spinner-border spinner-border-sm text-success" role="status"></div>
+            <div x-show="fase === 'obteniendo'" class="fila-flex align-items-center gap-2 py-2">
+                <div class="spinner-border spinner-border-sm texto-institucional" role="status"></div>
                 <span>Obteniendo ubicación…</span>
             </div>
 
@@ -99,7 +104,7 @@ declare(strict_types=1);
                 <div x-show="analizando" class="small text-body-secondary mb-2">Analizando…</div>
                 <div x-show="errorManual" class="text-danger small mb-2" x-text="errorManual"></div>
                 <div class="d-grid gap-2 d-sm-flex">
-                    <button type="button" class="btn btn-success boton-accion" @click="confirmarManual()"><i class="bi bi-check-lg"></i> Usar estas coordenadas</button>
+                    <button type="button" class="btn btn-institucional boton-accion" @click="confirmarManual()"><i class="bi bi-check-lg"></i> Usar estas coordenadas</button>
                     <a :href="enlaceMaps(latitudManual, longitudManual)" target="_blank" rel="noopener" class="btn btn-outline-secondary boton-accion"
                        :class="(latitudManual === '' || longitudManual === '') && 'disabled'"><i class="bi bi-geo-alt"></i> Ver en Google Maps</a>
                     <button type="button" class="btn btn-outline-secondary boton-accion" @click="obtenerGps()"><i class="bi bi-crosshair"></i> Volver a intentar con GPS</button>
@@ -118,11 +123,14 @@ declare(strict_types=1);
 
             <div x-show="errores.general" class="alert alert-danger py-2 mb-3" x-text="errores.general"></div>
         </div>
-
-        <button type="button" class="btn btn-success btn-lg w-100 boton-accion"
-                x-show="fase === 'lista' || fase === 'enviando'" :disabled="fase === 'enviando'" @click="enviar()">
-            <span x-show="fase === 'enviando'" class="spinner-border spinner-border-sm" role="status"></span>
-            <span x-text="fase === 'enviando' ? 'Enviando…' : <?= e(json_encode($captura['boton'])) ?>"></span>
-        </button>
+            </div>
+            <div class="modal-footer barra-modal">
+                <button type="button" class="btn btn-outline-secondary boton-accion flex-fill" @click="cancelar()" :disabled="bloqueado">Cancelar</button>
+                <button type="button" class="btn btn-institucional boton-accion flex-fill" :disabled="fase !== 'lista'" @click="enviar()">
+                    <span x-show="fase === 'enviando'" class="spinner-border spinner-border-sm" role="status"></span>
+                    <span x-text="fase === 'enviando' ? 'Enviando…' : <?= e(json_encode($captura['boton'])) ?>"></span>
+                </button>
+            </div>
+        </div>
     </div>
 </div>

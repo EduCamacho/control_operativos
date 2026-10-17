@@ -622,8 +622,8 @@ final class DominioTest extends TestCase
     {
         return [
             'tipos'            => ['1', '3'],
-            'nombre_plan'      => '  Saltamonte 2026 ',
             'lugar_programado' => 'Av. España con Jr. Grau',
+            'lugar_coordenadas' => '-8.1116, -79.0288',
             'jefe_grado'       => 'CAP',
             'jefe_nombres'     => 'Juan Pérez Rodríguez',
             'jefe_celular'     => '987 654 321',
@@ -639,16 +639,50 @@ final class DominioTest extends TestCase
         $r = validar_programacion(self::entrada_valida(), [1, 2, 3]);
         $this->assertSame([], $r['errores']);
         $this->assertSame([1, 3], $r['datos']['tipos']);
-        $this->assertSame('Saltamonte 2026', $r['datos']['nombre_plan']);
         $this->assertSame('987654321', $r['datos']['jefe_celular']);
         $this->assertSame(12, $r['datos']['fuerzas_propias']);
         $this->assertNull($r['datos']['observaciones']);
     }
 
-    public function test_nombre_del_plan_vacio_queda_null(): void
+    public function test_coordenadas_del_lugar_son_obligatorias(): void
     {
-        $entrada = ['nombre_plan' => '   '] + self::entrada_valida();
-        $this->assertNull(validar_programacion($entrada, [1, 2, 3])['datos']['nombre_plan']);
+        $r = validar_programacion(['lugar_coordenadas' => '  '] + self::entrada_valida(), [1, 2, 3]);
+        $this->assertArrayHasKey('lugar_coordenadas', $r['errores']);
+        $this->assertArrayNotHasKey('lugar_latitud', $r['datos']);
+    }
+
+    public function test_programacion_valida_guarda_las_coordenadas_del_lugar(): void
+    {
+        $r = validar_programacion(self::entrada_valida(), [1, 2, 3]);
+        $this->assertSame(-8.1116, $r['datos']['lugar_latitud']);
+        $this->assertSame(-79.0288, $r['datos']['lugar_longitud']);
+    }
+
+    public function test_coordenadas_del_lugar_pegadas_de_google_maps(): void
+    {
+        $r = validar_programacion(['lugar_coordenadas' => 'https://www.google.com/maps/@-8.1116,-79.0288,17z'] + self::entrada_valida(), [1, 2, 3]);
+        $this->assertSame([], $r['errores']);
+        $this->assertSame(-8.1116, $r['datos']['lugar_latitud']);
+        $this->assertSame(-79.0288, $r['datos']['lugar_longitud']);
+    }
+
+    public function test_coordenadas_del_lugar_invalidas_o_fuera_de_la_libertad(): void
+    {
+        $this->assertArrayHasKey('lugar_coordenadas', validar_programacion(['lugar_coordenadas' => 'Av. España'] + self::entrada_valida(), [1, 2, 3])['errores']);
+        $this->assertArrayHasKey('lugar_coordenadas', validar_programacion(['lugar_coordenadas' => '8.1116, 79.0288'] + self::entrada_valida(), [1, 2, 3])['errores']);
+    }
+
+    public function test_en_curso_no_cambia_las_coordenadas_del_lugar(): void
+    {
+        $this->assertNotContains('lugar_coordenadas', campos_editables('EN_CURSO', true));
+        $this->assertContains('lugar_coordenadas', campos_editables('PROGRAMADO', true));
+    }
+
+    public function test_formatea_coordenadas_para_mostrar_y_reeditar(): void
+    {
+        $this->assertSame('-8.111600, -79.028800', formatear_coordenadas('-8.1116000', '-79.0288000'));
+        $this->assertSame('', formatear_coordenadas(null, null));
+        $this->assertSame([-8.1116, -79.0288], parsear_coordenadas(formatear_coordenadas(-8.1116, -79.0288)));
     }
 
     public function test_programacion_con_errores(): void
@@ -677,10 +711,10 @@ final class DominioTest extends TestCase
 
     public function test_rechaza_textos_demasiado_largos(): void
     {
-        $entrada = ['lugar_programado' => str_repeat('á', 256), 'nombre_plan' => str_repeat('a', 151)] + self::entrada_valida();
+        $entrada = ['lugar_programado' => str_repeat('á', 256), 'jefe_nombres' => str_repeat('a', 151)] + self::entrada_valida();
         $errores = validar_programacion($entrada, [1, 2, 3])['errores'];
         $this->assertArrayHasKey('lugar_programado', $errores);
-        $this->assertArrayHasKey('nombre_plan', $errores);
+        $this->assertArrayHasKey('jefe_nombres', $errores);
     }
 
     public function test_255_caracteres_con_tilde_son_validos(): void
@@ -759,10 +793,28 @@ final class DominioTest extends TestCase
 
     public function test_valida_el_largo_de_la_clave(): void
     {
-        $this->assertNotNull(validar_clave('123456789'));
-        $this->assertNull(validar_clave('1234567890'));
-        $this->assertNull(validar_clave('ñandú-áéíó'));
+        $this->assertNotNull(validar_clave('1234567'));
+        $this->assertNull(validar_clave('12345678'));
+        $this->assertNull(validar_clave('ñandú-áé'));
         $this->assertNotNull(validar_clave(str_repeat('a', 73)));
+    }
+
+    public function test_cambio_de_clave_valido(): void
+    {
+        $this->assertSame([], validar_cambio_clave('ClaveVieja2026', 'ClaveNueva2026', 'ClaveNueva2026'));
+    }
+
+    public function test_cambio_de_clave_con_errores(): void
+    {
+        $this->assertArrayHasKey('nueva', validar_cambio_clave('ClaveVieja2026', 'corta', 'corta'));
+        $this->assertSame(
+            ['nueva' => 'La clave nueva debe ser distinta de la actual.'],
+            validar_cambio_clave('ClaveVieja2026', 'ClaveVieja2026', 'ClaveVieja2026'),
+        );
+        $this->assertSame(
+            ['confirmacion' => 'La confirmación no coincide con la clave nueva.'],
+            validar_cambio_clave('ClaveVieja2026', 'ClaveNueva2026', 'ClaveNueva2025'),
+        );
     }
 
     public function test_clave_temporal_sin_caracteres_confusos(): void
@@ -1082,6 +1134,13 @@ final class DominioTest extends TestCase
     public function test_control_conforme_sin_observacion(): void
     {
         $r = validar_control(['resultado' => 'CONFORME', 'observacion' => '  ', 'id_envio' => 'abcdef012345']);
+        $this->assertSame([], $r['errores']);
+        $this->assertNull($r['datos']['observacion']);
+    }
+
+    public function test_control_conforme_descarta_la_observacion(): void
+    {
+        $r = validar_control(['resultado' => 'CONFORME', 'observacion' => 'Texto escrito antes de cambiar a Conforme', 'id_envio' => 'abcdef012345']);
         $this->assertSame([], $r['errores']);
         $this->assertNull($r['datos']['observacion']);
     }

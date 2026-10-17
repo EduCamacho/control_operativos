@@ -29,6 +29,11 @@ foreach (listar_operativos_para_mapa($servicio) as $fila) {
         'jefe'              => $fila['jefe_grado'] . ' ' . $fila['jefe_nombres'],
         'jefe_celular'      => $fila['jefe_celular'],
         'puntos'            => (int) $fila['puntos'],
+        // Lugar programado: ubica en el mapa al operativo que aún no registra puntos.
+        'lugar'             => $fila['lugar_latitud'] === null ? null : [
+            'latitud'  => (float) $fila['lugar_latitud'],
+            'longitud' => (float) $fila['lugar_longitud'],
+        ],
         'controles'         => (int) $fila['controles'],
         'ubicacion'         => $fila['latitud'] === null ? null : [
             'latitud'     => (float) $fila['latitud'],

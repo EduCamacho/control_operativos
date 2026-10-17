@@ -21,7 +21,7 @@ $fecha_valida = static function (mixed $valor, string $por_defecto): string {
 
 $estados_filtro = ETIQUETAS_ESTADO;
 unset($estados_filtro['SIN_PROGRAMAR']);
-$estados_filtro['PENDIENTE_NOTA'] = 'Finalizado sin nota';
+$estados_filtro['PENDIENTE_NOTA'] = 'Finalizado sin N.I';
 
 $filtros = [
     'desde'     => $fecha_valida($_GET['desde'] ?? null, validar_fecha($vigente)->modify('-7 days')->format('Y-m-d')),

@@ -44,13 +44,17 @@ $menu = match ($usuario['rol'] ?? null) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#0b3d2e">
+    <meta name="theme-color" content="#1f6f50">
     <title><?= e($titulo) ?> · Control de Operativos</title>
     <link rel="stylesheet" href="<?= e(armar_url('assets/vendor/bootstrap/bootstrap.min.css')) ?>">
     <link rel="stylesheet" href="<?= e(armar_url('assets/vendor/bootstrap-icons/bootstrap-icons.min.css')) ?>">
     <link rel="stylesheet" href="<?= e(armar_url('assets/css/app.css')) ?>">
     <?php if ($usuario !== null): ?>
         <meta name="csrf" content="<?= e(obtener_token_csrf()) ?>">
+    <?php endif; ?>
+    <?php if ($usuario !== null): // Confirmaciones con SweetAlert2 (form[data-confirmar]). ?>
+        <script defer src="<?= e(armar_url('assets/vendor/sweetalert2/sweetalert2.all.min.js')) ?>"></script>
+        <script defer src="<?= e(armar_url('assets/js/confirmar.js')) ?>"></script>
     <?php endif; ?>
     <?php foreach ($scripts ?? [] as $script): // Antes de Alpine, para que registren sus componentes. ?>
         <script defer src="<?= e(armar_url($script)) ?>"></script>
@@ -84,6 +88,10 @@ $menu = match ($usuario['rol'] ?? null) {
                     <?= e($usuario['unidad_nombre'] ?? $usuario['nombre']) ?>
                     <span class="d-block opacity-75"><?= e($usuario['usuario']) ?> · <?= e($usuario['rol']) ?></span>
                 </div>
+                <a href="<?= e(armar_url('cuenta/clave')) ?>"
+                   class="btn btn-sm w-100 mb-2 enlace-cuenta<?= $ruta_actual === 'cuenta/clave' ? ' active' : '' ?>">
+                    <i class="bi bi-key" aria-hidden="true"></i> Cambiar clave
+                </a>
                 <form method="post" action="<?= e(armar_url('salir')) ?>">
                     <?= campo_csrf() ?>
                     <button type="submit" class="btn btn-outline-light btn-sm w-100">

@@ -26,11 +26,11 @@ erDiagram
 | `usuarios` | Cuentas del sistema | `rol`: `ADMIN`, `SUPERVISOR` o `UNIDAD`. `unidad_id` es único: una cuenta por unidad. Las cuentas ADMIN y SUPERVISOR tienen `unidad_id` NULL. |
 | `tipos_operativo` | Catálogo: control de identidad, rastrillaje, etc. | Lo administra ADMIN. |
 | `conceptos_resultado` | Catálogo: detenidos en flagrancia, papeletas IRNT, etc. | Lo administra ADMIN. El formulario de cierre se genera a partir de este catálogo. |
-| `operativos` | Un registro por unidad, fecha de servicio y turno | **Clave única** `(unidad_id, fecha_servicio, turno)` (RN-01). `estado`: `PROGRAMADO`, `EN_CURSO` o `FINALIZADO`. |
+| `operativos` | Los operativos de cada unidad; puede haber varios por fecha de servicio y turno (RN-01) | Índice `(unidad_id, fecha_servicio, turno)` sin unicidad (`sql/008` quitó la clave única). `estado`: `PROGRAMADO`, `EN_CURSO` o `FINALIZADO`. |
 | `operativo_tipos` | Relación N:M entre operativo y tipos | Clave primaria compuesta. |
 | `operativo_ubicaciones` | Puntos del recorrido | La última por `registrado_en` es la posición actual. `origen` es `GPS` (con precisión en metros) o `MANUAL` (sin precisión), RN-09. |
 | `operativo_resultados` | Cantidad por concepto | Clave primaria `(operativo_id, concepto_resultado_id)`. Se crean al finalizar. |
-| `controles_inopinados` | Controles del General | `distancia_m` se calcula con Haversine contra la última ubicación del operativo. |
+| `controles_inopinados` | Controles del General | Resultado y observación. Desde el 17/10/2026 no se guardan la ubicación del supervisor ni la distancia (puede controlar con un dron); esas columnas quedan para los controles anteriores. |
 | `bitacora` | Auditoría de acciones | Es obligatoria porque las cuentas de unidad son compartidas (RN-17). |
 
 ## Decisiones de diseño
@@ -41,6 +41,8 @@ erDiagram
 - **Origen de la ubicación** (RN-09): `operativo_ubicaciones.origen` y `controles_inopinados.origen`, como `ENUM('GPS','MANUAL')`. Se agregan con `sql/003`. Las filas existentes quedan como `GPS`.
 - **Envíos sin duplicar** (RN-11a): `operativo_ubicaciones.id_envio` (único) lo genera el celular en cada captura. Si se corta la señal después de que el servidor guardó el punto, el reintento trae el mismo `id_envio` y se responde éxito sin duplicarlo. Se agrega con `sql/004`. El cierre es idempotente por estado: si el operativo ya está `FINALIZADO`, el reintento responde éxito.
 - **Controles sin duplicar**: `controles_inopinados.id_envio` (único), igual que en las ubicaciones. Se agrega con `sql/005`.
+- **Coordenadas del lugar programado**: `operativos.lugar_latitud` y `lugar_longitud`, `DECIMAL(10,7) NULL`. Se agregan con `sql/006`. La aplicación las exige al programar; la columna admite NULL solo por los operativos creados antes de `006`.
+- **Sin nombre del plan**: la columna `operativos.nombre_plan` se eliminó con `sql/007` (el campo dejó de pedirse al programar).
 - **Grado del jefe**: lista fija en la constante `GRADOS` de `app/dominio.php`. No se crea una tabla, porque no cambia. Se sigue guardando en `jefe_grado VARCHAR(30)`.
 - **Cierre de sesiones** (RN-19): `usuarios.version_sesion` (entero) se incrementa al resetear la clave o desactivar la cuenta. Cada petición compara el valor guardado en la sesión con el de la base de datos y cierra la sesión si no coinciden. Se agrega con `sql/003`.
 - **Las coordenadas son `DECIMAL(10,7)`**, que da precisión de alrededor de 1 cm. No se usan tipos espaciales, porque no hacen falta sin jurisdicciones.

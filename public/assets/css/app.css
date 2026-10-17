@@ -2,8 +2,42 @@
 
 :root {
     --bs-body-font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --color-institucional: #0b3d2e;
+    /* Verde institucional: un solo lugar para ajustar el tono de toda la app. */
+    --color-institucional: #1f6f50;
+    --color-institucional-oscuro: #185a41;   /* hover */
+    --color-institucional-activo: #134a35;   /* al presionar */
+    --color-institucional-claro: #8fbfac;    /* borde de los campos con foco */
+    --color-institucional-rgb: 31, 111, 80;
     --color-naranja: #fd7e14;
+    --color-recorrido: #C2185B;   /* línea y puntos del recorrido en el mapa del supervisor */
+
+    /* Enlaces en el verde institucional en vez del azul de Bootstrap. El azul
+       (primary) se reserva para el estado FINALIZADO. */
+    --bs-link-color: var(--color-institucional);
+    --bs-link-color-rgb: var(--color-institucional-rgb);
+    --bs-link-hover-color: var(--color-institucional-oscuro);
+    --bs-link-hover-color-rgb: 24, 90, 65;
+}
+
+/* Otros componentes de Bootstrap que usan azul sin significado de estado. */
+.pagination {
+    --bs-pagination-color: var(--color-institucional);
+    --bs-pagination-hover-color: var(--color-institucional-oscuro);
+    --bs-pagination-focus-color: var(--color-institucional-oscuro);
+    --bs-pagination-focus-box-shadow: 0 0 0 .25rem rgba(var(--color-institucional-rgb), .2);
+    --bs-pagination-active-bg: var(--color-institucional);
+    --bs-pagination-active-border-color: var(--color-institucional);
+}
+
+.list-group {
+    --bs-list-group-active-bg: var(--color-institucional);
+    --bs-list-group-active-border-color: var(--color-institucional);
+}
+
+.nav-tabs .nav-link,
+.nav-link {
+    --bs-nav-link-color: var(--color-institucional);
+    --bs-nav-link-hover-color: var(--color-institucional-oscuro);
 }
 
 .barra-principal {
@@ -97,20 +131,119 @@
     max-width: 1200px;
 }
 
-/* Tarjetas de turno (Mis operativos): borde izquierdo con el color del estado. */
-.tarjeta-turno {
-    border-left-width: 5px;
-}
-.tarjeta-sin_programar { border-left-color: var(--bs-warning); }
-.tarjeta-programado { border-left-color: var(--bs-secondary); }
-.tarjeta-en_curso { border-left-color: var(--bs-success); }
-.tarjeta-no_iniciado { border-left-color: var(--bs-danger); }
-.tarjeta-sin_cierre { border-left-color: var(--color-naranja); }
-.tarjeta-finalizado { border-left-color: var(--bs-primary); }
+/* Color del estado en el borde izquierdo (turnos, filas y encabezado de la ficha). */
+.tarjeta-sin_programar { border-left-color: var(--bs-warning) !important; }
+.tarjeta-programado { border-left-color: var(--bs-secondary) !important; }
+.tarjeta-en_curso { border-left-color: var(--bs-success) !important; }
+.tarjeta-no_iniciado { border-left-color: var(--bs-danger) !important; }
+.tarjeta-sin_cierre { border-left-color: var(--color-naranja) !important; }
+.tarjeta-finalizado { border-left-color: var(--bs-primary) !important; }
 
-/* El botón de la tarjeta queda por encima del enlace que cubre toda la tarjeta. */
-.tarjeta-turno .card-footer {
-    z-index: 2;
+/* Mis operativos: los cuatro turnos (una columna en el celular, cuatro en la PC). */
+.turnos {
+    display: grid;
+    gap: .6rem;
+}
+
+@media (min-width: 992px) {
+    .turnos {
+        grid-template-columns: repeat(4, 1fr);
+        align-items: start;
+    }
+}
+
+.fila-estado {
+    border: 1px solid var(--bs-border-color);
+    border-left: 4px solid var(--bs-border-color);
+    border-radius: .5rem;
+    background: var(--bs-body-bg);
+}
+
+.turno {
+    padding: .65rem .8rem;
+    box-shadow: var(--bs-box-shadow-sm);
+}
+
+.turno.ahora {
+    border-color: var(--color-institucional);
+    box-shadow: 0 0 0 1px var(--color-institucional), var(--bs-box-shadow-sm);
+}
+
+.insignia-ahora {
+    background: var(--color-institucional);
+    color: #fff;
+    font-size: .65rem;
+    letter-spacing: .04em;
+}
+
+/* Pestañas Próximos / Historial (segmentadas, en el color institucional). */
+.pestanas {
+    display: flex;
+    background: var(--bs-tertiary-bg);
+    border-radius: .6rem;
+    padding: .25rem;
+    gap: .25rem;
+}
+
+.pestana {
+    flex: 1;
+    border: 0;
+    background: none;
+    border-radius: .45rem;
+    padding: .5rem;
+    min-height: 40px;
+    font-weight: 600;
+    color: var(--bs-secondary-color);
+}
+
+.pestana .badge {
+    background: var(--bs-secondary-bg);
+    color: var(--bs-body-color);
+}
+
+.pestana.activa {
+    background: var(--bs-body-bg);
+    color: var(--color-institucional);
+    box-shadow: var(--bs-box-shadow-sm);
+}
+
+.pestana.activa .badge {
+    background: var(--color-institucional);
+    color: #fff;
+}
+
+/* Listas por día (próximos e historial). */
+.grupo-dia {
+    margin-bottom: 1rem;
+}
+
+.titulo-dia {
+    font-size: .75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--bs-secondary-color);
+    margin-bottom: .35rem;
+}
+
+.fila-operativo {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .5rem .75rem;
+    margin-bottom: .35rem;
+    color: inherit;
+    text-decoration: none;
+    min-width: 0;
+}
+
+.fila-operativo:hover {
+    background: var(--bs-tertiary-bg);
+    color: inherit;
+}
+
+.fila-operativo > .me-auto {
+    min-width: 0;
 }
 
 /* Contador − / +: sin flechas del navegador, número centrado. */
@@ -231,15 +364,773 @@
     text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 3px #fff;
 }
 
-/* Tablero de cumplimiento. */
-.tablero th[scope=row] {
-    min-width: 9rem;
+
+/* Asistente de programación por pasos. */
+.pasos-progreso {
+    gap: .25rem;
 }
 
-.celda-tablero {
+.paso-indicador {
+    border: 0;
+    background: none;
+    padding: .25rem 0 .5rem;
+    border-bottom: 4px solid var(--bs-border-color);
+    color: var(--bs-secondary-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .15rem;
+    font-size: .75rem;
+    line-height: 1.1;
+}
+
+.paso-indicador:disabled {
+    opacity: 1;
+    cursor: default;
+}
+
+.paso-numero {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    background: var(--bs-secondary-bg);
+}
+
+.paso-indicador.hecho {
+    border-bottom-color: var(--bs-success);
+    color: var(--bs-success);
+}
+
+.paso-indicador.hecho .paso-numero {
+    background: var(--bs-success);
+    color: #fff;
+}
+
+.paso-indicador.actual {
+    border-bottom-color: var(--color-institucional);
+    color: var(--bs-body-color);
+    font-weight: 600;
+}
+
+.paso-indicador.actual .paso-numero {
+    background: var(--color-institucional);
+    color: #fff;
+}
+
+.titulo-paso:focus {
+    outline: none;
+}
+
+/* Botones Atrás / Siguiente fijos al pie, por encima del teclado y del borde inferior del celular. */
+.barra-pasos {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    margin: 0 -.75rem;
+    padding: .75rem .75rem calc(.75rem + env(safe-area-inset-bottom));
+    background: var(--bs-body-bg);
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.turno-calculado {
+    background: var(--bs-tertiary-bg);
+}
+
+/* Botones con el color institucional (el del menú lateral), para formularios y acciones.
+   No se cambia --bs-primary: el azul es el color del estado FINALIZADO. */
+.btn-institucional {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--color-institucional);
+    --bs-btn-border-color: var(--color-institucional);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--color-institucional-oscuro);
+    --bs-btn-hover-border-color: var(--color-institucional-oscuro);
+    --bs-btn-focus-shadow-rgb: var(--color-institucional-rgb);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--color-institucional-activo);
+    --bs-btn-active-border-color: var(--color-institucional-activo);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: var(--color-institucional);
+    --bs-btn-disabled-border-color: var(--color-institucional);
+}
+
+.btn-outline-institucional {
+    --bs-btn-color: var(--color-institucional);
+    --bs-btn-border-color: var(--color-institucional);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--color-institucional);
+    --bs-btn-hover-border-color: var(--color-institucional);
+    --bs-btn-focus-shadow-rgb: var(--color-institucional-rgb);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--color-institucional);
+    --bs-btn-active-border-color: var(--color-institucional);
+    --bs-btn-disabled-color: var(--color-institucional);
+    --bs-btn-disabled-border-color: var(--color-institucional);
+}
+
+/* Foco de los campos con el color institucional en vez del azul de Bootstrap. */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--color-institucional-claro);
+    box-shadow: 0 0 0 .25rem rgba(var(--color-institucional-rgb), .2);
+}
+
+.form-check-input:focus {
+    border-color: var(--color-institucional-claro);
+    box-shadow: 0 0 0 .25rem rgba(var(--color-institucional-rgb), .2);
+}
+
+.form-check-input:checked {
+    background-color: var(--color-institucional);
+    border-color: var(--color-institucional);
+}
+
+/* Tipos de operativo: casillas con la fila completa tocable (mínimo 44 px). */
+.casilla-tipo {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    min-height: 44px;
+    margin: 0;
+    padding-left: 0;
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+}
+
+.casilla-tipo .form-check-input {
+    float: none;
+    margin: 0;
+    width: 1.3em;
+    height: 1.3em;
+    flex-shrink: 0;
+}
+
+.casilla-tipo .form-check-label {
+    flex: 1;
+    padding: .55rem 0;
+    cursor: pointer;
+}
+
+/* El lugar es lo principal del paso 2: tarjeta con borde institucional. */
+.tarjeta-lugar {
+    border-left: 5px solid var(--color-institucional);
+}
+
+.tarjeta-lugar .card-header h3,
+.tarjeta-lugar h2 {
+    color: var(--color-institucional);
+}
+
+/* Coordenadas del lugar: el botón Buscar va pegado al campo y no compite con él. */
+.boton-buscar-mapa {
+    font-size: .95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+}
+
+/* Instrucciones para obtener las coordenadas: recuadro con una lista de pasos. */
+.ayuda-coordenadas {
+    background: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    padding: .65rem .8rem;
+}
+
+.pasos-coordenadas li {
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+}
+
+.pasos-coordenadas li + li {
+    margin-top: .4rem;
+}
+
+.pasos-coordenadas .numero {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.15rem;
+    height: 1.15rem;
+    border-radius: 50%;
+    background: var(--color-institucional);
+    color: #fff;
+    font-size: .7rem;
+    font-weight: 600;
+    margin-top: .05rem;
+    flex-shrink: 0;
+}
+
+/* Marcador en el lugar programado (operativo aún sin puntos): fondo blanco y borde
+   punteado del color del estado, para no confundirlo con una posición real. */
+.marcador-operativo.marcador-programado {
+    background: #fff;
+    color: var(--color-marcador);
+    border: 2px dashed var(--color-marcador);
+}
+
+.marcador-operativo.marcador-programado::after {
+    border-top-color: var(--color-marcador);
+}
+
+.mapa-punto-programado {
+    background: #fff;
+    border: 2px dashed var(--bs-secondary-color);
+    box-shadow: none;
+}
+
+/* --- Ficha del operativo (operativos/ver) --- */
+
+/* Encabezado con el borde izquierdo del color del estado (clases .tarjeta-<estado>). */
+.encabezado-operativo {
+    border-left-width: 5px;
+}
+
+/* Ficha del General: acciones como botones cuadrados en una fila (2 o 3, del mismo ancho). */
+.acciones-ficha {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: .5rem;
+}
+
+.boton-cuadrado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .25rem;
+    min-height: 72px;
+    padding: .5rem .25rem;
+    font-weight: 600;
+    font-size: .85rem;
+    line-height: 1.15;
+}
+
+.boton-cuadrado .bi {
+    font-size: 1.4rem;
+}
+
+.titulo-tarjeta {
+    color: var(--color-institucional);
+    font-weight: 600;
+}
+
+.enlace-institucional {
+    color: var(--color-institucional);
+}
+
+.enlace-institucional:hover {
+    color: var(--color-institucional-oscuro);
+}
+
+.aviso-estado {
+    background: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    padding: .75rem 1rem;
+}
+
+/* Datos del operativo: ícono a la izquierda, etiqueta pequeña y valor. */
+.dato {
+    display: flex;
+    gap: .75rem;
+    padding: .55rem 0;
+}
+
+.dato + .dato {
+    border-top: 1px solid var(--bs-border-color-translucent);
+}
+
+.dato-icono {
+    color: var(--color-institucional);
+    font-size: 1.1rem;
+    line-height: 1.4;
+    flex-shrink: 0;
+}
+
+.dato-etiqueta {
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--bs-secondary-color);
+}
+
+/* Cifras (fuerzas y resultados): recuadros con el número grande. */
+.cifras {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+    gap: .5rem;
+}
+
+.cifras-compactas {
+    grid-template-columns: repeat(3, 1fr);
+    margin-top: .25rem;
+}
+
+.cifra {
+    background: var(--bs-tertiary-bg);
+    border-radius: .5rem;
+    padding: .45rem .5rem;
+    text-align: center;
+}
+
+.cifra-numero {
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--color-institucional);
+}
+
+.cifra-etiqueta {
+    font-size: .75rem;
+    color: var(--bs-secondary-color);
+    line-height: 1.2;
+}
+
+/* Recorrido como línea de tiempo vertical; el punto más reciente arriba y resaltado. */
+.recorrido li {
+    position: relative;
+    padding: 0 0 .9rem 1.4rem;
+}
+
+.recorrido li:last-child {
+    padding-bottom: 0;
+}
+
+.recorrido li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: .35rem;
+    width: .7rem;
+    height: .7rem;
+    border-radius: 50%;
+    background: var(--bs-body-bg);
+    border: 2px solid var(--color-institucional);
+}
+
+.recorrido li.reciente::before {
+    background: var(--color-institucional);
+}
+
+.recorrido li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: .3rem;
+    top: 1.15rem;
+    bottom: .1rem;
+    width: 2px;
+    background: var(--bs-border-color);
+}
+
+
+/* Recorrido plegado: el último punto visible no muestra la línea hacia los ocultos. */
+.recorrido li.sin-linea::after {
+    display: none;
+}
+
+/* Modal de captura de ubicación (Iniciar / Nuevo punto). */
+.encabezado-modal {
+    background: var(--color-institucional);
+    color: #fff;
+}
+
+.texto-institucional {
+    color: var(--color-institucional);
+}
+
+.barra-modal {
+    flex-wrap: nowrap;
+    padding-bottom: calc(.75rem + env(safe-area-inset-bottom));
+}
+
+/* En el celular, el modal es una hoja inferior: sale desde abajo, ocupa solo lo
+   necesario (hasta 85 % de la altura) y deja ver la ficha detrás. En la PC queda centrado. */
+@media (max-width: 575.98px) {
+    .modal-hoja-inferior {
+        margin: 0;
+        width: 100%;
+        max-width: none;
+        min-height: 100%;
+        align-items: flex-end;
+    }
+
+    .modal-hoja-inferior.modal-dialog-scrollable {
+        height: 100%;
+    }
+
+    .modal-hoja-inferior .modal-content {
+        max-height: 85dvh;
+        border: 0;
+        border-radius: 1rem 1rem 0 0;
+    }
+
+    .modal-hoja-inferior .modal-header {
+        border-radius: 1rem 1rem 0 0;
+    }
+
+    /* Entra deslizándose desde abajo en vez de bajar desde arriba. */
+    .modal.fade .modal-hoja-inferior {
+        transform: translateY(100%);
+        transition: transform .25s ease-out;
+    }
+
+    .modal.show .modal-hoja-inferior {
+        transform: none;
+    }
+}
+
+/* Título de sección dentro de una pantalla (por ejemplo, "Servicio diario" y "Otros días"). */
+.titulo-seccion {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--color-institucional);
+    margin-bottom: .6rem;
+}
+
+.titulo-seccion-detalle {
+    font-weight: 400;
+    font-size: .9rem;
+    color: var(--bs-secondary-color);
+}
+
+/* Diálogos de SweetAlert2 con la tipografía y el redondeo del sistema. */
+.alerta-sistema {
+    font-family: var(--bs-body-font-family);
+    border-radius: 1rem;
+}
+
+.alerta-sistema .swal2-title {
+    font-size: 1.3rem;
+}
+
+.alerta-sistema .swal2-html-container {
+    font-size: 1rem;
+}
+
+/* Enlace "Cambiar clave" al pie del menú lateral. */
+.barra-lateral .enlace-cuenta {
+    color: rgba(255, 255, 255, .85);
+    border: 1px solid rgba(255, 255, 255, .25);
+}
+
+.barra-lateral .enlace-cuenta:hover,
+.barra-lateral .enlace-cuenta.active {
+    color: #fff;
+    background: rgba(255, 255, 255, .12);
+}
+
+/* Operativo dentro de un turno de Mis operativos (un turno puede tener varios). */
+.operativo-en-turno {
+    padding: .55rem .7rem;
+    margin-top: .5rem;
+}
+
+
+/* "Ver recorrido" en el mapa del supervisor: puntos numerados (magenta, como la línea) y barra para volver. */
+.punto-recorrido {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--color-recorrido);
+    color: #fff;
+    font: 700 12px/26px var(--bs-body-font-family);
+    text-align: center;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .35);
+}
+
+.punto-recorrido.inicio {
+    background: #fff;
+    color: var(--color-recorrido);
+    border-color: var(--color-recorrido);
+}
+
+.punto-recorrido.ultimo {
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    box-shadow: 0 0 0 4px rgba(194, 24, 91, .3), 0 1px 4px rgba(0, 0, 0, .35);
+}
+
+.barra-recorrido {
+    z-index: 5;
+    white-space: nowrap;
+}
+
+/* Igual que .d-flex pero sin !important: se usa en elementos con x-show de Alpine,
+   que oculta con display:none en línea (d-flex lo anularía y el elemento no se ocultaría). */
+.fila-flex {
+    display: flex;
+}
+
+/* Control recién registrado: resaltado en la lista de controles anteriores. */
+.control-nuevo {
+    background: rgba(var(--color-institucional-rgb), .08);
+    border-radius: .35rem;
+    padding-left: .5rem !important;
+    padding-right: .5rem !important;
+}
+
+/* --- Registrar control (supervisor) --- */
+
+
+/* Tres botones de resultado en una fila, con ícono grande. */
+.botones-resultado {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .5rem;
+}
+
+.boton-resultado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .3rem;
+    min-height: 88px;
+    padding: .5rem .25rem;
+    font-weight: 600;
+    font-size: .9rem;
+    line-height: 1.15;
+}
+
+.boton-resultado .bi {
+    font-size: 1.6rem;
+}
+
+
+/* --- Tablero de cumplimiento (compacto, poco texto) --- */
+
+.selector-fecha {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+}
+
+/* La fecha se ve como texto; encima hay un input date invisible que abre el calendario. */
+.fecha-tocable {
+    position: relative;
+    padding: .25rem .6rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .375rem;
     min-width: 6.5rem;
+    text-align: center;
 }
 
-.celda-tablero a:hover {
-    filter: brightness(.92);
+.fecha-tocable input[type=date] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Chips de división y "Solo alertas". */
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .3rem .75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 999px;
+    font-size: .85rem;
+    color: var(--bs-body-color);
+    text-decoration: none;
+    background: var(--bs-body-bg);
+}
+
+.chip.activo {
+    background: var(--color-institucional);
+    border-color: var(--color-institucional);
+    color: #fff;
+}
+
+.chip-alertas.activo {
+    background: var(--bs-danger);
+    border-color: var(--bs-danger);
+}
+
+
+/* Resumen del tablero: una tarjeta pequeña por estado (hace de leyenda).
+   3 por fila en el celular y 6 en la PC; la franja inferior lleva el color del estado. */
+.cifras-estado {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .4rem;
+}
+
+@media (min-width: 768px) {
+    .cifras-estado {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
+.cifra-estado {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: .35rem .25rem .5rem;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    text-align: center;
+    line-height: 1.15;
+    color: inherit;
+    cursor: pointer;
+}
+
+.cifra-estado:hover:not(:disabled) {
+    border-color: var(--color-institucional);
+}
+
+/* En 0 no hay lista que abrir: se ve atenuada y no se toca. */
+.cifra-estado:disabled {
+    opacity: .5;
+    cursor: default;
+}
+
+/* Punto del color del estado en el título del modal de la lista. */
+.punto-estado {
+    display: inline-block;
+    flex-shrink: 0;
+    width: .8rem;
+    height: .8rem;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px #fff;
+}
+
+.cifra-estado strong {
+    font-size: 1.25rem;
+}
+
+.etiqueta-estado {
+    color: var(--bs-secondary-color);
+    font-size: .72rem;
+}
+
+.franja-estado {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: .25rem;
+}
+
+/* Matriz con encabezado y columna de unidades fijos al desplazar. */
+.tablero-contenedor {
+    max-height: calc(100dvh - 15rem);
+    overflow: auto;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+}
+
+.tablero-compacto {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: .85rem;
+}
+
+.tablero-compacto th,
+.tablero-compacto td {
+    padding: .35rem .3rem;
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+    text-align: center;
+    vertical-align: middle;
+}
+
+.tablero-compacto thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--bs-tertiary-bg);
+    font-size: .75rem;
+    letter-spacing: .04em;
+    color: var(--bs-secondary-color);
+}
+
+.tablero-compacto .col-unidad {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--bs-body-bg);
+    text-align: left;
+    white-space: nowrap;
+    font-weight: 600;
+    max-width: 11rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tablero-compacto thead .col-unidad {
+    z-index: 3;
+    background: var(--bs-tertiary-bg);
+}
+
+.tablero-compacto .fila-division th {
+    position: sticky;
+    left: 0;
+    text-align: left;
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--bs-secondary-color);
+    background: var(--bs-body-bg);
+    padding-top: .7rem;
+}
+
+/* Cada operativo: una píldora del color de su estado con la hora de inicio. */
+.pildora-operativo {
+    display: inline-block;
+    min-width: 3.1rem;
+    padding: .2rem .35rem;
+    margin: .1rem 0;
+    border-radius: .35rem;
+    font-weight: 600;
+    font-size: .8rem;
+    text-decoration: none;
+    position: relative;
+}
+
+.pildora-operativo + .pildora-operativo {
+    margin-left: .15rem;
+}
+
+.pildora-operativo.vacia {
+    height: 1.4rem;
+    vertical-align: middle;
+}
+
+/* Finalizado sin N.I: un punto blanco en la esquina. */
+.pildora-operativo.sin-ni::after {
+    content: "";
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--bs-primary);
+}
+
+.celda-pendiente {
+    color: var(--bs-secondary-color);
+    font-weight: 700;
 }

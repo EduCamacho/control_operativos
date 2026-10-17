@@ -11,6 +11,9 @@
 document.addEventListener('alpine:init', function () {
     'use strict';
 
+    // Magenta: ningún estado lo usa y no aparece en el mapa de Google, así que el recorrido resalta.
+    const COLOR_RECORRIDO = '#C2185B';
+
     const ETIQUETAS = {
         PROGRAMADO: 'Programado', EN_CURSO: 'En curso', NO_INICIADO: 'No iniciado',
         SIN_CIERRE: 'Sin cierre', FINALIZADO: 'Finalizado',
@@ -20,6 +23,8 @@ document.addEventListener('alpine:init', function () {
         // Objetos de Google Maps fuera del estado reactivo de Alpine.
         let mapa = null;
         let recorrido = null;
+        let puntosRecorrido = [];   // [{lat, lng, hora, referencia}] del operativo abierto
+        let puntosNumerados = [];   // marcadores 1, 2, 3… de "Ver recorrido"
         const marcadores = new Map();
         let primerEncuadre = true;
 
@@ -36,10 +41,17 @@ document.addEventListener('alpine:init', function () {
             alertasAbiertas: false,
             cargandoFicha: false,
             panel: null,
+            viendoRecorrido: false,
 
             iniciar() {
                 this.panel = new window.bootstrap.Offcanvas(this.$refs.panelFicha);
-                this.$refs.panelFicha.addEventListener('hidden.bs.offcanvas', () => this.quitarRecorrido());
+                // Al cerrar la ficha se borra el recorrido, salvo cuando se cierra para "Ver recorrido".
+                this.$refs.panelFicha.addEventListener('hidden.bs.offcanvas', () => {
+                    if (!this.viendoRecorrido) {
+                        this.quitarRecorrido();
+                    }
+                });
+                window.verRecorridoEnMapa = () => this.verRecorridoEnMapa();
                 this.cargar();
                 setInterval(() => this.cargar(), config.segundos * 1000);
                 setInterval(() => { this.ahora = Date.now(); }, 1000);
@@ -133,9 +145,23 @@ document.addEventListener('alpine:init', function () {
                 this.actualizarMarcadores();
             },
 
+            /**
+             * Dónde va el marcador: la última ubicación registrada o, si todavía no hay
+             * puntos (programado o no iniciado), el lugar programado.
+             */
+            posicionDe(op) {
+                if (op.ubicacion) {
+                    return { lat: op.ubicacion.latitud, lng: op.ubicacion.longitud, programado: false };
+                }
+                if (op.lugar) {
+                    return { lat: op.lugar.latitud, lng: op.lugar.longitud, programado: true };
+                }
+                return null;
+            },
+
             crearContenidoMarcador(op) {
                 const pin = document.createElement('div');
-                pin.className = 'marcador-operativo';
+                pin.className = 'marcador-operativo' + (this.posicionDe(op).programado ? ' marcador-programado' : '');
                 pin.style.setProperty('--color-marcador', config.colores[op.estado]);
                 pin.textContent = op.unidad;
                 if (op.ubicacion && op.ubicacion.origen === 'MANUAL') {
@@ -148,21 +174,30 @@ document.addEventListener('alpine:init', function () {
             },
 
             iconoClasico(op) {
+                // En el lugar programado: círculo blanco con borde del color del estado.
+                const programado = this.posicionDe(op).programado;
                 return {
                     path: window.google.maps.SymbolPath.CIRCLE,
                     scale: 9,
-                    fillColor: config.colores[op.estado],
+                    fillColor: programado ? '#ffffff' : config.colores[op.estado],
                     fillOpacity: 1,
-                    strokeColor: '#ffffff',
-                    strokeWeight: 2,
+                    strokeColor: programado ? config.colores[op.estado] : '#ffffff',
+                    strokeWeight: programado ? 3 : 2,
                 };
+            },
+
+            tituloMarcador(op) {
+                const base = op.unidad + ' · ' + op.estado_etiqueta + ' · ';
+                return op.ubicacion
+                    ? base + op.ubicacion.referencia
+                    : base + 'lugar programado: ' + op.lugar_programado;
             },
 
             actualizarMarcadores() {
                 if (!mapa) {
                     return;
                 }
-                const conUbicacion = this.visibles.filter((op) => op.ubicacion);
+                const conUbicacion = this.visibles.filter((op) => this.posicionDe(op) !== null);
                 const vigentes = new Set(conUbicacion.map((op) => op.id));
 
                 marcadores.forEach((marcador, id) => {
@@ -175,8 +210,9 @@ document.addEventListener('alpine:init', function () {
 
                 const usarAvanzados = Boolean(config.mapId && window.google.maps.marker && window.google.maps.marker.AdvancedMarkerElement);
                 conUbicacion.forEach((op) => {
-                    const posicion = { lat: op.ubicacion.latitud, lng: op.ubicacion.longitud };
-                    const titulo = op.unidad + ' · ' + op.estado_etiqueta + ' · ' + op.ubicacion.referencia + ' (' + op.ubicacion.hace + ')';
+                    const { lat, lng } = this.posicionDe(op);
+                    const posicion = { lat, lng };
+                    const titulo = this.tituloMarcador(op);
                     let marcador = marcadores.get(op.id);
                     if (usarAvanzados) {
                         if (!marcador) {
@@ -203,7 +239,10 @@ document.addEventListener('alpine:init', function () {
 
                 if (primerEncuadre && conUbicacion.length) {
                     const limites = new window.google.maps.LatLngBounds();
-                    conUbicacion.forEach((op) => limites.extend({ lat: op.ubicacion.latitud, lng: op.ubicacion.longitud }));
+                    conUbicacion.forEach((op) => {
+                        const { lat, lng } = this.posicionDe(op);
+                        limites.extend({ lat, lng });
+                    });
                     mapa.fitBounds(limites, 60);
                     if (conUbicacion.length === 1) {
                         mapa.setZoom(15);
@@ -214,29 +253,136 @@ document.addEventListener('alpine:init', function () {
 
             dibujarRecorrido(puntos) {
                 this.quitarRecorrido();
+                puntosRecorrido = puntos;
                 if (!mapa || puntos.length < 2) {
                     return;
                 }
-                recorrido = new window.google.maps.Polyline({
-                    map: mapa,
-                    path: puntos.map((p) => ({ lat: p[0], lng: p[1] })),
-                    strokeColor: '#0b3d2e',
-                    strokeOpacity: 0.85,
-                    strokeWeight: 4,
-                    icons: [{ icon: { path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW, scale: 2.5 }, offset: '100%', repeat: '120px' }],
-                });
+                const ruta = puntos.map((p) => ({ lat: p.lat, lng: p.lng }));
+                // Dos líneas superpuestas: una blanca más ancha (el borde) y la magenta encima.
+                recorrido = [
+                    new window.google.maps.Polyline({
+                        map: mapa,
+                        path: ruta,
+                        strokeColor: '#ffffff',
+                        strokeOpacity: 1,
+                        strokeWeight: 9,
+                        zIndex: 10,
+                    }),
+                    new window.google.maps.Polyline({
+                        map: mapa,
+                        path: ruta,
+                        strokeColor: COLOR_RECORRIDO,
+                        strokeOpacity: 1,
+                        strokeWeight: 5,
+                        zIndex: 11,
+                        icons: [{
+                            icon: {
+                                path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                                scale: 3.5,
+                                fillColor: COLOR_RECORRIDO,
+                                fillOpacity: 1,
+                                strokeColor: '#ffffff',
+                                strokeWeight: 1.5,
+                            },
+                            offset: '40px',
+                            repeat: '80px',
+                        }],
+                    }),
+                ];
             },
 
             quitarRecorrido() {
+                this.quitarPuntosNumerados();
                 if (recorrido) {
-                    recorrido.setMap(null);
+                    recorrido.forEach((linea) => linea.setMap(null));
                     recorrido = null;
                 }
             },
 
+            // --- "Ver recorrido": la ficha se oculta y el mapa muestra los puntos numerados ---
+
+            /** Lo llama el botón de la ficha. Devuelve false si no hay mapa visible (la ficha muestra la lista). */
+            verRecorridoEnMapa() {
+                if (!mapa || this.vista !== 'mapa' || puntosRecorrido.length === 0) {
+                    return false;
+                }
+                this.viendoRecorrido = true;
+                this.panel.hide();
+                this.dibujarPuntosNumerados();
+                const limites = new window.google.maps.LatLngBounds();
+                puntosRecorrido.forEach((p) => limites.extend({ lat: p.lat, lng: p.lng }));
+                mapa.fitBounds(limites, 70);
+                if (puntosRecorrido.length === 1) {
+                    mapa.setZoom(16);
+                }
+                return true;
+            },
+
+            volverAFicha() {
+                this.quitarPuntosNumerados();
+                this.viendoRecorrido = false;
+                this.panel.show();
+            },
+
+            dibujarPuntosNumerados() {
+                this.quitarPuntosNumerados();
+                const usarAvanzados = Boolean(config.mapId && window.google.maps.marker && window.google.maps.marker.AdvancedMarkerElement);
+                const ventana = new window.google.maps.InfoWindow();
+                puntosRecorrido.forEach((punto, indice) => {
+                    const numero = String(indice + 1);
+                    const posicion = { lat: punto.lat, lng: punto.lng };
+                    let marcador;
+                    if (usarAvanzados) {
+                        const circulo = document.createElement('div');
+                        circulo.className = 'punto-recorrido' + (indice === 0 ? ' inicio' : '') + (indice === puntosRecorrido.length - 1 ? ' ultimo' : '');
+                        circulo.textContent = numero;
+                        marcador = new window.google.maps.marker.AdvancedMarkerElement({ map: mapa, position: posicion, content: circulo, zIndex: 1000 + indice });
+                    } else {
+                        marcador = new window.google.maps.Marker({
+                            map: mapa,
+                            position: posicion,
+                            zIndex: 1000 + indice,
+                            label: { text: numero, color: '#ffffff', fontSize: '11px', fontWeight: '700' },
+                            icon: { path: window.google.maps.SymbolPath.CIRCLE, scale: 11, fillColor: COLOR_RECORRIDO, fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 2 },
+                        });
+                    }
+                    // Texto con textContent: la referencia la escribe la unidad.
+                    marcador.addListener('click', () => {
+                        const contenido = document.createElement('div');
+                        const titulo = document.createElement('strong');
+                        titulo.textContent = numero + ' · ' + punto.hora;
+                        const referencia = document.createElement('div');
+                        referencia.textContent = punto.referencia;
+                        contenido.append(titulo, referencia);
+                        ventana.setContent(contenido);
+                        ventana.open({ map: mapa, anchor: marcador });
+                    });
+                    puntosNumerados.push(marcador);
+                });
+                puntosNumerados.ventana = ventana;
+            },
+
+            quitarPuntosNumerados() {
+                if (puntosNumerados.ventana) {
+                    puntosNumerados.ventana.close();
+                }
+                puntosNumerados.forEach((marcador) => {
+                    marcador.map = null;
+                    if (marcador.setMap) marcador.setMap(null);
+                });
+                puntosNumerados = [];
+            },
+
             // --- Ficha -------------------------------------------------------
 
+            cerrarRecorrido() {
+                this.viendoRecorrido = false;
+                this.quitarRecorrido();
+            },
+
             async abrirFicha(op) {
+                this.viendoRecorrido = false;
+                this.quitarPuntosNumerados();
                 this.alertasAbiertas = false;
                 this.cargandoFicha = true;
                 this.$refs.contenidoFicha.innerHTML = '';
@@ -253,8 +399,9 @@ document.addEventListener('alpine:init', function () {
                     if (ficha) {
                         this.dibujarRecorrido(JSON.parse(ficha.dataset.recorrido || '[]'));
                     }
-                    if (mapa && op.ubicacion) {
-                        mapa.panTo({ lat: op.ubicacion.latitud, lng: op.ubicacion.longitud });
+                    const posicion = this.posicionDe(op);
+                    if (mapa && posicion) {
+                        mapa.panTo({ lat: posicion.lat, lng: posicion.lng });
                     }
                 } catch (error) {
                     this.$refs.contenidoFicha.innerHTML = '<div class="alert alert-warning">Sin conexión. Intente de nuevo.</div>';

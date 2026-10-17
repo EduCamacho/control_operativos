@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-El General de la Región Policial La Libertad dispuso que las comisarías y unidades especializadas ejecuten **un operativo por turno** (mañana, tarde, noche y madrugada). El sistema permite:
+El General de la Región Policial La Libertad dispuso que las comisarías y unidades especializadas ejecuten **al menos un operativo por turno** (pueden ser varios) (mañana, tarde, noche y madrugada). El sistema permite:
 
 1. Que cada unidad **programe** sus operativos con anticipación.
 2. Que el **jefe del operativo**, desde su celular, **inicie** el operativo y registre **cada cambio de ubicación**; el sistema captura la posición con el GPS del teléfono.
@@ -57,7 +57,7 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 
 | Estado derivado | Condición |
 |---|---|
-| `SIN_PROGRAMAR` | No existe un operativo para esa unidad, servicio diario y turno (solo en el tablero) |
+| `SIN_PROGRAMAR` | La unidad no tiene ningún operativo en ese servicio diario y turno (solo en el tablero) |
 | `NO_INICIADO` | `PROGRAMADO` y ahora > `inicio_programado` + 15 min |
 | `SIN_CIERRE` | `EN_CURSO` y ahora > `fin_programado` + 30 min |
 | `PENDIENTE_NOTA` | `FINALIZADO` sin número de nota informativa. Se muestra como distintivo sobre `FINALIZADO`, no como un estado aparte. |
@@ -66,7 +66,7 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 
 **Programación**
 
-- **RN-01** — Solo puede haber **un operativo por unidad, fecha de servicio y turno**, es decir, hasta cuatro por servicio diario. Lo garantiza una clave única en la base de datos.
+- **RN-01** — Una unidad puede programar **uno o más operativos en el mismo turno** de un servicio diario (cambio comunicado el 17/10/2026; antes era uno solo). Lo que se controla es que cada turno tenga **al menos uno**: el turno sin ninguno queda como `SIN_PROGRAMAR`. Ya no hay clave única en la base de datos (`sql/008`).
 - **RN-02** — El usuario ingresa la fecha de servicio, la hora de inicio y la hora de fin. El sistema clasifica el turno según la hora de inicio (ver "Servicio diario y turnos") y arma `inicio_programado` y `fin_programado` como fecha y hora completas:
   - Si la hora de inicio es anterior a las 06:00 (MADRUGADA), el inicio cae el día siguiente a la fecha de servicio.
   - El fin es la primera vez que llega la hora de fin después del inicio. Si la hora de fin es menor que la de inicio, cae al día siguiente del inicio (por ejemplo, de 20:00 a 02:00).
@@ -74,14 +74,14 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 - **RN-03** — **No hay hora límite para programar**: se puede hacer en cualquier momento, siempre que `inicio_programado` sea posterior a la hora actual. **No se puede programar con la hora de inicio ya pasada**; eso solo lo puede hacer ADMIN, y queda en bitácora.
 - **RN-04** — Datos de programación:
   - Tipo(s) de operativo: uno o más, del catálogo.
-  - Nombre del plan: opcional, por ejemplo "Saltamonte 2026" o "Estado de Emergencia Trujillo-V-2026".
   - Lugar programado: texto con calle, avenida, sector o barrio.
+  - Coordenadas del lugar programado: **obligatorias**. Se pegan desde Google Maps (botón **Buscar** junto al campo) y se validan dentro de La Libertad. Ubican en el mapa del General al operativo que todavía no registra puntos, y permiten "Cómo llegar" al lugar programado.
   - Hora de inicio y hora de fin.
   - Jefe del operativo: grado, nombres y celular. El grado se elige de una lista fija, en este orden: ALFZ, TNTE, CAP, MAY, CMDTE, CRNL y GRAL; luego S3, S2, S1, ST3, ST2, ST1, SB y SS.
   - Fuerzas propias: entero ≥ 1.
   - Fuerzas de apoyo y unidades móviles: enteros ≥ 0.
 - **RN-05** — Qué se puede editar según el estado:
-  - `PROGRAMADO`, antes de la hora de inicio programada: todo, incluidos la fecha de servicio y las horas. Al cambiar la hora de inicio puede cambiar el turno; si ese turno ya tiene operativo, se rechaza (RN-01).
+  - `PROGRAMADO`, antes de la hora de inicio programada: todo, incluidos la fecha de servicio y las horas. Al cambiar la hora de inicio puede cambiar el turno.
   - `PROGRAMADO`, desde la hora de inicio programada: todo, **excepto la fecha de servicio y las horas** (y por tanto el turno), para que no se pueda mover el horario y ocultar un `NO_INICIADO`.
   - `EN_CURSO`: fuerzas, unidades móviles, jefe y observaciones.
   - `FINALIZADO`: la unidad no puede modificar nada. Solo puede **agregar** la nota informativa si falta (RN-13).
@@ -123,11 +123,10 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 - **RN-14** — **Alertas**: `NO_INICIADO` y `SIN_CIERRE`, según la tabla de estados derivados. Las tolerancias (15 y 30 min) y la ventana de inicio (60 min) se configuran en `app/config.php`.
 - **RN-15** — **Control inopinado**:
   - Lo registra un SUPERVISOR sobre operativos del servicio diario vigente, en cualquier estado.
-  - Guarda el resultado (`CONFORME`, `CON_OBSERVACIONES` o `NO_ENCONTRADO`), una observación y, si está disponible, la ubicación GPS del supervisor.
-  - **El GPS del supervisor no es obligatorio**, y a su ubicación no se le aplican el rectángulo de La Libertad ni la advertencia de precisión.
-  - El sistema calcula la distancia a la última ubicación que el operativo registró antes del control. Si falta alguna de las dos ubicaciones, la distancia queda vacía.
+  - Guarda el resultado (`CONFORME`, `CON_OBSERVACIONES` o `NO_ENCONTRADO`) y una observación.
+  - **No registra la ubicación del supervisor ni calcula distancias**: a veces el General controla con un dron, sin ir al lugar (decisión de Eduardo, 17/10/2026). Las columnas de ubicación y distancia de `controles_inopinados` se conservan solo por los controles registrados antes.
   - Un operativo puede tener varios controles.
-  - La observación es obligatoria cuando el resultado es `CON_OBSERVACIONES` o `NO_ENCONTRADO`, y opcional cuando es `CONFORME`.
+  - La observación solo se pide cuando el resultado es `CON_OBSERVACIONES` o `NO_ENCONTRADO`, y ahí es obligatoria. Con `CONFORME` no hay observación.
   - Un reintento sin señal no duplica el control (`id_envio`, RN-11a).
 - **RN-16** — **Visibilidad**: una cuenta UNIDAD solo ve y modifica los operativos de su unidad. El filtro por la unidad de la sesión se aplica **en el servidor**, en cada consulta. SUPERVISOR y ADMIN ven todo.
 - **RN-21** — **El mapa interactivo es solo del SUPERVISOR.** En las vistas de UNIDAD y ADMIN, cada ubicación se muestra como un **enlace a Google Maps** armado con las coordenadas que guardó el sistema: `https://www.google.com/maps/search/?api=1&query=LAT,LNG`. Esos enlaces no consumen la API.
@@ -136,7 +135,7 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 
 - **RN-17** — Hay **una sola cuenta por unidad**, compartida. Puede estar abierta a la vez en varios dispositivos (la PC de la comisaría y el celular del jefe). Cada acción queda en bitácora con usuario, IP y dispositivo, y el operativo guarda el jefe declarado.
 - **RN-18** — La sesión dura **al menos 12 horas**, para que el jefe no tenga que volver a ingresar en campo.
-- **RN-19** — Tras 5 intentos fallidos de ingreso, la cuenta se bloquea 15 minutos. El bloqueo es **por cuenta**, sin importar la IP. ADMIN puede resetear claves y desbloquear. Al resetear la clave o desactivar una cuenta, **se cierran todas sus sesiones abiertas**. **HTTPS es obligatorio**, porque sin él el navegador no entrega el GPS.
+- **RN-19** — Cada usuario puede **cambiar su propia clave** (clave actual, nueva de al menos 8 caracteres y distinta, y confirmación). La sesión actual sigue abierta y las de los demás dispositivos solo se cierran si el usuario lo elige, porque la cuenta UNIDAD es compartida (RN-17). Tras 5 intentos fallidos de ingreso, la cuenta se bloquea 15 minutos. El bloqueo es **por cuenta**, sin importar la IP. ADMIN puede resetear claves y desbloquear. Al resetear la clave o desactivar una cuenta, **se cierran todas sus sesiones abiertas**. **HTTPS es obligatorio**, porque sin él el navegador no entrega el GPS.
 - **RN-20** — Una cuenta con rol UNIDAD debe tener una unidad asignada, y cada unidad tiene como máximo una cuenta. Las cuentas ADMIN y SUPERVISOR no tienen unidad.
 
 ## Flujo típico de un turno
@@ -156,11 +155,14 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 
 ## Pendientes por confirmar
 
+- [x] Uno o más operativos por turno (RN-01, comunicado a Eduardo el 17/10/2026).
+
 - [ ] Nombres completos de las 26 unidades (Eduardo enviará la lista; los de `sql/002_datos_iniciales.sql` son provisionales).
 - [ ] Quiénes, además del General, tendrán rol SUPERVISOR.
 - [ ] Catálogos iniciales de tipos de operativo y conceptos de resultado (ver `sql/002_datos_iniciales.sql`).
 - [x] Tolerancias (15 y 30 min) y ventana para iniciar (60 min antes): se configuran en `app/config.php` (`TOLERANCIA_NO_INICIADO_MIN`, `TOLERANCIA_SIN_CIERRE_MIN`, `VENTANA_INICIO_MIN`). No hay pantalla de ADMIN.
 - [x] El grado de Comandante se abrevia CMDTE (confirmado por Eduardo).
 - [x] Servicio diario de 06:00 a 05:59 y rangos horarios de los turnos (confirmado por Eduardo).
-- [ ] Observación del control inopinado opcional cuando el resultado es CONFORME (propuesta de Claude, por validar).
+- [x] Observación del control inopinado: solo con Con observaciones y No encontrado; con Conforme no se pide (Eduardo).
+- [x] Coordenadas del lugar programado obligatorias (confirmado por Eduardo: permiten poner el marcador en el mapa).
 - [ ] SUPERVISOR y ADMIN ven el tablero y la ficha de cualquier operativo; el mapa y el registro de controles son solo del SUPERVISOR (propuesta de Claude, por validar).

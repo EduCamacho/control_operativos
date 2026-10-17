@@ -82,7 +82,7 @@ require RUTA_APP . '/vistas/cabecera.php';
     </div>
     <div x-show="error" x-cloak class="alert alert-danger" x-text="error"></div>
 
-    <div class="d-flex flex-wrap gap-2 mb-4" x-show="fase === 'formulario' || fase === 'enviando'">
+    <div class="fila-flex flex-wrap gap-2 mb-4" x-show="fase === 'formulario' || fase === 'enviando'">
         <button type="submit" class="btn btn-danger btn-lg boton-accion px-4" :disabled="fase === 'enviando'">
             <span x-show="fase === 'enviando'" class="spinner-border spinner-border-sm" role="status"></span>
             <i class="bi bi-stop-circle" x-show="fase !== 'enviando'"></i> Finalizar operativo
@@ -112,11 +112,17 @@ require RUTA_APP . '/vistas/cabecera.php';
                         nota_informativa: formulario.querySelector('#nota_informativa').value,
                     };
                 },
-                confirmar() {
+                async confirmar() {
                     const datos = this.leerDatos();
                     const total = Object.values(datos.cantidades).reduce((suma, n) => suma + n, 0);
-                    const resumen = total === 0 ? 'Resultado NEGATIVO (todas las cantidades en 0).' : 'Resultado positivo: ' + total + ' en total.';
-                    if (!window.confirm('¿Finalizar el operativo?\n\n' + resumen + '\n\nDespués ya no podrá modificar los resultados.')) {
+                    const resumen = total === 0 ? 'Resultado NEGATIVO: todas las cantidades en 0.' : 'Resultado positivo: ' + total + ' en total.';
+                    const confirmado = await window.Confirmar.preguntar({
+                        titulo: '¿Finalizar el operativo?',
+                        texto: resumen + ' Después ya no podrá modificar los resultados.',
+                        boton: 'Sí, finalizar',
+                        tipo: 'peligro',
+                    });
+                    if (!confirmado) {
                         return;
                     }
                     this.error = '';

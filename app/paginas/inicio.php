@@ -19,21 +19,30 @@ if ($usuario['rol'] === 'SUPERVISOR') {
 $ahora = obtener_ahora();
 $vigente = fecha_servicio_vigente($ahora);
 $unidades = listar_unidades_activas();
+// Un turno puede tener uno o más operativos (RN-01).
 $por_unidad = [];
 foreach (listar_operativos_del_servicio($vigente) as $operativo) {
-    $por_unidad[(int) $operativo['unidad_id']][$operativo['turno']] = $operativo;
+    $por_unidad[(int) $operativo['unidad_id']][$operativo['turno']][] = $operativo;
 }
 $totales = array_fill_keys(array_keys(ETIQUETAS_ESTADO), 0);
 $alertas = [];
 foreach ($unidades as $unidad) {
     foreach (TURNOS as $turno) {
-        $operativo = $por_unidad[(int) $unidad['id']][$turno] ?? null;
-        $estado = calcular_estado_celda($operativo, $vigente, $turno, $ahora, TOLERANCIA_NO_INICIADO_MIN, TOLERANCIA_SIN_CIERRE_MIN);
-        if ($estado !== null) {
-            $totales[$estado]++;
+        $operativos = $por_unidad[(int) $unidad['id']][$turno] ?? [];
+        if ($operativos === []) {
+            // Turno sin ningún operativo: SIN_PROGRAMAR solo si ya no se puede programar.
+            $estado = calcular_estado_celda(null, $vigente, $turno, $ahora, TOLERANCIA_NO_INICIADO_MIN, TOLERANCIA_SIN_CIERRE_MIN);
+            if ($estado !== null) {
+                $totales[$estado]++;
+            }
+            continue;
         }
-        if ($operativo !== null && in_array($estado, ['NO_INICIADO', 'SIN_CIERRE'], true)) {
-            $alertas[] = ['operativo' => $operativo, 'estado' => $estado];
+        foreach ($operativos as $operativo) {
+            $estado = calcular_estado_visible($operativo, $ahora);
+            $totales[$estado]++;
+            if (in_array($estado, ['NO_INICIADO', 'SIN_CIERRE'], true)) {
+                $alertas[] = ['operativo' => $operativo, 'estado' => $estado];
+            }
         }
     }
 }
@@ -90,7 +99,7 @@ require RUTA_APP . '/vistas/cabecera.php';
     <div class="col-lg-5">
         <div class="list-group shadow-sm">
             <a class="list-group-item list-group-item-action d-flex justify-content-between" href="<?= e(armar_url('admin/operativos', ['estado' => 'PENDIENTE_NOTA', 'desde' => validar_fecha($vigente)->modify('-7 days')->format('Y-m-d'), 'hasta' => $vigente])) ?>">
-                Finalizados sin nota (últimos 7 días) <span class="badge text-bg-<?= $sin_nota ? 'primary' : 'light' ?>"><?= $sin_nota ?></span>
+                Finalizados sin N.I (últimos 7 días) <span class="badge text-bg-<?= $sin_nota ? 'primary' : 'light' ?>"><?= $sin_nota ?></span>
             </a>
             <a class="list-group-item list-group-item-action d-flex justify-content-between" href="<?= e(armar_url('admin/usuarios')) ?>">
                 Unidades activas sin cuenta <span class="badge text-bg-<?= $sin_cuenta ? 'warning' : 'light' ?>"><?= $sin_cuenta ?></span>

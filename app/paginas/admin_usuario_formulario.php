@@ -259,7 +259,9 @@ require RUTA_APP . '/vistas/cabecera.php';
             <?php endif; ?>
         </p>
         <div class="d-flex flex-wrap gap-2">
-            <form method="post" onsubmit="return confirm('¿Resetear la clave de <?= e($actual['usuario']) ?>? Se cerrarán sus sesiones abiertas.')">
+            <form method="post" data-confirmar-titulo="¿Resetear la clave de <?= e($actual['usuario']) ?>?"
+                  data-confirmar="Se generará una clave nueva y se cerrarán las sesiones abiertas de la cuenta."
+                  data-confirmar-boton="Sí, resetear" data-confirmar-tipo="peligro">
                 <?= campo_csrf() ?>
                 <input type="hidden" name="accion" value="resetear_clave">
                 <button type="submit" class="btn btn-outline-danger boton-accion"><i class="bi bi-key"></i> Resetear clave</button>

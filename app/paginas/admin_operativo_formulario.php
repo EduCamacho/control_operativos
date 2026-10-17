@@ -35,7 +35,7 @@ $a_local = static fn (?string $fecha_hora): string => $fecha_hora === null ? '' 
 $valores = $actual === null
     ? [
         'unidad_id' => '', 'fecha_servicio' => fecha_servicio_vigente($ahora), 'hora_inicio' => '', 'hora_fin' => '', 'tipos' => [],
-        'nombre_plan' => '', 'lugar_programado' => '', 'jefe_grado' => '', 'jefe_nombres' => '', 'jefe_celular' => '',
+        'lugar_programado' => '', 'lugar_coordenadas' => '', 'jefe_grado' => '', 'jefe_nombres' => '', 'jefe_celular' => '',
         'fuerzas_propias' => 1, 'fuerzas_apoyo' => 0, 'unidades_moviles' => 0, 'observaciones' => '',
         'estado' => 'PROGRAMADO', 'inicio_real' => '', 'fin_real' => '', 'nota_informativa' => '', 'cantidad' => [], 'motivo' => '',
     ]
@@ -43,6 +43,7 @@ $valores = $actual === null
         'hora_inicio' => formatear_hora($actual['inicio_programado']),
         'hora_fin'    => formatear_hora($actual['fin_programado']),
         'tipos'       => $tipos_actuales,
+        'lugar_coordenadas' => formatear_coordenadas($actual['lugar_latitud'], $actual['lugar_longitud']),
         'cantidad'    => $cantidades_actuales,
         'motivo'      => '',
     ];
@@ -185,12 +186,9 @@ if ($accion === 'guardar') {
                 }
             }
             $pdo->commit();
-        } catch (PDOException $error) {
+        } catch (Throwable $error) {
             $pdo->rollBack();
-            if (!es_error_duplicado($error)) {
-                throw $error;
-            }
-            $errores['hora_inicio'] = 'La unidad ya tiene un operativo en el turno ' . obtener_etiqueta_turno($datos['turno']) . ' de ese servicio diario (RN-01).';
+            throw $error;
         }
 
         if ($errores === []) {
@@ -206,6 +204,7 @@ $tipos_formulario = obtener_tipos_para_formulario(array_map('intval', (array) $v
 $deshabilitado = static fn (string $campo): string => '';
 $fecha_minima = null;
 $titulo = $actual === null ? 'Programar en nombre de una unidad' : 'Corregir operativo';
+$scripts = ['assets/js/programacion.js'];
 require RUTA_APP . '/vistas/cabecera.php';
 ?>
 <nav aria-label="Ruta de navegación">
@@ -342,7 +341,9 @@ require RUTA_APP . '/vistas/cabecera.php';
         <?php if ($controles > 0): ?>
             <p class="small mb-0">No se puede eliminar: tiene <?= $controles ?> control(es) inopinado(s), que son evidencia de supervisión.</p>
         <?php else: ?>
-            <form method="post" onsubmit="return confirm('¿Eliminar definitivamente este operativo con sus puntos y resultados?')">
+            <form method="post" data-confirmar-titulo="¿Eliminar el operativo?"
+                  data-confirmar="Se eliminará definitivamente el operativo de <?= e($actual['unidad_nombre']) ?> con sus puntos y resultados. La copia queda en la bitácora."
+                  data-confirmar-boton="Sí, eliminar" data-confirmar-tipo="peligro">
                 <?= campo_csrf() ?>
                 <input type="hidden" name="accion" value="eliminar">
                 <label for="motivo_eliminar" class="form-label small">Motivo</label>
