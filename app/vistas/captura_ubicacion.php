@@ -28,7 +28,7 @@ declare(strict_types=1);
 
         <div aria-live="polite">
             <!-- Obteniendo el GPS -->
-            <div x-show="fase === 'obteniendo'" class="d-flex align-items-center gap-2 py-2">
+            <div x-show="fase === 'obteniendo'" class="fila-flex align-items-center gap-2 py-2">
                 <div class="spinner-border spinner-border-sm texto-institucional" role="status"></div>
                 <span>Obteniendo ubicación…</span>
             </div>

@@ -94,7 +94,7 @@ require RUTA_APP . '/vistas/cabecera.php';
     <div class="mapa-contenedor position-relative" x-show="vista === 'mapa'">
         <div x-ref="mapa" class="mapa-google"></div>
         <!-- Mientras se ve el recorrido de un operativo (botón "Ver recorrido" de la ficha) -->
-        <div class="barra-recorrido position-absolute top-0 start-50 translate-middle-x mt-2 d-flex gap-2"
+        <div class="barra-recorrido position-absolute top-0 start-50 translate-middle-x mt-2 fila-flex gap-2"
              x-show="viendoRecorrido && vista === 'mapa'" x-cloak>
             <button type="button" class="btn btn-institucional shadow" @click="volverAFicha()">
                 <i class="bi bi-arrow-left"></i> Volver a la ficha
@@ -145,7 +145,7 @@ require RUTA_APP . '/vistas/cabecera.php';
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
         </div>
         <div class="offcanvas-body pt-0">
-            <div x-show="cargandoFicha" class="d-flex align-items-center gap-2 text-body-secondary">
+            <div x-show="cargandoFicha" class="fila-flex align-items-center gap-2 text-body-secondary">
                 <div class="spinner-border spinner-border-sm" role="status"></div> Cargando…
             </div>
             <div x-ref="contenidoFicha"></div>

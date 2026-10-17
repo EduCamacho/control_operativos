@@ -82,7 +82,7 @@ require RUTA_APP . '/vistas/cabecera.php';
     </div>
     <div x-show="error" x-cloak class="alert alert-danger" x-text="error"></div>
 
-    <div class="d-flex flex-wrap gap-2 mb-4" x-show="fase === 'formulario' || fase === 'enviando'">
+    <div class="fila-flex flex-wrap gap-2 mb-4" x-show="fase === 'formulario' || fase === 'enviando'">
         <button type="submit" class="btn btn-danger btn-lg boton-accion px-4" :disabled="fase === 'enviando'">
             <span x-show="fase === 'enviando'" class="spinner-border spinner-border-sm" role="status"></span>
             <i class="bi bi-stop-circle" x-show="fase !== 'enviando'"></i> Finalizar operativo

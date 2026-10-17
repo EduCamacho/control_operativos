@@ -73,7 +73,7 @@ require RUTA_APP . '/vistas/cabecera.php';
         <!-- Ubicación del supervisor (opcional) -->
         <div class="card card-body shadow-sm mb-3" aria-live="polite">
             <h2 class="h6">Su ubicación <span class="text-body-secondary fw-normal">(opcional)</span></h2>
-            <div x-show="ubicacion.estado === 'obteniendo'" class="d-flex align-items-center gap-2 small">
+            <div x-show="ubicacion.estado === 'obteniendo'" class="fila-flex align-items-center gap-2 small">
                 <div class="spinner-border spinner-border-sm text-success" role="status"></div> Obteniendo ubicación…
             </div>
             <div x-show="ubicacion.estado === 'lista'" class="small">

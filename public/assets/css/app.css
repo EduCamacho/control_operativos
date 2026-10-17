@@ -852,3 +852,9 @@
     z-index: 5;
     white-space: nowrap;
 }
+
+/* Igual que .d-flex pero sin !important: se usa en elementos con x-show de Alpine,
+   que oculta con display:none en línea (d-flex lo anularía y el elemento no se ocultaría). */
+.fila-flex {
+    display: flex;
+}
