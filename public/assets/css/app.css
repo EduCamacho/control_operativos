@@ -319,19 +319,78 @@
     background: var(--bs-tertiary-bg);
 }
 
-/* Tipos de operativo como botones que se marcan al tocarlos. */
-.boton-tipo {
-    min-height: 48px;
-    display: flex;
-    align-items: center;
-    gap: .5rem;
+/* Botones con el color institucional (el del menú lateral), para formularios y acciones.
+   No se cambia --bs-primary: el azul es el color del estado FINALIZADO. */
+.btn-institucional {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--color-institucional);
+    --bs-btn-border-color: var(--color-institucional);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #093326;
+    --bs-btn-hover-border-color: #093326;
+    --bs-btn-focus-shadow-rgb: 11, 61, 46;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #072a1f;
+    --bs-btn-active-border-color: #072a1f;
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: var(--color-institucional);
+    --bs-btn-disabled-border-color: var(--color-institucional);
 }
 
-.boton-tipo .icono-marcado,
-.btn-check:checked + .boton-tipo .icono-sin-marcar {
+.btn-outline-institucional {
+    --bs-btn-color: var(--color-institucional);
+    --bs-btn-border-color: var(--color-institucional);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--color-institucional);
+    --bs-btn-hover-border-color: var(--color-institucional);
+    --bs-btn-focus-shadow-rgb: 11, 61, 46;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--color-institucional);
+    --bs-btn-active-border-color: var(--color-institucional);
+    --bs-btn-disabled-color: var(--color-institucional);
+    --bs-btn-disabled-border-color: var(--color-institucional);
+}
+
+/* Foco de los campos con el color institucional en vez del azul de Bootstrap. */
+.form-control:focus,
+.form-select:focus {
+    border-color: #6f9a8c;
+    box-shadow: 0 0 0 .25rem rgba(11, 61, 46, .2);
+}
+
+.form-check-input:focus {
+    border-color: #6f9a8c;
+    box-shadow: 0 0 0 .25rem rgba(11, 61, 46, .2);
+}
+
+.form-check-input:checked {
+    background-color: var(--color-institucional);
+    border-color: var(--color-institucional);
+}
+
+/* Tipos de operativo: píldoras pequeñas que se marcan al tocarlas. */
+.boton-tipo {
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .3rem .85rem;
+}
+
+.boton-tipo .icono-marcado {
     display: none;
 }
 
 .btn-check:checked + .boton-tipo .icono-marcado {
     display: inline;
+}
+
+/* El lugar es lo principal del paso 2: tarjeta con borde institucional. */
+.tarjeta-lugar {
+    border-left: 5px solid var(--color-institucional);
+}
+
+.tarjeta-lugar .card-header h3,
+.tarjeta-lugar h2 {
+    color: var(--color-institucional);
 }

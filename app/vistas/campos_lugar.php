@@ -1,43 +1,23 @@
 <?php
 /**
- * Bloque "Qué y dónde": tipos de operativo (botones que se marcan al tocarlos),
- * lugar programado y sus coordenadas (opcionales).
- * Espera $valores, $errores, $deshabilitado y $tipos_formulario.
+ * Bloque "Lugar del operativo": lugar programado y sus coordenadas (opcionales),
+ * con el botón para buscarlo en Google Maps y copiar las coordenadas.
+ * Espera $valores, $errores y $deshabilitado.
  */
 declare(strict_types=1);
-
-$tipos_marcados = array_map('intval', (array) $valores['tipos']);
 ?>
-<fieldset class="mb-3"<?= $deshabilitado('tipos') ?>>
-    <legend class="form-label fs-6">Tipo(s) de operativo <span class="text-body-secondary small">— toque uno o más</span></legend>
-    <div class="row row-cols-1 row-cols-sm-2 g-2">
-        <?php foreach ($tipos_formulario as $tipo): ?>
-            <div class="col">
-                <input type="checkbox" class="btn-check" name="tipos[]" autocomplete="off"
-                       id="tipo-<?= e($tipo['id']) ?>" value="<?= e($tipo['id']) ?>"
-                       <?= marcar(in_array((int) $tipo['id'], $tipos_marcados, true)) ?>>
-                <label class="btn btn-outline-primary w-100 text-start boton-tipo" for="tipo-<?= e($tipo['id']) ?>">
-                    <i class="bi bi-check-circle-fill icono-marcado" aria-hidden="true"></i>
-                    <i class="bi bi-circle icono-sin-marcar" aria-hidden="true"></i>
-                    <span class="nombre-tipo"><?= e($tipo['nombre']) ?></span><?= $tipo['activo'] ? '' : ' <small>(inactivo)</small>' ?>
-                </label>
-            </div>
-        <?php endforeach; ?>
-    </div>
-    <?php if (isset($errores['tipos'])): ?><div class="text-danger small mt-1"><?= e($errores['tipos']) ?></div><?php endif; ?>
-</fieldset>
 <div class="mb-3">
-    <label for="lugar_programado" class="form-label">Lugar programado</label>
+    <label for="lugar_programado" class="form-label">Dirección o referencia</label>
     <input type="text" id="lugar_programado" name="lugar_programado" maxlength="255" required
            class="form-control form-control-lg<?= clase_error($errores, 'lugar_programado') ?>" value="<?= e($valores['lugar_programado']) ?>"
            placeholder="Av. España con Jr. Grau, sector Centro"<?= $deshabilitado('lugar_programado') ?>>
     <?= mostrar_error($errores, 'lugar_programado') ?>
 </div>
-<div class="mb-3" x-data="coordenadasLugar(<?= e(json_encode(['url' => armar_url('api/coordenadas'), 'texto' => (string) ($valores['lugar_coordenadas'] ?? '')])) ?>)">
+<div class="mb-1" x-data="coordenadasLugar(<?= e(json_encode(['url' => armar_url('api/coordenadas'), 'texto' => (string) ($valores['lugar_coordenadas'] ?? '')])) ?>)">
     <label for="lugar_coordenadas" class="form-label">Coordenadas del lugar <span class="text-body-secondary">(opcional)</span></label>
     <?php $coordenadas_bloqueadas = $deshabilitado('lugar_coordenadas') !== ''; ?>
     <?php if (!$coordenadas_bloqueadas): ?>
-        <a :href="enlaceBuscar()" target="_blank" rel="noopener" class="btn btn-outline-primary w-100 boton-accion mb-2">
+        <a :href="enlaceBuscar()" target="_blank" rel="noopener" class="btn btn-outline-institucional w-100 boton-accion mb-2">
             <i class="bi bi-map"></i> Abrir Google Maps
         </a>
     <?php endif; ?>

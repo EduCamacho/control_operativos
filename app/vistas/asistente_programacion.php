@@ -37,9 +37,20 @@ $texto_guardar = $actual === null ? 'Programar operativo' : 'Guardar cambios';
 </section>
 
 <!-- Paso 2: Qué y dónde -->
-<section class="card card-body shadow-sm mb-3" data-paso="2" x-show="paso === 2" x-cloak>
-    <h2 class="h5 titulo-paso" tabindex="-1">¿Qué y dónde?</h2>
-    <?php require RUTA_APP . '/vistas/campos_operativo.php'; ?>
+<section class="mb-3" data-paso="2" x-show="paso === 2" x-cloak>
+    <h2 class="h5 titulo-paso visually-hidden" tabindex="-1">¿Qué y dónde?</h2>
+    <div class="card card-body shadow-sm mb-3">
+        <h3 class="h6 mb-2">Tipo de operativo <span class="fw-normal text-body-secondary small">· toque uno o más</span></h3>
+        <?php require RUTA_APP . '/vistas/campos_tipos.php'; ?>
+    </div>
+    <div class="card shadow-sm tarjeta-lugar">
+        <div class="card-header bg-transparent">
+            <h3 class="h5 mb-0"><i class="bi bi-geo-alt-fill"></i> ¿Dónde será el operativo?</h3>
+        </div>
+        <div class="card-body">
+            <?php require RUTA_APP . '/vistas/campos_lugar.php'; ?>
+        </div>
+    </div>
 </section>
 
 <!-- Paso 3: Jefe y fuerzas -->
@@ -73,7 +84,7 @@ $texto_guardar = $actual === null ? 'Programar operativo' : 'Guardar cambios';
                 <div class="d-flex align-items-center mb-1">
                     <h3 class="h6 mb-0 me-auto"><?= e($nombre) ?></h3>
                     <?php if (in_array($numero, $pasos_editables, true)): ?>
-                        <button type="button" class="btn btn-sm btn-outline-primary" @click="irA(<?= $numero ?>)">
+                        <button type="button" class="btn btn-sm btn-outline-institucional" @click="irA(<?= $numero ?>)">
                             <i class="bi bi-pencil"></i> Cambiar
                         </button>
                     <?php else: ?>
@@ -111,10 +122,10 @@ $texto_guardar = $actual === null ? 'Programar operativo' : 'Guardar cambios';
     <button type="button" class="btn btn-outline-secondary boton-accion flex-fill" x-show="paso > 1 && !editando" @click="atras()">
         <i class="bi bi-arrow-left"></i> Atrás
     </button>
-    <button type="button" class="btn btn-primary boton-accion flex-fill" x-show="paso < 4" @click="siguiente()">
+    <button type="button" class="btn btn-institucional boton-accion flex-fill" x-show="paso < 4" @click="siguiente()">
         <span x-text="editando ? 'Listo' : (paso === 3 ? 'Revisar' : 'Siguiente')"></span> <i class="bi bi-arrow-right"></i>
     </button>
-    <button type="submit" class="btn btn-success boton-accion flex-fill" x-show="paso === 4" x-cloak>
+    <button type="submit" class="btn btn-institucional boton-accion flex-fill" x-show="paso === 4" x-cloak>
         <i class="bi bi-check-lg"></i> <?= e($texto_guardar) ?>
     </button>
 </div>
