@@ -52,6 +52,10 @@ $menu = match ($usuario['rol'] ?? null) {
     <?php if ($usuario !== null): ?>
         <meta name="csrf" content="<?= e(obtener_token_csrf()) ?>">
     <?php endif; ?>
+    <?php if ($usuario !== null): // Confirmaciones con SweetAlert2 (form[data-confirmar]). ?>
+        <script defer src="<?= e(armar_url('assets/vendor/sweetalert2/sweetalert2.all.min.js')) ?>"></script>
+        <script defer src="<?= e(armar_url('assets/js/confirmar.js')) ?>"></script>
+    <?php endif; ?>
     <?php foreach ($scripts ?? [] as $script): // Antes de Alpine, para que registren sus componentes. ?>
         <script defer src="<?= e(armar_url($script)) ?>"></script>
     <?php endforeach; ?>

@@ -248,7 +248,9 @@ require RUTA_APP . '/vistas/cabecera.php';
                 <?php endif; ?>
                 <?php if ($puede_eliminar): ?>
                     <form method="post" action="<?= e(armar_url('operativos/eliminar')) ?>" class="mt-3 pt-3 border-top text-end"
-                          onsubmit="return confirm('¿Eliminar este operativo? Solo se puede eliminar antes de su hora de inicio.')">
+                          data-confirmar-titulo="¿Eliminar el operativo?"
+                          data-confirmar="Se eliminará el operativo del turno <?= e($turno) ?> (<?= e(formatear_hora($hora_inicio)) ?> – <?= e(formatear_hora($hora_fin)) ?>). Esta acción no se puede deshacer."
+                          data-confirmar-boton="Sí, eliminar" data-confirmar-tipo="peligro">
                         <?= campo_csrf() ?>
                         <input type="hidden" name="id" value="<?= e($id) ?>">
                         <button type="submit" class="btn btn-sm btn-link text-danger text-decoration-none"><i class="bi bi-trash"></i> Eliminar operativo</button>

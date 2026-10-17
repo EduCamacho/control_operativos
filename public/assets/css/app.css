@@ -756,3 +756,17 @@
     font-size: .9rem;
     color: var(--bs-secondary-color);
 }
+
+/* Diálogos de SweetAlert2 con la tipografía y el redondeo del sistema. */
+.alerta-sistema {
+    font-family: var(--bs-body-font-family);
+    border-radius: 1rem;
+}
+
+.alerta-sistema .swal2-title {
+    font-size: 1.3rem;
+}
+
+.alerta-sistema .swal2-html-container {
+    font-size: 1rem;
+}

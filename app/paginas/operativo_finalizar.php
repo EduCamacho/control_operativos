@@ -112,11 +112,17 @@ require RUTA_APP . '/vistas/cabecera.php';
                         nota_informativa: formulario.querySelector('#nota_informativa').value,
                     };
                 },
-                confirmar() {
+                async confirmar() {
                     const datos = this.leerDatos();
                     const total = Object.values(datos.cantidades).reduce((suma, n) => suma + n, 0);
-                    const resumen = total === 0 ? 'Resultado NEGATIVO (todas las cantidades en 0).' : 'Resultado positivo: ' + total + ' en total.';
-                    if (!window.confirm('¿Finalizar el operativo?\n\n' + resumen + '\n\nDespués ya no podrá modificar los resultados.')) {
+                    const resumen = total === 0 ? 'Resultado NEGATIVO: todas las cantidades en 0.' : 'Resultado positivo: ' + total + ' en total.';
+                    const confirmado = await window.Confirmar.preguntar({
+                        titulo: '¿Finalizar el operativo?',
+                        texto: resumen + ' Después ya no podrá modificar los resultados.',
+                        boton: 'Sí, finalizar',
+                        tipo: 'peligro',
+                    });
+                    if (!confirmado) {
                         return;
                     }
                     this.error = '';

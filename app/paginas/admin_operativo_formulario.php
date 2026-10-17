@@ -344,7 +344,9 @@ require RUTA_APP . '/vistas/cabecera.php';
         <?php if ($controles > 0): ?>
             <p class="small mb-0">No se puede eliminar: tiene <?= $controles ?> control(es) inopinado(s), que son evidencia de supervisión.</p>
         <?php else: ?>
-            <form method="post" onsubmit="return confirm('¿Eliminar definitivamente este operativo con sus puntos y resultados?')">
+            <form method="post" data-confirmar-titulo="¿Eliminar el operativo?"
+                  data-confirmar="Se eliminará definitivamente el operativo de <?= e($actual['unidad_nombre']) ?> con sus puntos y resultados. La copia queda en la bitácora."
+                  data-confirmar-boton="Sí, eliminar" data-confirmar-tipo="peligro">
                 <?= campo_csrf() ?>
                 <input type="hidden" name="accion" value="eliminar">
                 <label for="motivo_eliminar" class="form-label small">Motivo</label>
