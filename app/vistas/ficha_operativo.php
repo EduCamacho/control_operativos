@@ -9,7 +9,13 @@ declare(strict_types=1);
 
 $estado_ficha = calcular_estado_visible($operativo, $ahora);
 $ultima = $ubicaciones === [] ? null : $ubicaciones[array_key_last($ubicaciones)];
-$recorrido = array_map(static fn (array $u): array => [(float) $u['latitud'], (float) $u['longitud']], $ubicaciones);
+// Cada punto con su hora y referencia, para numerarlos en el mapa ("Ver recorrido").
+$recorrido = array_map(static fn (array $u): array => [
+    'lat'        => (float) $u['latitud'],
+    'lng'        => (float) $u['longitud'],
+    'hora'       => formatear_hora($u['registrado_en']),
+    'referencia' => $u['referencia'],
+], $ubicaciones);
 ?>
 <div class="ficha-operativo" data-recorrido="<?= e(json_encode($recorrido)) ?>" data-operativo-id="<?= e($operativo['id']) ?>">
     <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
@@ -98,14 +104,21 @@ $recorrido = array_map(static fn (array $u): array => [(float) $u['latitud'], (f
     <?php endif; ?>
 
     <?php if ($ubicaciones !== []): ?>
-        <h3 class="h6 text-uppercase text-body-secondary mt-3">Recorrido · <?= count($ubicaciones) ?> punto(s)</h3>
-        <ul class="list-group list-group-flush small">
-            <?php foreach (array_reverse($ubicaciones, true) as $indice => $ubicacion): ?>
-                <li class="list-group-item px-0 d-flex gap-2">
-                    <span class="badge rounded-pill text-bg-light border align-self-start"><?= $indice + 1 ?></span>
-                    <span><?= mostrar_ubicacion($ubicacion, true, false) ?></span>
-                </li>
-            <?php endforeach; ?>
-        </ul>
+        <!-- Con el mapa visible, el botón muestra el recorrido sobre el mapa (mapa.js);
+             sin mapa (vista Lista o página de la ficha), despliega la lista de puntos aquí. -->
+        <div x-data="{ lista: false }" class="mt-3">
+            <button type="button" class="btn btn-outline-institucional w-100 boton-accion"
+                    @click="(window.verRecorridoEnMapa && window.verRecorridoEnMapa()) || (lista = !lista)">
+                <i class="bi bi-signpost-split"></i> Ver recorrido (<?= count($ubicaciones) ?> <?= count($ubicaciones) === 1 ? 'punto' : 'puntos' ?>)
+            </button>
+            <ul class="list-group list-group-flush small mt-2" x-show="lista" x-cloak>
+                <?php foreach (array_reverse($ubicaciones, true) as $indice => $ubicacion): ?>
+                    <li class="list-group-item px-0 d-flex gap-2">
+                        <span class="badge rounded-pill text-bg-light border align-self-start"><?= $indice + 1 ?></span>
+                        <span><?= mostrar_ubicacion($ubicacion, true, false) ?></span>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
     <?php endif; ?>
 </div>

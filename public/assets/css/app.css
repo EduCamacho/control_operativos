@@ -821,3 +821,34 @@
 .operativo-celda + .operativo-celda {
     border-top: 2px solid #fff;
 }
+
+/* "Ver recorrido" en el mapa del supervisor: puntos numerados y barra para volver. */
+.punto-recorrido {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--color-institucional);
+    color: #fff;
+    font: 700 12px/26px var(--bs-body-font-family);
+    text-align: center;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .35);
+}
+
+.punto-recorrido.inicio {
+    background: #fff;
+    color: var(--color-institucional);
+    border-color: var(--color-institucional);
+}
+
+.punto-recorrido.ultimo {
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    box-shadow: 0 0 0 4px rgba(var(--color-institucional-rgb), .3), 0 1px 4px rgba(0, 0, 0, .35);
+}
+
+.barra-recorrido {
+    z-index: 5;
+    white-space: nowrap;
+}

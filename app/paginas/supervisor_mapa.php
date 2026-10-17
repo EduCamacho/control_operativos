@@ -93,6 +93,16 @@ require RUTA_APP . '/vistas/cabecera.php';
     <!-- Mapa -->
     <div class="mapa-contenedor position-relative" x-show="vista === 'mapa'">
         <div x-ref="mapa" class="mapa-google"></div>
+        <!-- Mientras se ve el recorrido de un operativo (botón "Ver recorrido" de la ficha) -->
+        <div class="barra-recorrido position-absolute top-0 start-50 translate-middle-x mt-2 d-flex gap-2"
+             x-show="viendoRecorrido && vista === 'mapa'" x-cloak>
+            <button type="button" class="btn btn-institucional shadow" @click="volverAFicha()">
+                <i class="bi bi-arrow-left"></i> Volver a la ficha
+            </button>
+            <button type="button" class="btn btn-light border shadow" @click="cerrarRecorrido()" aria-label="Cerrar el recorrido">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
         <div class="mapa-aviso position-absolute top-50 start-50 translate-middle text-center p-3" x-show="avisoMapa" x-cloak>
             <i class="bi bi-map display-5 text-body-secondary"></i>
             <p class="mt-2 mb-2" x-text="avisoMapa"></p>

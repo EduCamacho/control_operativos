@@ -20,6 +20,8 @@ document.addEventListener('alpine:init', function () {
         // Objetos de Google Maps fuera del estado reactivo de Alpine.
         let mapa = null;
         let recorrido = null;
+        let puntosRecorrido = [];   // [{lat, lng, hora, referencia}] del operativo abierto
+        let puntosNumerados = [];   // marcadores 1, 2, 3… de "Ver recorrido"
         const marcadores = new Map();
         let primerEncuadre = true;
 
@@ -36,10 +38,17 @@ document.addEventListener('alpine:init', function () {
             alertasAbiertas: false,
             cargandoFicha: false,
             panel: null,
+            viendoRecorrido: false,
 
             iniciar() {
                 this.panel = new window.bootstrap.Offcanvas(this.$refs.panelFicha);
-                this.$refs.panelFicha.addEventListener('hidden.bs.offcanvas', () => this.quitarRecorrido());
+                // Al cerrar la ficha se borra el recorrido, salvo cuando se cierra para "Ver recorrido".
+                this.$refs.panelFicha.addEventListener('hidden.bs.offcanvas', () => {
+                    if (!this.viendoRecorrido) {
+                        this.quitarRecorrido();
+                    }
+                });
+                window.verRecorridoEnMapa = () => this.verRecorridoEnMapa();
                 this.cargar();
                 setInterval(() => this.cargar(), config.segundos * 1000);
                 setInterval(() => { this.ahora = Date.now(); }, 1000);
@@ -241,12 +250,13 @@ document.addEventListener('alpine:init', function () {
 
             dibujarRecorrido(puntos) {
                 this.quitarRecorrido();
+                puntosRecorrido = puntos;
                 if (!mapa || puntos.length < 2) {
                     return;
                 }
                 recorrido = new window.google.maps.Polyline({
                     map: mapa,
-                    path: puntos.map((p) => ({ lat: p[0], lng: p[1] })),
+                    path: puntos.map((p) => ({ lat: p.lat, lng: p.lng })),
                     strokeColor: '#1f6f50',
                     strokeOpacity: 0.85,
                     strokeWeight: 4,
@@ -255,15 +265,97 @@ document.addEventListener('alpine:init', function () {
             },
 
             quitarRecorrido() {
+                this.quitarPuntosNumerados();
                 if (recorrido) {
                     recorrido.setMap(null);
                     recorrido = null;
                 }
             },
 
+            // --- "Ver recorrido": la ficha se oculta y el mapa muestra los puntos numerados ---
+
+            /** Lo llama el botón de la ficha. Devuelve false si no hay mapa visible (la ficha muestra la lista). */
+            verRecorridoEnMapa() {
+                if (!mapa || this.vista !== 'mapa' || puntosRecorrido.length === 0) {
+                    return false;
+                }
+                this.viendoRecorrido = true;
+                this.panel.hide();
+                this.dibujarPuntosNumerados();
+                const limites = new window.google.maps.LatLngBounds();
+                puntosRecorrido.forEach((p) => limites.extend({ lat: p.lat, lng: p.lng }));
+                mapa.fitBounds(limites, 70);
+                if (puntosRecorrido.length === 1) {
+                    mapa.setZoom(16);
+                }
+                return true;
+            },
+
+            volverAFicha() {
+                this.quitarPuntosNumerados();
+                this.viendoRecorrido = false;
+                this.panel.show();
+            },
+
+            dibujarPuntosNumerados() {
+                this.quitarPuntosNumerados();
+                const usarAvanzados = Boolean(config.mapId && window.google.maps.marker && window.google.maps.marker.AdvancedMarkerElement);
+                const ventana = new window.google.maps.InfoWindow();
+                puntosRecorrido.forEach((punto, indice) => {
+                    const numero = String(indice + 1);
+                    const posicion = { lat: punto.lat, lng: punto.lng };
+                    let marcador;
+                    if (usarAvanzados) {
+                        const circulo = document.createElement('div');
+                        circulo.className = 'punto-recorrido' + (indice === 0 ? ' inicio' : '') + (indice === puntosRecorrido.length - 1 ? ' ultimo' : '');
+                        circulo.textContent = numero;
+                        marcador = new window.google.maps.marker.AdvancedMarkerElement({ map: mapa, position: posicion, content: circulo, zIndex: 1000 + indice });
+                    } else {
+                        marcador = new window.google.maps.Marker({
+                            map: mapa,
+                            position: posicion,
+                            zIndex: 1000 + indice,
+                            label: { text: numero, color: '#ffffff', fontSize: '11px', fontWeight: '700' },
+                            icon: { path: window.google.maps.SymbolPath.CIRCLE, scale: 11, fillColor: '#1f6f50', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 2 },
+                        });
+                    }
+                    // Texto con textContent: la referencia la escribe la unidad.
+                    marcador.addListener('click', () => {
+                        const contenido = document.createElement('div');
+                        const titulo = document.createElement('strong');
+                        titulo.textContent = numero + ' · ' + punto.hora;
+                        const referencia = document.createElement('div');
+                        referencia.textContent = punto.referencia;
+                        contenido.append(titulo, referencia);
+                        ventana.setContent(contenido);
+                        ventana.open({ map: mapa, anchor: marcador });
+                    });
+                    puntosNumerados.push(marcador);
+                });
+                puntosNumerados.ventana = ventana;
+            },
+
+            quitarPuntosNumerados() {
+                if (puntosNumerados.ventana) {
+                    puntosNumerados.ventana.close();
+                }
+                puntosNumerados.forEach((marcador) => {
+                    marcador.map = null;
+                    if (marcador.setMap) marcador.setMap(null);
+                });
+                puntosNumerados = [];
+            },
+
             // --- Ficha -------------------------------------------------------
 
+            cerrarRecorrido() {
+                this.viendoRecorrido = false;
+                this.quitarRecorrido();
+            },
+
             async abrirFicha(op) {
+                this.viendoRecorrido = false;
+                this.quitarPuntosNumerados();
                 this.alertasAbiertas = false;
                 this.cargandoFicha = true;
                 this.$refs.contenidoFicha.innerHTML = '';
