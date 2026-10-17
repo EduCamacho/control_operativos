@@ -40,54 +40,91 @@ $configuracion_captura = static fn (string $accion): string => e(json_encode([
     'limites'         => ['latitudMin' => LATITUD_MIN, 'latitudMax' => LATITUD_MAX, 'longitudMin' => LONGITUD_MIN, 'longitudMax' => LONGITUD_MAX],
 ]));
 
-$titulo = 'Operativo ' . obtener_etiqueta_turno($operativo['turno']);
+$turno = obtener_etiqueta_turno($operativo['turno']);
+$hora_inicio = convertir_a_fecha_hora($operativo['inicio_programado']);
+$hora_fin = convertir_a_fecha_hora($operativo['fin_programado']);
+$con_cantidad = array_values(array_filter($resultados, static fn (array $r): bool => (int) $r['cantidad'] > 0));
+$tiene_nota = $operativo['nota_informativa'] !== null && $operativo['nota_informativa'] !== '';
+
+$titulo = 'Operativo ' . $turno;
 $scripts = ['assets/js/envio.js', 'assets/js/ubicacion.js'];
 require RUTA_APP . '/vistas/cabecera.php';
 ?>
-<nav aria-label="Ruta de navegación">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="<?= e(armar_url()) ?>">Mis operativos</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Operativo</li>
-    </ol>
-</nav>
+<a href="<?= e(armar_url()) ?>" class="d-inline-block small text-body-secondary text-decoration-none mb-2">
+    <i class="bi bi-arrow-left"></i> Mis operativos
+</a>
 
-<div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-    <h1 class="h4 mb-0">Turno <?= e(obtener_etiqueta_turno($operativo['turno'])) ?></h1>
-    <?= mostrar_estado($estado, pendiente_nota($operativo)) ?>
+<!-- Encabezado: unidad, turno y estado, con el borde del color del estado -->
+<div class="card shadow-sm mb-3 encabezado-operativo tarjeta-<?= e(strtolower($estado)) ?>">
+    <div class="card-body py-3">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <h1 class="h5 mb-0 me-auto"><?= e($operativo['unidad_nombre']) ?></h1>
+            <?= mostrar_estado($estado, pendiente_nota($operativo)) ?>
+        </div>
+        <div class="text-body-secondary">
+            Turno <strong class="text-body"><?= e($turno) ?></strong> · <?= e(formatear_hora($hora_inicio)) ?> – <?= e(formatear_hora($hora_fin)) ?>
+            <?php if ($hora_fin->format('Y-m-d') !== $hora_inicio->format('Y-m-d')): ?><span class="small">(día siguiente)</span><?php endif; ?>
+        </div>
+        <div class="small text-body-secondary">
+            <?php if ($operativo['inicio_real'] !== null): ?>
+                Iniciado <?= e(formatear_hora($operativo['inicio_real'])) ?>
+                <?php if ($operativo['fin_real'] !== null): ?>
+                    · finalizado <?= e(formatear_hora($operativo['fin_real'])) ?>
+                <?php else: ?>
+                    · <?= e(formatear_hace($operativo['inicio_real'], $ahora)) ?>
+                <?php endif; ?>
+            <?php else: ?>
+                Servicio diario del <?= e(formatear_fecha_larga(validar_fecha($operativo['fecha_servicio']))) ?>
+            <?php endif; ?>
+        </div>
+    </div>
 </div>
-<p class="text-body-secondary mb-3">
-    Servicio diario del <?= e(formatear_fecha_larga(validar_fecha($operativo['fecha_servicio']))) ?>
-</p>
 
 <div class="row g-3">
     <div class="col-lg-7">
         <?php if ($operativo['estado'] === 'PROGRAMADO'): ?>
             <div x-data="capturaUbicacion(<?= $configuracion_captura('INICIAR') ?>)">
                 <?php if ($puede_iniciar): ?>
-                    <button type="button" class="btn btn-success btn-lg w-100 boton-accion mb-3" x-show="fase === 'inactiva'" @click="abrir()">
+                    <button type="button" class="btn btn-institucional btn-lg w-100 boton-accion mb-3" x-show="fase === 'inactiva'" @click="abrir()">
                         <i class="bi bi-play-fill"></i> Iniciar operativo
                     </button>
                     <?php $captura = ['titulo' => 'Iniciar operativo', 'boton' => 'Iniciar operativo']; ?>
                     <?php require RUTA_APP . '/vistas/captura_ubicacion.php'; ?>
                 <?php elseif ($ahora < $desde_inicio): ?>
-                    <div class="alert alert-secondary"><i class="bi bi-clock"></i> Podrá iniciarlo desde las <strong><?= e(formatear_hora($desde_inicio)) ?></strong>.</div>
+                    <div class="aviso-estado mb-3">
+                        <i class="bi bi-clock"></i> Podrá iniciarlo desde las <strong><?= e(formatear_hora($desde_inicio)) ?></strong>.
+                    </div>
                 <?php else: ?>
-                    <div class="alert alert-danger"><i class="bi bi-x-octagon"></i> Pasó la hora de fin programada sin iniciarse: ya no se puede iniciar.</div>
+                    <div class="alert alert-danger mb-3">
+                        <i class="bi bi-x-octagon"></i> Pasó la hora de fin programada sin iniciarse: ya no se puede iniciar.
+                    </div>
                 <?php endif; ?>
             </div>
+
         <?php elseif ($operativo['estado'] === 'EN_CURSO'): ?>
             <div class="card shadow-sm mb-3">
                 <div class="card-body">
-                    <div class="small text-body-secondary">Ubicación actual</div>
-                    <div class="fs-6"><?= $actual === null ? 'Sin ubicación' : mostrar_ubicacion($actual) ?></div>
-                    <?php if ($actual !== null): ?>
-                        <div class="small text-body-secondary">Actualizada <?= e(formatear_hace($actual['registrado_en'], $ahora)) ?></div>
+                    <h2 class="h6 titulo-tarjeta"><i class="bi bi-geo-alt-fill"></i> Posición actual</h2>
+                    <?php if ($actual === null): ?>
+                        <p class="text-body-secondary mb-0">Todavía no hay puntos registrados.</p>
+                    <?php else: ?>
+                        <div class="fs-5 fw-semibold lh-sm"><?= e($actual['referencia']) ?></div>
+                        <div class="text-body-secondary small mt-1">
+                            <?= e(formatear_hora($actual['registrado_en'])) ?> · <?= e(formatear_hace($actual['registrado_en'], $ahora)) ?> ·
+                            <?= $actual['origen'] === 'MANUAL'
+                                ? '<span class="badge text-bg-warning">Manual</span>'
+                                : 'precisión ' . e($actual['precision_m'] ?? '?') . ' m' ?>
+                        </div>
+                        <a href="<?= e(armar_enlace_google_maps((float) $actual['latitud'], (float) $actual['longitud'])) ?>"
+                           target="_blank" rel="noopener" class="d-inline-block small mt-1 enlace-institucional">
+                            <i class="bi bi-box-arrow-up-right"></i> Ver en Google Maps
+                        </a>
                     <?php endif; ?>
                 </div>
             </div>
             <div x-data="capturaUbicacion(<?= $configuracion_captura('PUNTO') ?>)">
                 <div class="d-grid gap-2 mb-3" x-show="fase === 'inactiva'">
-                    <button type="button" class="btn btn-primary btn-lg boton-accion" @click="abrir()">
+                    <button type="button" class="btn btn-institucional btn-lg boton-accion" @click="abrir()">
                         <i class="bi bi-geo-alt-fill"></i> Registrar nuevo punto
                     </button>
                     <a href="<?= e(armar_url('operativos/finalizar', ['id' => $id])) ?>" class="btn btn-outline-danger btn-lg boton-accion">
@@ -97,44 +134,49 @@ require RUTA_APP . '/vistas/cabecera.php';
                 <?php $captura = ['titulo' => 'Nuevo punto', 'boton' => 'Registrar punto']; ?>
                 <?php require RUTA_APP . '/vistas/captura_ubicacion.php'; ?>
             </div>
+
         <?php else: ?>
             <div class="card shadow-sm mb-3">
                 <div class="card-body">
-                    <h2 class="h6">Resultados
-                        <?php if (es_resultado_negativo(array_column($resultados, 'cantidad'))): ?>
+                    <div class="d-flex align-items-center mb-2">
+                        <h2 class="h6 titulo-tarjeta mb-0 me-auto"><i class="bi bi-clipboard-data"></i> Resultados</h2>
+                        <?php if ($con_cantidad === []): ?>
                             <span class="badge text-bg-secondary">Negativo</span>
                         <?php else: ?>
                             <span class="badge text-bg-success">Positivo</span>
                         <?php endif; ?>
-                    </h2>
-                    <?php $con_cantidad = array_filter($resultados, static fn (array $r): bool => (int) $r['cantidad'] > 0); ?>
+                    </div>
                     <?php if ($con_cantidad === []): ?>
-                        <p class="text-body-secondary mb-0">Sin resultados (todas las cantidades en 0).</p>
+                        <p class="text-body-secondary mb-0">Sin resultados: todas las cantidades quedaron en 0.</p>
                     <?php else: ?>
-                        <ul class="list-unstyled mb-0">
+                        <div class="cifras">
                             <?php foreach ($con_cantidad as $resultado): ?>
-                                <li><strong><?= e($resultado['cantidad']) ?></strong> <?= e(mb_strtolower($resultado['nombre'])) ?></li>
+                                <div class="cifra">
+                                    <div class="cifra-numero"><?= e($resultado['cantidad']) ?></div>
+                                    <div class="cifra-etiqueta"><?= e(mb_strtolower($resultado['nombre'])) ?></div>
+                                </div>
                             <?php endforeach; ?>
-                        </ul>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
             <div class="card shadow-sm mb-3">
                 <div class="card-body">
-                    <?php if ($operativo['nota_informativa'] !== null && $operativo['nota_informativa'] !== ''): ?>
+                    <h2 class="h6 titulo-tarjeta"><i class="bi bi-file-earmark-text"></i> Nota informativa (SICPIP)</h2>
+                    <?php if ($tiene_nota): ?>
                         <div class="fw-semibold"><?= e(formatear_nota_informativa($operativo['nota_informativa'])) ?></div>
                     <?php else: ?>
                         <form method="post" action="<?= e(armar_url('operativos/nota')) ?>">
                             <?= campo_csrf() ?>
                             <input type="hidden" name="id" value="<?= e($id) ?>">
-                            <label for="nota_informativa" class="form-label fw-semibold">Agregar nota informativa (SICPIP)</label>
+                            <label for="nota_informativa" class="form-label small text-body-secondary">Todavía no tiene nota. Escriba solo el número.</label>
                             <div class="input-group input-group-lg">
                                 <span class="input-group-text">N°</span>
                                 <input type="text" id="nota_informativa" name="nota_informativa" inputmode="numeric" maxlength="40" required
                                        class="form-control" placeholder="202601802185">
-                                <button type="submit" class="btn btn-primary">Guardar</button>
+                                <button type="submit" class="btn btn-institucional">Guardar</button>
                             </div>
-                            <div class="form-text">Solo el número. Una vez guardada, solo el administrador puede cambiarla.</div>
+                            <div class="form-text">Una vez guardada, solo el administrador puede cambiarla.</div>
                         </form>
                     <?php endif; ?>
                 </div>
@@ -142,75 +184,96 @@ require RUTA_APP . '/vistas/cabecera.php';
         <?php endif; ?>
 
         <?php if ($ubicaciones !== []): ?>
-            <h2 class="h6 text-uppercase text-body-secondary">Recorrido · <?= count($ubicaciones) ?> punto(s)</h2>
-            <ul class="list-group mb-3">
-                <?php foreach (array_reverse($ubicaciones, true) as $indice => $ubicacion): ?>
-                    <li class="list-group-item small d-flex gap-2">
-                        <span class="badge rounded-pill text-bg-light border align-self-start"><?= $indice + 1 ?></span>
-                        <span><?= mostrar_ubicacion($ubicacion) ?><?= $indice === 0 ? ' <span class="badge text-bg-success">Inicio</span>' : '' ?></span>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <h2 class="h6 titulo-tarjeta"><i class="bi bi-signpost-split"></i> Recorrido · <?= count($ubicaciones) ?> punto(s)</h2>
+                    <ol class="recorrido list-unstyled mb-0">
+                        <?php foreach (array_reverse($ubicaciones, true) as $indice => $ubicacion): ?>
+                            <li class="<?= $indice === array_key_last($ubicaciones) ? 'reciente' : '' ?>">
+                                <div class="d-flex flex-wrap align-items-baseline gap-2">
+                                    <span class="fw-semibold"><?= e(formatear_hora($ubicacion['registrado_en'])) ?></span>
+                                    <span><?= e($ubicacion['referencia']) ?></span>
+                                    <?php if ($indice === 0): ?><span class="badge text-bg-success">Inicio</span><?php endif; ?>
+                                </div>
+                                <div class="small text-body-secondary">
+                                    <?= $ubicacion['origen'] === 'MANUAL'
+                                        ? '<span class="badge text-bg-warning">Manual</span>'
+                                        : 'precisión ' . e($ubicacion['precision_m'] ?? '?') . ' m' ?>
+                                    · <a href="<?= e(armar_enlace_google_maps((float) $ubicacion['latitud'], (float) $ubicacion['longitud'])) ?>"
+                                         target="_blank" rel="noopener" class="enlace-institucional">Ver en Google Maps</a>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                    </ol>
+                </div>
+            </div>
         <?php endif; ?>
     </div>
 
     <div class="col-lg-5">
         <div class="card shadow-sm mb-3">
+            <div class="card-header bg-transparent d-flex align-items-center">
+                <h2 class="h6 titulo-tarjeta mb-0 me-auto"><i class="bi bi-card-checklist"></i> Datos del operativo</h2>
+                <?php if ($puede_editar): ?>
+                    <a href="<?= e(armar_url('operativos/programar', ['id' => $id])) ?>" class="btn btn-sm btn-outline-institucional">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                <?php endif; ?>
+            </div>
             <div class="card-body">
-                <dl class="row mb-0 small">
-                    <dt class="col-5">Programado</dt>
-                    <dd class="col-7">
-                        <?= e(convertir_a_fecha_hora($operativo['inicio_programado'])->format('d/m H:i')) ?> –
-                        <?= e(convertir_a_fecha_hora($operativo['fin_programado'])->format('d/m H:i')) ?>
-                    </dd>
-                    <?php if ($operativo['inicio_real'] !== null): ?>
-                        <dt class="col-5">Real</dt>
-                        <dd class="col-7">
-                            <?= e(convertir_a_fecha_hora($operativo['inicio_real'])->format('d/m H:i')) ?> –
-                            <?= $operativo['fin_real'] === null ? 'en curso' : e(convertir_a_fecha_hora($operativo['fin_real'])->format('d/m H:i')) ?>
-                        </dd>
-                    <?php endif; ?>
-                    <dt class="col-5">Tipo(s)</dt>
-                    <dd class="col-7"><?= e(implode(', ', array_column($tipos, 'nombre'))) ?></dd>
-                    <dt class="col-5">Lugar programado</dt>
-                    <dd class="col-7">
+                <div class="dato">
+                    <i class="bi bi-tags dato-icono"></i>
+                    <div><div class="dato-etiqueta">Tipo(s)</div><?= e(implode(', ', array_column($tipos, 'nombre'))) ?></div>
+                </div>
+                <div class="dato">
+                    <i class="bi bi-geo-alt dato-icono"></i>
+                    <div>
+                        <div class="dato-etiqueta">Lugar programado</div>
                         <?= e($operativo['lugar_programado']) ?>
                         <?php if ($operativo['lugar_latitud'] !== null): ?>
                             <a href="<?= e(armar_enlace_google_maps((float) $operativo['lugar_latitud'], (float) $operativo['lugar_longitud'])) ?>"
-                               target="_blank" rel="noopener" class="d-block"><i class="bi bi-geo-alt"></i> Ver en Google Maps</a>
+                               target="_blank" rel="noopener" class="d-block small enlace-institucional">Ver en Google Maps</a>
                         <?php endif; ?>
-                    </dd>
-                    <dt class="col-5">Jefe</dt>
-                    <dd class="col-7">
-                        <?= e($operativo['jefe_grado'] . ' ' . $operativo['jefe_nombres']) ?><br>
-                        <a href="tel:<?= e($operativo['jefe_celular']) ?>"><i class="bi bi-telephone"></i> <?= e($operativo['jefe_celular']) ?></a>
-                    </dd>
-                    <dt class="col-5">Fuerzas</dt>
-                    <dd class="col-7">
-                        <?= e($operativo['fuerzas_propias']) ?> propias · <?= e($operativo['fuerzas_apoyo']) ?> de apoyo ·
-                        <?= e($operativo['unidades_moviles']) ?> unidad(es) móvil(es)
-                    </dd>
-                    <?php if ($operativo['observaciones'] !== null): ?>
-                        <dt class="col-5">Observaciones</dt>
-                        <dd class="col-7 text-break" style="white-space: pre-line"><?= e($operativo['observaciones']) ?></dd>
-                    <?php endif; ?>
-                </dl>
+                    </div>
+                </div>
+                <div class="dato">
+                    <i class="bi bi-person-badge dato-icono"></i>
+                    <div class="flex-fill">
+                        <div class="dato-etiqueta">Jefe del operativo</div>
+                        <?= e($operativo['jefe_grado'] . ' ' . $operativo['jefe_nombres']) ?>
+                        <div>
+                            <a href="tel:<?= e($operativo['jefe_celular']) ?>" class="btn btn-sm btn-outline-institucional mt-1">
+                                <i class="bi bi-telephone"></i> Llamar · <?= e($operativo['jefe_celular']) ?>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="dato">
+                    <i class="bi bi-people dato-icono"></i>
+                    <div class="flex-fill">
+                        <div class="dato-etiqueta">Fuerzas</div>
+                        <div class="cifras cifras-compactas">
+                            <div class="cifra"><div class="cifra-numero"><?= e($operativo['fuerzas_propias']) ?></div><div class="cifra-etiqueta">propias</div></div>
+                            <div class="cifra"><div class="cifra-numero"><?= e($operativo['fuerzas_apoyo']) ?></div><div class="cifra-etiqueta">de apoyo</div></div>
+                            <div class="cifra"><div class="cifra-numero"><?= e($operativo['unidades_moviles']) ?></div><div class="cifra-etiqueta">móviles</div></div>
+                        </div>
+                    </div>
+                </div>
+                <?php if ($operativo['observaciones'] !== null): ?>
+                    <div class="dato">
+                        <i class="bi bi-chat-left-text dato-icono"></i>
+                        <div><div class="dato-etiqueta">Observaciones</div><div class="text-break" style="white-space: pre-line"><?= e($operativo['observaciones']) ?></div></div>
+                    </div>
+                <?php endif; ?>
+                <?php if ($puede_eliminar): ?>
+                    <form method="post" action="<?= e(armar_url('operativos/eliminar')) ?>" class="mt-3 pt-3 border-top text-end"
+                          onsubmit="return confirm('¿Eliminar este operativo? Solo se puede eliminar antes de su hora de inicio.')">
+                        <?= campo_csrf() ?>
+                        <input type="hidden" name="id" value="<?= e($id) ?>">
+                        <button type="submit" class="btn btn-sm btn-link text-danger text-decoration-none"><i class="bi bi-trash"></i> Eliminar operativo</button>
+                    </form>
+                <?php endif; ?>
             </div>
-        </div>
-        <div class="d-flex flex-wrap gap-2">
-            <?php if ($puede_editar): ?>
-                <a href="<?= e(armar_url('operativos/programar', ['id' => $id])) ?>" class="btn btn-outline-primary boton-accion">
-                    <i class="bi bi-pencil"></i> Editar
-                </a>
-            <?php endif; ?>
-            <?php if ($puede_eliminar): ?>
-                <form method="post" action="<?= e(armar_url('operativos/eliminar')) ?>"
-                      onsubmit="return confirm('¿Eliminar este operativo? Solo se puede eliminar antes de su hora de inicio.')">
-                    <?= campo_csrf() ?>
-                    <input type="hidden" name="id" value="<?= e($id) ?>">
-                    <button type="submit" class="btn btn-outline-danger boton-accion"><i class="bi bi-trash"></i> Eliminar</button>
-                </form>
-            <?php endif; ?>
         </div>
     </div>
 </div>

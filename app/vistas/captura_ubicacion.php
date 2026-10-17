@@ -6,8 +6,8 @@
  */
 declare(strict_types=1);
 ?>
-<div class="card shadow-sm border-success mb-3" x-show="fase !== 'inactiva'" x-cloak x-id="['captura']">
-    <div class="card-header d-flex justify-content-between align-items-center bg-success-subtle">
+<div class="card shadow-sm panel-captura mb-3" x-show="fase !== 'inactiva'" x-cloak x-id="['captura']">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <span class="fw-semibold"><i class="bi bi-geo-alt-fill"></i> <?= e($captura['titulo']) ?></span>
         <button type="button" class="btn-close" aria-label="Cerrar" @click="cancelar()"
                 x-show="fase !== 'enviando' && fase !== 'sin_conexion'"></button>
@@ -99,7 +99,7 @@ declare(strict_types=1);
                 <div x-show="analizando" class="small text-body-secondary mb-2">Analizando…</div>
                 <div x-show="errorManual" class="text-danger small mb-2" x-text="errorManual"></div>
                 <div class="d-grid gap-2 d-sm-flex">
-                    <button type="button" class="btn btn-success boton-accion" @click="confirmarManual()"><i class="bi bi-check-lg"></i> Usar estas coordenadas</button>
+                    <button type="button" class="btn btn-institucional boton-accion" @click="confirmarManual()"><i class="bi bi-check-lg"></i> Usar estas coordenadas</button>
                     <a :href="enlaceMaps(latitudManual, longitudManual)" target="_blank" rel="noopener" class="btn btn-outline-secondary boton-accion"
                        :class="(latitudManual === '' || longitudManual === '') && 'disabled'"><i class="bi bi-geo-alt"></i> Ver en Google Maps</a>
                     <button type="button" class="btn btn-outline-secondary boton-accion" @click="obtenerGps()"><i class="bi bi-crosshair"></i> Volver a intentar con GPS</button>
@@ -119,7 +119,7 @@ declare(strict_types=1);
             <div x-show="errores.general" class="alert alert-danger py-2 mb-3" x-text="errores.general"></div>
         </div>
 
-        <button type="button" class="btn btn-success btn-lg w-100 boton-accion"
+        <button type="button" class="btn btn-institucional btn-lg w-100 boton-accion"
                 x-show="fase === 'lista' || fase === 'enviando'" :disabled="fase === 'enviando'" @click="enviar()">
             <span x-show="fase === 'enviando'" class="spinner-border spinner-border-sm" role="status"></span>
             <span x-text="fase === 'enviando' ? 'Enviando…' : <?= e(json_encode($captura['boton'])) ?>"></span>

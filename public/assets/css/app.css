@@ -466,3 +466,133 @@
     border: 2px dashed var(--bs-secondary-color);
     box-shadow: none;
 }
+
+/* --- Ficha del operativo (operativos/ver) --- */
+
+/* Encabezado con el borde izquierdo del color del estado (clases .tarjeta-<estado>). */
+.encabezado-operativo {
+    border-left-width: 5px;
+}
+
+.titulo-tarjeta {
+    color: var(--color-institucional);
+    font-weight: 600;
+}
+
+.enlace-institucional {
+    color: var(--color-institucional);
+}
+
+.enlace-institucional:hover {
+    color: var(--color-institucional-oscuro);
+}
+
+.aviso-estado {
+    background: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    padding: .75rem 1rem;
+}
+
+/* Datos del operativo: ícono a la izquierda, etiqueta pequeña y valor. */
+.dato {
+    display: flex;
+    gap: .75rem;
+    padding: .55rem 0;
+}
+
+.dato + .dato {
+    border-top: 1px solid var(--bs-border-color-translucent);
+}
+
+.dato-icono {
+    color: var(--color-institucional);
+    font-size: 1.1rem;
+    line-height: 1.4;
+    flex-shrink: 0;
+}
+
+.dato-etiqueta {
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--bs-secondary-color);
+}
+
+/* Cifras (fuerzas y resultados): recuadros con el número grande. */
+.cifras {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+    gap: .5rem;
+}
+
+.cifras-compactas {
+    grid-template-columns: repeat(3, 1fr);
+    margin-top: .25rem;
+}
+
+.cifra {
+    background: var(--bs-tertiary-bg);
+    border-radius: .5rem;
+    padding: .45rem .5rem;
+    text-align: center;
+}
+
+.cifra-numero {
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--color-institucional);
+}
+
+.cifra-etiqueta {
+    font-size: .75rem;
+    color: var(--bs-secondary-color);
+    line-height: 1.2;
+}
+
+/* Recorrido como línea de tiempo vertical; el punto más reciente arriba y resaltado. */
+.recorrido li {
+    position: relative;
+    padding: 0 0 .9rem 1.4rem;
+}
+
+.recorrido li:last-child {
+    padding-bottom: 0;
+}
+
+.recorrido li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: .35rem;
+    width: .7rem;
+    height: .7rem;
+    border-radius: 50%;
+    background: var(--bs-body-bg);
+    border: 2px solid var(--color-institucional);
+}
+
+.recorrido li.reciente::before {
+    background: var(--color-institucional);
+}
+
+.recorrido li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: .3rem;
+    top: 1.15rem;
+    bottom: .1rem;
+    width: 2px;
+    background: var(--bs-border-color);
+}
+
+/* Panel de captura de ubicación en el color institucional. */
+.panel-captura {
+    border-color: var(--color-institucional);
+}
+
+.panel-captura > .card-header {
+    background: rgba(var(--color-institucional-rgb), .08);
+    color: var(--color-institucional);
+}

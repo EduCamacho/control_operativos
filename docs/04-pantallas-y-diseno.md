@@ -40,10 +40,14 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - Cada paso se valida antes de avanzar; el servidor vuelve a validar todo y, si rechaza algo, el asistente abre el paso con el error.
    - **Al editar** abre directo en **Revisar**. Los bloques que el estado no permite cambiar (RN-05) muestran "No se puede cambiar"; en curso solo se cambia el bloque 3.
    - El formulario del ADMIN usa los mismos bloques, pero en una sola página.
-3. **Operativo en curso**
-   - Arriba, la ubicación actual en texto con el enlace **Ver en Google Maps**. No hay mapa.
-   - Dos botones grandes: **Registrar nuevo punto** y **Finalizar operativo**.
-   - Debajo, la lista de puntos con hora, referencia y enlace a Google Maps.
+3. **Ficha del operativo** (`/operativos/ver`)
+   - **Encabezado** con la unidad, el estado, el turno y el horario, con el borde izquierdo del color del estado; debajo, la hora de inicio real y hace cuánto.
+   - **En curso**: tarjeta **Posición actual** (la referencia en grande, hora, hace cuánto, precisión o "Manual" y **Ver en Google Maps**). Debajo, dos botones grandes: **Registrar nuevo punto** (verde institucional) y **Finalizar operativo** (contorno rojo). No hay mapa (RN-21).
+   - **Programado**: botón **Iniciar operativo**, o el aviso "Podrá iniciarlo desde las HH:MM".
+   - **Finalizado**: **Resultados** como recuadros con la cifra grande (o "Negativo") y la **Nota informativa**, con el campo para agregarla si falta.
+   - **Recorrido** como línea de tiempo vertical, el punto más reciente arriba y resaltado, el primero marcado como "Inicio".
+   - **Datos del operativo** con ícono por dato (tipos, lugar programado con su enlace, jefe con el botón **Llamar** y fuerzas en tres recuadros con la cifra), y **Editar** en el encabezado de la tarjeta. **Eliminar** va al pie, discreto, solo cuando se permite (RN-06).
+   - En la PC, dos columnas: a la izquierda la acción y el recorrido; a la derecha los datos.
 4. **Captura de ubicación** (al iniciar y al registrar un nuevo punto)
    - Mientras obtiene el GPS muestra el mensaje "Obteniendo ubicación…" y luego la precisión lograda.
    - Si la precisión es peor que 100 m, ofrece *Reintentar*, *Usar de todos modos* o *Ingresar manualmente*.
