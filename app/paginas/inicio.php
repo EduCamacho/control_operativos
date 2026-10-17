@@ -90,7 +90,7 @@ require RUTA_APP . '/vistas/cabecera.php';
     <div class="col-lg-5">
         <div class="list-group shadow-sm">
             <a class="list-group-item list-group-item-action d-flex justify-content-between" href="<?= e(armar_url('admin/operativos', ['estado' => 'PENDIENTE_NOTA', 'desde' => validar_fecha($vigente)->modify('-7 days')->format('Y-m-d'), 'hasta' => $vigente])) ?>">
-                Finalizados sin nota (últimos 7 días) <span class="badge text-bg-<?= $sin_nota ? 'primary' : 'light' ?>"><?= $sin_nota ?></span>
+                Finalizados sin N.I (últimos 7 días) <span class="badge text-bg-<?= $sin_nota ? 'primary' : 'light' ?>"><?= $sin_nota ?></span>
             </a>
             <a class="list-group-item list-group-item-action d-flex justify-content-between" href="<?= e(armar_url('admin/usuarios')) ?>">
                 Unidades activas sin cuenta <span class="badge text-bg-<?= $sin_cuenta ? 'warning' : 'light' ?>"><?= $sin_cuenta ?></span>

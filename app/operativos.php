@@ -104,12 +104,12 @@ function calcular_estado_visible(array $operativo, DateTimeImmutable $ahora): st
     return estado_visible($operativo, $ahora, TOLERANCIA_NO_INICIADO_MIN, TOLERANCIA_SIN_CIERRE_MIN);
 }
 
-/** Badge del estado visible, con el distintivo "Sin nota" sobre FINALIZADO (docs/04). */
+/** Badge del estado visible, con el distintivo "Sin N.I" sobre FINALIZADO (docs/04). */
 function mostrar_estado(string $estado_visible, bool $pendiente_nota = false): string
 {
     $html = '<span class="badge ' . e(obtener_clase_estado($estado_visible)) . '">' . e(obtener_etiqueta_estado($estado_visible)) . '</span>';
     if ($pendiente_nota) {
-        $html .= ' <span class="badge text-bg-light border border-primary text-primary"><i class="bi bi-file-earmark-x"></i> Sin nota</span>';
+        $html .= ' <span class="badge text-bg-light border border-primary text-primary"><i class="bi bi-file-earmark-x"></i> Sin N.I</span>';
     }
     return $html;
 }

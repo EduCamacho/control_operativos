@@ -116,7 +116,7 @@ require RUTA_APP . '/vistas/cabecera.php';
                         <strong class="me-auto" x-text="op.unidad"></strong>
                         <span class="badge text-bg-light border" x-text="op.turno_etiqueta + (op.servicio_anterior ? ' (servicio anterior)' : '')"></span>
                         <span class="badge" :class="config.clases[op.estado]" x-text="op.estado_etiqueta"></span>
-                        <span class="badge text-bg-light border border-primary text-primary" x-show="op.pendiente_nota">Sin nota</span>
+                        <span class="badge text-bg-light border border-primary text-primary" x-show="op.pendiente_nota">Sin N.I</span>
                     </div>
                     <div class="small text-body-secondary">
                         <span x-text="op.inicio_programado + '–' + op.fin_programado"></span> ·

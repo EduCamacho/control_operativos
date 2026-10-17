@@ -20,7 +20,7 @@
 | SIN_CIERRE | naranja | clase propia `.bg-naranja` (`#fd7e14`), para no confundirse con el amarillo de SIN_PROGRAMAR |
 | FINALIZADO | azul | `primary` |
 
-`PENDIENTE_NOTA` no tiene color propio: se muestra como un distintivo "Sin nota" sobre el azul de FINALIZADO.
+`PENDIENTE_NOTA` no tiene color propio: se muestra como un distintivo "Sin N.I" (sin nota informativa) sobre el azul de FINALIZADO.
 
 ## Ubicaciones fuera del mapa del General
 
@@ -99,6 +99,6 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
   - En la lista de unidades para una cuenta UNIDAD, las que ya tienen cuenta aparecen deshabilitadas (RN-20).
   - Un ADMIN no puede quitarse su propio rol ni desactivar su propia cuenta, y siempre debe quedar al menos un ADMIN activo.
 - **Catálogos** (`/admin/catalogos`): tipos de operativo y conceptos de resultado. Los nombres se guardan en mayúsculas. No se eliminan, porque los operativos los referencian: se desactivan, y dejan de aparecer en los formularios nuevos.
-- **Operativos** (`/admin/operativos`): búsqueda por fechas de servicio (por defecto, 7 días antes y después del vigente), unidad, turno y estado visible (incluidos no iniciado, sin cierre y finalizado sin nota). La ficha de corrección permite cambiar todo: la programación (con el mismo formulario de la unidad, pero sin bloqueos ni fecha mínima), el estado y las horas reales, la nota y los resultados. Pide el motivo. También permite **programar en nombre de una unidad**, incluso con la hora pasada, y **eliminar** con motivo.
-- **Inicio**: resumen del servicio diario vigente (cantidad por estado, alertas de no iniciados y sin cierre) y accesos a finalizados sin nota, unidades sin cuenta y cuentas bloqueadas.
+- **Operativos** (`/admin/operativos`): búsqueda por fechas de servicio (por defecto, 7 días antes y después del vigente), unidad, turno y estado visible (incluidos no iniciado, sin cierre y finalizado sin N.I). La ficha de corrección permite cambiar todo: la programación (con el mismo formulario de la unidad, pero sin bloqueos ni fecha mínima), el estado y las horas reales, la nota y los resultados. Pide el motivo. También permite **programar en nombre de una unidad**, incluso con la hora pasada, y **eliminar** con motivo.
+- **Inicio**: resumen del servicio diario vigente (cantidad por estado, alertas de no iniciados y sin cierre) y accesos a finalizados sin N.I, unidades sin cuenta y cuentas bloqueadas.
 - **Bitácora** (`/admin/bitacora`): consulta filtrada por usuario, acción y rango de fechas (por defecto, los últimos 7 días), con 50 registros por página. Las ediciones muestran cada campo como "antes → después".

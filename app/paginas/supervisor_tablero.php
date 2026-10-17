@@ -116,7 +116,7 @@ require RUTA_APP . '/vistas/cabecera.php';
                                    class="d-block text-center text-decoration-none py-2 px-1 <?= e(obtener_clase_estado($estado)) ?>"
                                    title="<?= e(obtener_etiqueta_estado($estado) . ' · ' . $operativo['lugar_programado']) ?>">
                                     <span class="d-block small fw-semibold"><?= e(obtener_etiqueta_estado($estado)) ?></span>
-                                    <span class="d-block small"><?= e(formatear_hora($operativo['inicio_programado'])) ?>–<?= e(formatear_hora($operativo['fin_programado'])) ?><?= pendiente_nota($operativo) ? ' · sin nota' : '' ?></span>
+                                    <span class="d-block small"><?= e(formatear_hora($operativo['inicio_programado'])) ?>–<?= e(formatear_hora($operativo['fin_programado'])) ?><?= pendiente_nota($operativo) ? ' · sin N.I' : '' ?></span>
                                 </a>
                             </td>
                         <?php elseif ($estado === 'SIN_PROGRAMAR'): ?>
