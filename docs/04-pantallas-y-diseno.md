@@ -80,12 +80,13 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
 2. **Ficha del operativo**: se abre como panel inferior al tocar un marcador. En vez de la lista del recorrido tiene el botón **Ver recorrido (N puntos)**: oculta la ficha y encuadra el mapa sobre el recorrido (línea **magenta** `#C2185B` con borde blanco y flechas de dirección; el magenta no lo usa ningún estado ni el mapa de Google), con los puntos numerados del mismo color (tocar uno muestra su hora y referencia) y una barra **← Volver a la ficha** / **✕**. Sin mapa (vista Lista o página de la ficha), el botón despliega la lista de puntos.
    - Muestra unidad, tipos, plan, jefe, fuerzas, horario programado y real, lugar, última actualización ("hace 12 min") y recorrido.
    - Botones: **Cómo llegar** (`https://www.google.com/maps/dir/?api=1&destination=LAT,LNG`), **Llamar al jefe** (`tel:`) y **Registrar control**.
-3. **Registrar control inopinado**
-   - Intenta capturar el GPS del supervisor. Si no lo consigue, permite ingresar las coordenadas manualmente o guardar sin ubicación (RN-15).
-   - Pide el resultado: CONFORME, CON OBSERVACIONES o NO ENCONTRADO.
-   - Pide una observación.
-   - Al guardar, muestra la distancia calculada al último punto del operativo.
-   - Al pie, **Controles anteriores** del operativo (resultado, hora, quién y distancia). Los controles se ven aquí, donde se registran, y no en la ficha del mapa. El recién registrado aparece arriba de inmediato, resaltado, sin recargar la página.
+3. **Registrar control inopinado** (`/supervisor/control`), con poco texto:
+   - **← Mapa** y el encabezado del operativo (unidad, estado, turno y horario) con el borde del color del estado.
+   - Una línea con el estado del GPS del supervisor: "Obteniendo su ubicación…", "Su ubicación ✓" (con **Quitar**) o "Sin ubicación" (con **Reintentar** · **Manual** para pegar coordenadas). Es opcional (RN-15).
+   - **Resultado**: tres botones grandes en una fila, con ícono: ✓ Conforme (verde), ⚠ Con observaciones (amarillo) y ✕ No encontrado (rojo).
+   - **Observación** (opcional si es Conforme) y **Guardar control** fijo al pie.
+   - Al guardar: ✓ **Control registrado** con la distancia al último punto en cifra grande y **Volver al mapa**.
+   - Al pie, **Controles anteriores** del operativo (resultado, hora y distancia; el nombre del supervisor solo si es otro). Los controles se ven aquí, donde se registran, y no en la ficha del mapa. El recién registrado aparece arriba de inmediato, resaltado, sin recargar la página.
 4. **Tablero de cumplimiento**
    - Matriz de **unidades activas × 4 turnos** de la fecha elegida (por defecto, el servicio diario vigente), con flechas para el día anterior y el siguiente y filtro por división. Cada celda tiene el color de su estado y abre la ficha.
    - Una celda sin operativo es SIN_PROGRAMAR (amarillo) cuando ya pasó la última hora de inicio posible del turno; antes se muestra "—", porque todavía puede programarse.
