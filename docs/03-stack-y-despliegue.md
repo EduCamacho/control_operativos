@@ -75,13 +75,16 @@ En cPanel, crear un subdominio (por ejemplo `operativos.tudominio.com`) con el *
 
 Son funciones puras, sin acceso a la base de datos, y cada una tiene sus tests en PHPUnit:
 
-- `calcular_horario_turno(string $fecha, string $horaInicio, string $horaFin): array`: devuelve `[inicio, fin]` como DATETIME, con cruce de medianoche (RN-02).
+- `clasificar_turno(string $horaInicio): string`: devuelve `MANANA`, `TARDE`, `NOCHE` o `MADRUGADA` según la hora de inicio (RN-02).
+- `calcular_horario_turno(string $fecha, string $horaInicio, string $horaFin): array`: devuelve `[turno, inicio, fin]`, con la MADRUGADA al día siguiente y el cruce de medianoche (RN-02).
+- `fecha_servicio_vigente(DateTimeImmutable $ahora): string`: hoy desde las 06:00 y ayer antes de esa hora.
 - `dentro_de_la_libertad(float $lat, float $lng): bool` (RN-08).
+- `parsear_coordenadas(string $texto): ?array`: separa en `[lat, lng]` lo que se copió de Google Maps (decimal, URL con `@` o grados, minutos y segundos) y devuelve `null` si no lo reconoce (RN-09).
 - `distancia_m(float $lat1, float $lng1, float $lat2, float $lng2): int`: fórmula de Haversine (RN-15).
-- `estado_visible(array $operativo, DateTimeImmutable $ahora): string`: devuelve `NO_INICIADO`, `SIN_CIERRE`, `PENDIENTE_NOTA` o el estado guardado (RN-14).
-- `puede_iniciar()`, `puede_eliminar()`, `campos_editables(string $estado): array` (RN-05, RN-06, RN-07).
+- `estado_visible(array $operativo, DateTimeImmutable $ahora): string`: devuelve `NO_INICIADO`, `SIN_CIERRE` o el estado guardado (RN-14). `pendiente_nota(array $operativo): bool` aparte, porque es un distintivo.
+- `puede_iniciar()`, `puede_eliminar()`, `campos_editables(string $estado, bool $paso_hora_inicio): array` (RN-05, RN-06, RN-07).
 - `normalizar_nota_informativa(string $texto): ?string`: deja solo los dígitos (RN-13).
-- `fecha_servicio_permitida(string $fecha, string $turno, DateTimeImmutable $ahora): bool` (RN-03).
+- `programacion_permitida(DateTimeImmutable $inicio, DateTimeImmutable $ahora, bool $es_admin): bool`: el inicio debe ser futuro, salvo para ADMIN (RN-03).
 
 ## Desarrollo y despliegue sin SSH
 

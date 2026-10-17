@@ -10,8 +10,9 @@ En la interfaz, los mensajes y el código se usan estos términos tal como los e
 | **DIVOPUS Trujillo** | División a la que pertenecen las 18 comisarías del sistema. |
 | **DUE** | Grupo de unidades especializadas: UNEME-SECEME, Escuadrón Verde, UTSEVI, Halcones y UPROVE. |
 | **DIVINCRI / DEPINCRI** | División de Investigación Criminal y sus departamentos (Centro, Este y Norte). |
-| **Turno** | MAÑANA, TARDE o NOCHE. |
-| **Fecha de servicio** | Día en que empieza el turno. El turno noche que termina a las 02:00 pertenece al día anterior. |
+| **Turno** | MAÑANA (06:00–11:59), TARDE (12:00–17:59), NOCHE (18:00–23:59) o MADRUGADA (00:00–05:59), según la hora de inicio. Lo clasifica el sistema. |
+| **Jornada de servicio** | Periodo de 06:00 a 05:59 del día siguiente, con sus cuatro turnos. |
+| **Fecha de servicio** | Día en que empieza la jornada. La MADRUGADA del sábado 18 pertenece a la jornada del viernes 17. |
 | **Tipo de operativo** | Modalidad: control de identidad, rastrillaje, alto impacto, requisa, zonas rígidas, etc. Un operativo puede tener más de una. |
 | **Nombre del plan** | Denominación del plan u orden de operaciones (por ejemplo, "Saltamonte 2026" o "Estado de Emergencia Trujillo-V-2026"). Es opcional. |
 | **Lugar programado** | Dónde se planea ejecutar el operativo, en texto. |
@@ -27,5 +28,6 @@ En la interfaz, los mensajes y el código se usan estos términos tal como los e
 | **IRNT** | Infracción al Reglamento Nacional de Tránsito. "Papeleta por IRNT" (PIRNT). |
 | **Flagrancia** | Detención en el momento de cometer el delito o inmediatamente después. |
 | **Negativo / positivo** | Operativo sin resultados o con resultados. En el sistema se deduce de las cantidades: negativo si todas son 0. |
+| **Sin programar** | Turno de una jornada para el que la unidad no registró operativo. |
 | **No iniciado** | Operativo programado que pasó 15 minutos de su hora de inicio sin haberse iniciado. |
 | **Sin cierre** | Operativo en curso que pasó 30 minutos de su hora de fin sin haberse finalizado. |

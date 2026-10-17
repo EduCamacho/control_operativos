@@ -1,6 +1,6 @@
 # Control de Operativos — REGPOL La Libertad
 
-Es un sistema web para que 26 comisarías y unidades especializadas programen un operativo por turno (mañana, tarde y noche) e inicien y actualicen su ubicación desde el celular del jefe del operativo con GPS. El General ve los operativos en un mapa para hacer controles inopinados. Es independiente de SICAD.
+Es un sistema web para que 26 comisarías y unidades especializadas programen un operativo por turno (mañana, tarde, noche y madrugada) e inicien y actualicen su ubicación desde el celular del jefe del operativo con GPS. El General ve los operativos en un mapa para hacer controles inopinados. Es independiente de SICAD.
 
 ## Leer antes de programar
 
@@ -13,7 +13,7 @@ Es un sistema web para que 26 comisarías y unidades especializadas programen un
 ## Stack (resumen)
 
 PHP 8.2+ plano con PDO, MySQL o MariaDB, Bootstrap 5.3 y Alpine.js 3. El hosting es compartido con cPanel.
-La Google Maps JS API se carga **solo en las pantallas del SUPERVISOR** (RN-21). En las demás vistas, cada ubicación es un enlace `https://www.google.com/maps/search/?api=1&query=LAT,LNG`. Para ubicar se usa el GPS del navegador, que es obligatorio y no tiene ingreso manual (RN-09).
+La Google Maps JS API se carga **solo en las pantallas del SUPERVISOR** (RN-21). En las demás vistas, cada ubicación es un enlace `https://www.google.com/maps/search/?api=1&query=LAT,LNG`. Para ubicar se intenta primero el GPS del navegador. Si falla o es impreciso (por ejemplo, en una PC), se pueden pegar coordenadas de Google Maps, y quedan marcadas como `MANUAL` (RN-09).
 **No usar** frameworks, Composer en producción, Node, bundlers, websockets ni tareas cron. El mapa se actualiza consultando `/api/mapa` cada 30 s.
 
 ## Reglas de código
@@ -33,8 +33,10 @@ La Google Maps JS API se carga **solo en las pantallas del SUPERVISOR** (RN-21).
 
 PHPUnit **solo en local** (Laragon). Toda función de `app/dominio.php` debe tener tests, incluidos los casos borde:
 
-- Turno noche que cruza la medianoche.
-- Coordenadas con signo invertido o sin punto decimal, como venían en el Excel.
+- Clasificación del turno en los límites de cada rango (05:59, 06:00, 11:59, 12:00…) y operativos que cruzan la medianoche.
+- Jornada vigente antes y después de las 06:00 (la MADRUGADA pertenece a la fecha de servicio anterior).
+- Coordenadas dentro y fuera de La Libertad, incluidos los bordes del rectángulo; las de signo invertido o sin punto decimal deben quedar rechazadas.
+- `parsear_coordenadas()` con los formatos de Google Maps (decimal, URL con `@`, grados, minutos y segundos, coma decimal) y con textos que no reconoce.
 - Tolerancias de los estados derivados.
 - Eliminar justo antes y justo después de la hora de inicio.
 

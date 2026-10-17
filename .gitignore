@@ -4,7 +4,7 @@ app/config.php
 .env
 
 # Dependencias y artefactos locales (PHPUnit solo en local)
-vendor/
+/vendor/
 .phpunit.result.cache
 .phpunit.cache/
 

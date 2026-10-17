@@ -12,11 +12,14 @@
 
 | Estado visible | Color | Bootstrap |
 |---|---|---|
+| SIN_PROGRAMAR | amarillo | `warning` (solo en el tablero: celda vacía) |
 | PROGRAMADO | gris | `secondary` |
 | EN_CURSO | verde | `success` |
 | NO_INICIADO | rojo | `danger` |
-| SIN_CIERRE | naranja | `warning` |
+| SIN_CIERRE | naranja | clase propia `.bg-naranja` (`#fd7e14`), para no confundirse con el amarillo de SIN_PROGRAMAR |
 | FINALIZADO | azul | `primary` |
+
+`PENDIENTE_NOTA` no tiene color propio: se muestra como un distintivo "Sin nota" sobre el azul de FINALIZADO.
 
 ## Ubicaciones fuera del mapa del General
 
@@ -25,14 +28,14 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
 ## Rol UNIDAD
 
 1. **Mis operativos (inicio)**
-   - Muestra la fecha de servicio vigente con **3 tarjetas fijas: MAÑANA, TARDE y NOCHE**.
+   - Muestra la jornada vigente con **4 tarjetas fijas: MAÑANA, TARDE, NOCHE y MADRUGADA**.
    - Cada tarjeta tiene su estado y **un solo botón** con la acción que toca: *Programar*, *Iniciar*, *Nuevo punto / Finalizar* o *Agregar nota*.
    - Debajo, los operativos de los próximos días y el historial.
 2. **Programar / editar**
-   - Turno y fecha.
+   - Fecha de servicio, hora de inicio y hora de fin (formato de 24 horas). El turno no se elige: se muestra calculado al escribir la hora de inicio, junto con el día y la hora reales ("MADRUGADA · empieza el sáb 18/10 a las 02:00").
    - Tipos de operativo, como casillas para marcar.
-   - Nombre del plan, lugar programado, hora de inicio y hora de fin.
-   - Jefe: grado, nombres y celular.
+   - Nombre del plan y lugar programado.
+   - Jefe: grado (lista desplegable), nombres y celular.
    - Fuerzas propias, fuerzas de apoyo y unidades móviles, con campos numéricos que tengan botones − y +.
    - Solo muestra editables los campos que permite el estado (RN-05).
 3. **Operativo en curso**
@@ -41,9 +44,11 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - Debajo, la lista de puntos con hora, referencia y enlace a Google Maps.
 4. **Captura de ubicación** (al iniciar y al registrar un nuevo punto)
    - Mientras obtiene el GPS muestra el mensaje "Obteniendo ubicación…" y luego la precisión lograda.
-   - Si la precisión es peor que 100 m, ofrece *Reintentar* o *Usar de todos modos*.
-   - Si el permiso está denegado o el GPS no responde, muestra los pasos para activar la ubicación en el navegador del celular y un botón **Reintentar**. No hay ingreso manual (RN-09).
+   - Si la precisión es peor que 100 m, ofrece *Reintentar*, *Usar de todos modos* o *Ingresar manualmente*.
+   - Si el permiso está denegado o el GPS no responde, muestra los pasos para activar la ubicación en el navegador del celular, un botón **Reintentar** y la opción *Ingresar manualmente* (RN-09).
+   - **Ingreso manual**: tiene un campo "Pegar coordenadas de Google Maps", con la ayuda "En Google Maps, mantén presionado el lugar (o haz clic derecho en la PC) y copia las coordenadas". Al pegar, se llenan solos los campos de latitud y longitud, que el usuario revisa. Hay un enlace **Ver en Google Maps** para comprobar el punto antes de guardar. Si las coordenadas caen fuera de La Libertad, se muestra el error y no se guardan.
    - Pide la referencia, que es obligatoria.
+   - Si no hay conexión de datos al enviar, avisa "Sin conexión: se reintentará el envío", conserva lo capturado y reintenta solo cuando vuelve la señal o al pulsar **Reintentar** (RN-11a).
 5. **Finalizar**
    - Un campo numérico por cada concepto de resultado, con 0 por defecto y botones − y +.
    - Observaciones y número de nota informativa, ambos opcionales.
@@ -53,7 +58,7 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
 
 1. **Mapa (pantalla principal)**
    - Ocupa toda la pantalla y muestra la fecha de servicio vigente.
-   - Marcadores coloreados por estado, cada uno con el nombre corto de la unidad.
+   - Marcadores coloreados por estado, cada uno con el nombre corto de la unidad. Si la última ubicación es manual, el marcador lleva el distintivo "Manual".
    - Filtros por turno y por división. Los FINALIZADOS se pueden mostrar u ocultar.
    - Se actualiza cada 30 s e indica "Actualizado hace X s".
    - Una **barra de alertas** muestra cuántos operativos están NO_INICIADO y SIN_CIERRE. Al tocarla, despliega la lista con el lugar programado, porque los NO_INICIADO aún no tienen ubicación.
@@ -61,12 +66,12 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - Muestra unidad, tipos, plan, jefe, fuerzas, horario programado y real, lugar, última actualización ("hace 12 min") y recorrido.
    - Botones: **Cómo llegar** (`https://www.google.com/maps/dir/?api=1&destination=LAT,LNG`), **Llamar al jefe** (`tel:`) y **Registrar control**.
 3. **Registrar control inopinado**
-   - Captura el GPS del supervisor.
+   - Intenta capturar el GPS del supervisor. Si no lo consigue, permite ingresar las coordenadas manualmente o guardar sin ubicación (RN-15).
    - Pide el resultado: CONFORME, CON OBSERVACIONES o NO ENCONTRADO.
    - Pide una observación.
    - Al guardar, muestra la distancia calculada al último punto del operativo.
 4. **Tablero de cumplimiento**
-   - Matriz de **26 unidades × 3 turnos**, donde cada celda tiene el color de su estado.
+   - Matriz de **26 unidades × 4 turnos**, donde cada celda tiene el color de su estado. Las celdas sin operativo son SIN_PROGRAMAR (amarillo).
    - Permite elegir la fecha.
    - Sirve para ver de un vistazo quién no programó o no inició.
 
