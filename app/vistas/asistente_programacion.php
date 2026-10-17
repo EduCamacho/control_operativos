@@ -54,17 +54,21 @@ $texto_guardar = $actual === null ? 'Programar operativo' : 'Guardar cambios';
 </section>
 
 <!-- Paso 3: Jefe y fuerzas -->
-<section class="card card-body shadow-sm mb-3" data-paso="3" x-show="paso === 3" x-cloak>
-    <h2 class="h5 titulo-paso" tabindex="-1">Jefe y fuerzas</h2>
-    <?php if ($jefe_sugerido): ?>
-        <div class="alert alert-light border py-2 small">
-            <i class="bi bi-info-circle"></i> Se completó con el jefe del último operativo. Cámbielo si corresponde.
-        </div>
-    <?php endif; ?>
-    <h3 class="h6 text-body-secondary">Jefe del operativo</h3>
-    <?php require RUTA_APP . '/vistas/campos_jefe.php'; ?>
-    <h3 class="h6 text-body-secondary mt-4">Fuerzas</h3>
-    <?php require RUTA_APP . '/vistas/campos_fuerzas.php'; ?>
+<section class="mb-3" data-paso="3" x-show="paso === 3" x-cloak>
+    <h2 class="h5 titulo-paso visually-hidden" tabindex="-1">Jefe y fuerzas</h2>
+    <div class="card card-body shadow-sm mb-3">
+        <h3 class="h6 mb-2"><i class="bi bi-person-badge"></i> Jefe del operativo</h3>
+        <?php if ($jefe_sugerido): ?>
+            <div class="alert alert-light border py-2 small">
+                <i class="bi bi-info-circle"></i> Se completó con el jefe del último operativo. Cámbielo si corresponde.
+            </div>
+        <?php endif; ?>
+        <?php require RUTA_APP . '/vistas/campos_jefe.php'; ?>
+    </div>
+    <div class="card card-body shadow-sm">
+        <h3 class="h6 mb-2"><i class="bi bi-people"></i> Fuerzas</h3>
+        <?php require RUTA_APP . '/vistas/campos_fuerzas.php'; ?>
+    </div>
 </section>
 
 <!-- Paso 4: Revisar -->
