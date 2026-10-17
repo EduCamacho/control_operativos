@@ -32,7 +32,7 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - Encabezado con el nombre de la unidad, la fecha y la hora, y el botón **Programar** a la derecha.
    - Los **4 turnos** del servicio diario vigente (MAÑANA, TARDE, NOCHE y MADRUGADA), en una columna en el celular y en cuatro en la PC, con el borde izquierdo del color del estado. El **turno actual** se resalta con "● AHORA".
      - Turno vacío: una sola línea con el rango de inicio y **+ Programar**; si ya no se puede programar, "Sin programar" en amarillo.
-     - Turno programado: horario, lugar, jefe y **un solo botón** con la acción que toca: *Iniciar operativo*, *Nuevo punto / Finalizar* (verde institucional) o *Agregar nota* (contorno).
+     - Turno programado: horario, lugar, jefe y **un solo botón** con la acción que toca: *Iniciar operativo*, *Nuevo punto / Finalizar* (verde institucional) o *Agregar N.I* (nota informativa; contorno).
    - Si un operativo del servicio anterior sigue en curso, aparece arriba como aviso naranja con su acción.
    - Debajo, pestañas **Próximos** (con la cantidad) e **Historial**, con los operativos agrupados por día ("Domingo 18/10"). El historial muestra los últimos 7 días con operativos y **Ver más** llega hasta 30.
 2. **Programar / editar**: asistente en **4 pasos**, con la barra de progreso arriba y los botones **Atrás** y **Siguiente** fijos al pie, al alcance del pulgar.

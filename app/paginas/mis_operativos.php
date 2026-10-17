@@ -51,7 +51,7 @@ $calcular_accion = static function (?array $operativo, string $turno) use ($ahor
     return match (true) {
         puede_iniciar($operativo, $ahora, VENTANA_INICIO_MIN) => ['Iniciar operativo', 'operativos/ver', $parametros, 'btn-institucional', 'play-fill'],
         $operativo['estado'] === 'EN_CURSO'                   => ['Nuevo punto / Finalizar', 'operativos/ver', $parametros, 'btn-institucional', 'geo-alt-fill'],
-        puede_agregar_nota($operativo)                        => ['Agregar nota', 'operativos/ver', $parametros, 'btn-outline-institucional', 'file-earmark-plus'],
+        puede_agregar_nota($operativo)                        => ['Agregar N.I', 'operativos/ver', $parametros, 'btn-outline-institucional', 'file-earmark-plus'],
         default                                               => null,
     };
 };
