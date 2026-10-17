@@ -220,7 +220,7 @@ document.addEventListener('alpine:init', function () {
                 recorrido = new window.google.maps.Polyline({
                     map: mapa,
                     path: puntos.map((p) => ({ lat: p[0], lng: p[1] })),
-                    strokeColor: '#0b3d2e',
+                    strokeColor: '#1f6f50',
                     strokeOpacity: 0.85,
                     strokeWeight: 4,
                     icons: [{ icon: { path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW, scale: 2.5 }, offset: '100%', repeat: '120px' }],

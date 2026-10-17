@@ -44,7 +44,7 @@ $menu = match ($usuario['rol'] ?? null) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#0b3d2e">
+    <meta name="theme-color" content="#1f6f50">
     <title><?= e($titulo) ?> · Control de Operativos</title>
     <link rel="stylesheet" href="<?= e(armar_url('assets/vendor/bootstrap/bootstrap.min.css')) ?>">
     <link rel="stylesheet" href="<?= e(armar_url('assets/vendor/bootstrap-icons/bootstrap-icons.min.css')) ?>">
