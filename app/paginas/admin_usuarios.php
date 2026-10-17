@@ -96,7 +96,7 @@ require RUTA_APP . '/vistas/cabecera.php';
 
     <div class="list-group">
         <template x-for="f in visibles" :key="f.id">
-            <a :href="f.url" class="list-group-item list-group-item-action fila-flex align-items-center gap-2" :class="!f.activo && 'usuario-inactivo'">
+            <a :href="f.url" class="list-group-item list-group-item-action fila-flex align-items-center gap-2" :class="!f.activo && 'fila-inactiva'">
                 <div class="me-auto">
                     <div class="fila-flex flex-wrap align-items-center gap-2">
                         <span class="fw-semibold" x-text="f.usuario"></span>

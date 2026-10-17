@@ -905,10 +905,10 @@
 }
 
 
-/* --- Usuarios (admin) --- */
+/* --- Usuarios y unidades (admin) --- */
 
-/* Cuenta inactiva: la fila se ve atenuada. */
-.usuario-inactivo {
+/* Cuenta o unidad inactiva: la fila se ve atenuada. */
+.fila-inactiva {
     opacity: .6;
 }
 
@@ -916,6 +916,22 @@
 .acceso-nunca {
     color: var(--bs-warning-text-emphasis);
     font-weight: 600;
+}
+
+/* Número de orden de la unidad, discreto a la izquierda. */
+.orden-unidad {
+    min-width: 1.6rem;
+    font-size: .75rem;
+    font-family: var(--bs-font-monospace);
+    color: var(--bs-secondary-color);
+    text-align: center;
+}
+
+/* La parte de la fila que abre el formulario (la fila tiene además "Crear cuenta"). */
+.enlace-fila {
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
 }
 
 /* "N unidades sin cuenta": se despliega al tocar. */

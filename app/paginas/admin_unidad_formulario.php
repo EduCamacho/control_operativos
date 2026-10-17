@@ -114,7 +114,7 @@ require RUTA_APP . '/vistas/cabecera.php';
         <label class="form-check-label" for="activo">Activa</label>
     </div>
     <div class="d-flex flex-wrap gap-2">
-        <button type="submit" class="btn btn-success boton-accion px-4"><i class="bi bi-check-lg"></i> Guardar</button>
+        <button type="submit" class="btn btn-institucional boton-accion px-4"><i class="bi bi-check-lg"></i> Guardar</button>
         <a href="<?= e(armar_url('admin/unidades')) ?>" class="btn btn-outline-secondary boton-accion px-4">Cancelar</a>
     </div>
 </form>

@@ -96,7 +96,7 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
 
 ## Rol ADMIN
 
-- **Unidades** (`/admin/unidades`): crear, editar, activar y desactivar, y fijar el orden. La lista se agrupa por división y avisa qué unidades no tienen cuenta.
+- **Unidades** (`/admin/unidades`): crear, editar, activar y desactivar, y fijar el orden. La lista se agrupa por división, con una búsqueda (unidad o usuario) y chips de división con su cantidad, que filtran sin recargar. Cada fila muestra el orden, el nombre corto, el nombre y la cuenta, y abre el formulario; ahí se activa o desactiva con el interruptor **Activa** (la lista ya no tiene ese botón). Las unidades inactivas se ven atenuadas. Las que no tienen cuenta muestran **Sin cuenta** (ámbar) y el botón **Crear cuenta**, que abre el formulario de usuario con la unidad ya elegida.
 - **Usuarios** (`/admin/usuarios`): crear, asignar rol y unidad, resetear clave, desbloquear y activar o desactivar. La lista tiene una búsqueda (usuario, nombre o unidad, sin distinguir tildes) y chips de rol con su cantidad, que filtran sin recargar. Los roles se muestran como Unidad, Supervisor y Administrador, en una etiqueta gris; solo llevan color lo bloqueado (rojo), lo inactivo (fila atenuada) y "Nunca ingresó" (ámbar). Arriba, **N unidades sin cuenta** se despliega con cada unidad y su botón **Crear cuenta**, que abre el formulario con la unidad ya elegida.
   - Al crear una cuenta, la clave es opcional: si se deja vacía, el sistema genera una de 12 caracteres sin letras confusas (sin 0/o ni 1/l/i) y la muestra **una sola vez**. Al resetear la clave pasa lo mismo.
   - En la lista de unidades para una cuenta UNIDAD, las que ya tienen cuenta aparecen deshabilitadas (RN-20).
