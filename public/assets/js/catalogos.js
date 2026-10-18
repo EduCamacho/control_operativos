@@ -11,7 +11,8 @@ document.addEventListener('alpine:init', function () {
         return {
             elementos: config.elementos,
             urlAccion: config.urlAccion,
-            form: { id: null, nombre: '', descripcion: '', orden: config.siguienteOrden, activo: true, usos: 0 },
+            iconos: config.iconos, // solo en conceptos de resultado
+            form: { id: null, nombre: '', descripcion: '', icono: config.iconoPredeterminado, orden: config.siguienteOrden, activo: true, usos: 0 },
             conErrores: false,
             modal: null,
 
@@ -30,7 +31,7 @@ document.addEventListener('alpine:init', function () {
                 this.conErrores = false; // los errores del servidor eran de otro intento
                 this.form = elemento
                     ? Object.assign({}, elemento)
-                    : { id: null, nombre: '', descripcion: '', orden: config.siguienteOrden, activo: true, usos: 0 };
+                    : { id: null, nombre: '', descripcion: '', icono: config.iconoPredeterminado, orden: config.siguienteOrden, activo: true, usos: 0 };
                 this.modal.show();
             },
         };

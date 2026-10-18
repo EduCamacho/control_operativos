@@ -24,6 +24,7 @@ const CATALOGOS = [
         'singular'        => 'concepto de resultado',
         'largo_nombre'    => 120,
         'con_descripcion' => true,
+        'con_icono'       => true, // para los reportes (ICONOS_RESULTADO)
         'usos'            => 'SELECT concepto_resultado_id, COUNT(*) FROM operativo_resultados GROUP BY concepto_resultado_id',
     ],
 ];
@@ -31,7 +32,11 @@ const CATALOGOS = [
 $clave_catalogo = array_key_exists($_GET['catalogo'] ?? '', CATALOGOS) ? $_GET['catalogo'] : 'tipos';
 $catalogo = CATALOGOS[$clave_catalogo];
 $tabla = $catalogo['tabla']; // Viene de la constante, nunca del navegador.
+$con_icono = $catalogo['con_icono'] ?? false;
 $columnas = $catalogo['con_descripcion'] ? 'id, nombre, descripcion, orden, activo' : 'id, nombre, orden, activo';
+if ($con_icono) {
+    $columnas .= ', icono';
+}
 
 $id = obtener_id_get();
 $actual = null;
@@ -48,13 +53,14 @@ $errores = [];
 $valores = $actual ?? [
     'nombre'      => '',
     'descripcion' => '',
+    'icono'       => ICONO_RESULTADO_PREDETERMINADO,
     'orden'       => $siguiente_orden,
     'activo'      => 1,
 ];
 
 if (es_post()) {
     verificar_csrf();
-    ['datos' => $datos, 'errores' => $errores] = validar_elemento_catalogo($_POST, $catalogo['largo_nombre'], $catalogo['con_descripcion']);
+    ['datos' => $datos, 'errores' => $errores] = validar_elemento_catalogo($_POST, $catalogo['largo_nombre'], $catalogo['con_descripcion'], $con_icono);
     $valores = array_merge($valores, $_POST, ['activo' => $datos['activo']]);
 
     if ($errores === []) {
@@ -97,15 +103,20 @@ $configuracion = [
         'id'          => (int) $el['id'],
         'nombre'      => $el['nombre'],
         'descripcion' => $el['descripcion'] ?? '',
+        'icono'       => $el['icono'] ?? ICONO_RESULTADO_PREDETERMINADO,
         'orden'       => (string) $el['orden'],
         'activo'      => (bool) $el['activo'],
         'usos'        => (int) ($usos[$el['id']] ?? 0),
     ], $elementos),
     'siguienteOrden' => (string) $siguiente_orden,
+    // Vista previa de cada ícono (lista y formulario), en el color de los reportes.
+    'iconos'         => $con_icono ? array_map(static fn (string $clave): string => armar_icono_resultado($clave, '#1f6f50'), array_combine(array_keys(ICONOS_RESULTADO), array_keys(ICONOS_RESULTADO))) : [],
+    'iconoPredeterminado' => ICONO_RESULTADO_PREDETERMINADO,
     'inicial'        => $actual !== null || $errores !== [] ? [
         'id'          => $id,
         'nombre'      => (string) $valores['nombre'],
         'descripcion' => (string) ($valores['descripcion'] ?? ''),
+        'icono'       => (string) ($valores['icono'] ?? ICONO_RESULTADO_PREDETERMINADO),
         'orden'       => (string) $valores['orden'],
         'activo'      => (bool) $valores['activo'],
         'usos'        => $id === null ? 0 : (int) ($usos[$id] ?? 0),
@@ -144,6 +155,9 @@ require RUTA_APP . '/vistas/cabecera.php';
             <button type="button" class="list-group-item list-group-item-action fila-flex align-items-center gap-2 text-start"
                     :class="!el.activo && 'fila-inactiva'" @click="abrir(el)">
                 <span class="orden-unidad" title="Orden" x-text="el.orden"></span>
+                <?php if ($con_icono): ?>
+                    <img :src="iconos[el.icono]" alt="" width="22" height="22" class="flex-shrink-0">
+                <?php endif; ?>
                 <span class="me-auto">
                     <span x-text="el.nombre"></span>
                     <small class="d-block text-body-secondary" x-show="el.descripcion" x-text="el.descripcion"></small>
@@ -184,6 +198,22 @@ require RUTA_APP . '/vistas/cabecera.php';
                                    aria-describedby="ayuda-descripcion">
                             <div id="ayuda-descripcion" class="form-text">Ayuda que se muestra bajo el campo al finalizar el operativo.</div>
                             <div class="invalid-feedback"><?= e($errores['descripcion'] ?? '') ?></div>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($con_icono): ?>
+                        <div class="mb-3">
+                            <label for="icono" class="form-label">Ícono</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><img :src="iconos[form.icono]" alt="" width="22" height="22"></span>
+                                <select id="icono" name="icono" class="form-select" x-model="form.icono"
+                                        :class="conErrores && <?= $error_en('icono') ?> && 'is-invalid'" aria-describedby="ayuda-icono">
+                                    <?php foreach (ICONOS_RESULTADO as $clave => $etiqueta): ?>
+                                        <option value="<?= e($clave) ?>"><?= e($etiqueta) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <div class="invalid-feedback"><?= e($errores['icono'] ?? '') ?></div>
+                            </div>
+                            <div id="ayuda-icono" class="form-text">Se muestra junto al concepto en los reportes.</div>
                         </div>
                     <?php endif; ?>
                     <div class="mb-3">

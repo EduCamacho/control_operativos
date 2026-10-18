@@ -98,6 +98,27 @@ const DIVISIONES = [
     'DUE'      => 'DUE',
     'DIVINCRI' => 'DIVINCRI La Libertad',
 ];
+// Íconos de los conceptos de resultado (archivos de app/iconos/, Tabler Icons).
+// La etiqueta es la que ve el ADMIN al elegirlo en Catálogos.
+const ICONOS_RESULTADO = [
+    'lock'            => 'Candado (detenidos)',
+    'user-search'     => 'Persona buscada (requisitoriados)',
+    'world'           => 'Mundo (extranjeros)',
+    'id'              => 'Documento de identidad',
+    'users-group'     => 'Grupo de personas (bandas)',
+    'receipt'         => 'Papeleta',
+    'car-garage'      => 'Vehículo en depósito',
+    'car'             => 'Vehículo',
+    'crosshair'       => 'Mira (armas)',
+    'box-multiple'    => 'Cajas (municiones)',
+    'pills'           => 'Pastillas (droga)',
+    'cannabis'        => 'Cannabis',
+    'bomb'            => 'Explosivos',
+    'shield-check'    => 'Escudo',
+    'clipboard-check' => 'Genérico',
+];
+const ICONO_RESULTADO_PREDETERMINADO = 'clipboard-check';
+
 const LARGO_MINIMO_CLAVE = 8;
 const LARGO_CLAVE_TEMPORAL = 12;
 // Sin caracteres que se confunden al dictarlos o leerlos en el celular (0/o, 1/l/i).
@@ -628,6 +649,141 @@ function calcular_estado_celda(
 }
 
 /**
+ * Matriz del reporte del servicio diario: cada unidad con sus 4 turnos, cada
+ * turno con sus operativos (uno o más, RN-01) y su estado visible (RN-14), y
+ * los totales por estado. Un turno sin operativos cuenta como SIN_PROGRAMAR
+ * cuando ya no se puede programar (como en el tablero).
+ *
+ * @param list<array> $unidades   Con id; se respeta su orden.
+ * @param list<array> $operativos Del servicio diario, de cualquier unidad.
+ * @return array{filas: list<array{unidad: array, turnos: array<string, array{operativos: list<array{operativo: array, estado: string}>, estado_vacio: ?string}>, total: int}>, totales: array<string, int>, operativos: int, sin_nota: int}
+ */
+function armar_matriz_servicio(
+    array $unidades,
+    array $operativos,
+    string $fecha_servicio,
+    DateTimeImmutable $ahora,
+    int $tolerancia_no_iniciado_min,
+    int $tolerancia_sin_cierre_min,
+): array {
+    $por_unidad = [];
+    foreach ($operativos as $operativo) {
+        $por_unidad[(int) $operativo['unidad_id']][$operativo['turno']][] = $operativo;
+    }
+    ordenar_celdas_por_inicio($por_unidad);
+
+    $filas = [];
+    $totales = array_fill_keys(array_keys(ETIQUETAS_ESTADO), 0);
+    $cantidad = 0;
+    $sin_nota = 0;
+    foreach ($unidades as $unidad) {
+        $turnos = [];
+        $total_unidad = 0;
+        foreach (TURNOS as $turno) {
+            $celda = [];
+            foreach ($por_unidad[(int) $unidad['id']][$turno] ?? [] as $operativo) {
+                $estado = estado_visible($operativo, $ahora, $tolerancia_no_iniciado_min, $tolerancia_sin_cierre_min);
+                $celda[] = ['operativo' => $operativo, 'estado' => $estado];
+                $totales[$estado]++;
+                $total_unidad++;
+                $sin_nota += pendiente_nota($operativo) ? 1 : 0;
+            }
+            $estado_vacio = $celda === []
+                ? calcular_estado_celda(null, $fecha_servicio, $turno, $ahora, $tolerancia_no_iniciado_min, $tolerancia_sin_cierre_min)
+                : null;
+            if ($estado_vacio !== null) {
+                $totales[$estado_vacio]++;
+            }
+            $turnos[$turno] = ['operativos' => $celda, 'estado_vacio' => $estado_vacio];
+        }
+        $cantidad += $total_unidad;
+        $filas[] = ['unidad' => $unidad, 'turnos' => $turnos, 'total' => $total_unidad];
+    }
+    return ['filas' => $filas, 'totales' => $totales, 'operativos' => $cantidad, 'sin_nota' => $sin_nota];
+}
+
+/**
+ * Cifras de la cabecera del reporte: operativos realizados, en total y por
+ * división (en el orden de DIVISIONES, solo las que tienen unidades en la matriz).
+ * Realizado = ya se ejecuta o se ejecutó: FINALIZADO, EN_CURSO o SIN_CIERRE
+ * (este es un EN_CURSO pasado de hora). Los programados no cuentan.
+ *
+ * @return array{realizados: int, divisiones: array<string, int>}
+ */
+function contar_realizados_por_division(array $matriz): array
+{
+    $divisiones = [];
+    $realizados = 0;
+    foreach ($matriz['filas'] as $fila) {
+        $division = $fila['unidad']['division'];
+        $divisiones[$division] ??= 0;
+        foreach ($fila['turnos'] as $celda) {
+            foreach ($celda['operativos'] as ['operativo' => $operativo]) {
+                if (in_array($operativo['estado'], ['EN_CURSO', 'FINALIZADO'], true)) {
+                    $divisiones[$division]++;
+                    $realizados++;
+                }
+            }
+        }
+    }
+    $orden = array_flip(array_keys(DIVISIONES));
+    uksort($divisiones, static fn (string $a, string $b): int => ($orden[$a] ?? 99) <=> ($orden[$b] ?? 99));
+    return ['realizados' => $realizados, 'divisiones' => $divisiones];
+}
+
+/**
+ * Personal y recursos empleados en los operativos realizados (los mismos que
+ * cuenta contar_realizados_por_division()): fuerzas propias, de apoyo, su total
+ * (efectivos) y unidades móviles, en total y por división.
+ *
+ * @return array{propias: int, apoyo: int, efectivos: int, moviles: int, divisiones: array<string, array{efectivos: int, moviles: int}>}
+ */
+function sumar_fuerzas_realizadas(array $matriz): array
+{
+    $suma = ['propias' => 0, 'apoyo' => 0, 'efectivos' => 0, 'moviles' => 0, 'divisiones' => []];
+    foreach ($matriz['filas'] as $fila) {
+        $division = $fila['unidad']['division'];
+        $suma['divisiones'][$division] ??= ['efectivos' => 0, 'moviles' => 0];
+        foreach ($fila['turnos'] as $celda) {
+            foreach ($celda['operativos'] as ['operativo' => $operativo]) {
+                if (!in_array($operativo['estado'], ['EN_CURSO', 'FINALIZADO'], true)) {
+                    continue;
+                }
+                $propias = (int) $operativo['fuerzas_propias'];
+                $apoyo = (int) $operativo['fuerzas_apoyo'];
+                $moviles = (int) $operativo['unidades_moviles'];
+                $suma['propias'] += $propias;
+                $suma['apoyo'] += $apoyo;
+                $suma['efectivos'] += $propias + $apoyo;
+                $suma['moviles'] += $moviles;
+                $suma['divisiones'][$division]['efectivos'] += $propias + $apoyo;
+                $suma['divisiones'][$division]['moviles'] += $moviles;
+            }
+        }
+    }
+    $orden = array_flip(array_keys(DIVISIONES));
+    uksort($suma['divisiones'], static fn (string $a, string $b): int => ($orden[$a] ?? 99) <=> ($orden[$b] ?? 99));
+    return $suma;
+}
+
+/** Ordena los operativos de cada celda por hora de inicio programada. */
+function ordenar_celdas_por_inicio(array &$por_unidad): void
+{
+    foreach ($por_unidad as &$turnos) {
+        foreach ($turnos as &$lista) {
+            usort($lista, static fn (array $a, array $b): int => strcmp((string) $a['inicio_programado'], (string) $b['inicio_programado']));
+        }
+    }
+}
+
+/** 'reporte_servicio_2026-10-18.pdf', o con la división: 'reporte_servicio_2026-10-18_DIVOPUS.pdf'. */
+function nombre_archivo_reporte(string $fecha_servicio, string $division): string
+{
+    return 'reporte_servicio_' . validar_fecha($fecha_servicio)->format('Y-m-d')
+        . ($division === '' ? '' : '_' . preg_replace('/[^A-Z0-9]/', '', strtoupper($division))) . '.pdf';
+}
+
+/**
  * RN-15: el control se registra sobre operativos del servicio diario vigente.
  * También sobre uno de un servicio anterior que sigue en curso, porque sigue en el mapa.
  */
@@ -1134,12 +1290,13 @@ function validar_usuario(array $entrada, array $ids_unidades, bool $es_nuevo): a
 }
 
 /**
- * Tipos de operativo y conceptos de resultado. Los conceptos llevan además una descripción.
+ * Tipos de operativo y conceptos de resultado. Los conceptos llevan además una
+ * descripción y un ícono (uno de ICONOS_RESULTADO; vacío = el genérico).
  * Los nombres se guardan en mayúsculas, como en el catálogo inicial.
  *
  * @return array{datos: array<string, mixed>, errores: array<string, string>}
  */
-function validar_elemento_catalogo(array $entrada, int $largo_nombre, bool $con_descripcion): array
+function validar_elemento_catalogo(array $entrada, int $largo_nombre, bool $con_descripcion, bool $con_icono = false): array
 {
     $datos = [];
     $errores = [];
@@ -1159,6 +1316,15 @@ function validar_elemento_catalogo(array $entrada, int $largo_nombre, bool $con_
             $errores['descripcion'] = 'La descripción admite hasta 255 caracteres.';
         } else {
             $datos['descripcion'] = $descripcion === '' ? null : $descripcion;
+        }
+    }
+
+    if ($con_icono) {
+        $icono = trim((string) ($entrada['icono'] ?? ''));
+        if ($icono !== '' && !array_key_exists($icono, ICONOS_RESULTADO)) {
+            $errores['icono'] = 'Elija un ícono de la lista.';
+        } else {
+            $datos['icono'] = $icono === '' ? null : $icono;
         }
     }
 

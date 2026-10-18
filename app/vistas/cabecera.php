@@ -4,6 +4,7 @@
  *   $titulo    Título de la pestaña.
  *   $sin_menu  true para ocultar el menú (ingreso).
  *   $scripts   Rutas de JS propios de la página (se cargan antes de Alpine).
+ *   $estilos   Rutas de CSS propios de la página (después de app.css).
  *   $pagina_completa  true para ocupar todo el espacio sin márgenes (mapa).
  *
  * Menú en barra lateral izquierda: fija desde pantallas grandes (lg) y,
@@ -27,10 +28,12 @@ $menu = match ($usuario['rol'] ?? null) {
         'admin/catalogos' => ['Catálogos', 'list-check'],
         'admin/bitacora'  => ['Bitácora', 'journal-text'],
         'supervisor/tablero' => ['Tablero', 'grid-3x3'],
+        'reportes'        => ['Reportes', 'file-earmark-text'],
     ],
     'SUPERVISOR' => [
         ''                   => ['Mapa', 'map'],
         'supervisor/tablero' => ['Tablero', 'grid-3x3'],
+        'reportes'           => ['Reportes', 'file-earmark-text'],
     ],
     'UNIDAD'     => [
         ''                     => ['Mis operativos', 'clipboard-check'],
@@ -50,6 +53,9 @@ $menu = match ($usuario['rol'] ?? null) {
     <link rel="stylesheet" href="<?= e(armar_url('assets/vendor/bootstrap/bootstrap.min.css')) ?>">
     <link rel="stylesheet" href="<?= e(armar_url('assets/vendor/bootstrap-icons/bootstrap-icons.min.css')) ?>">
     <link rel="stylesheet" href="<?= e(armar_url('assets/css/app.css')) ?>">
+    <?php foreach ($estilos ?? [] as $estilo): ?>
+        <link rel="stylesheet" href="<?= e(armar_url($estilo)) ?>">
+    <?php endforeach; ?>
     <?php if ($usuario !== null): ?>
         <meta name="csrf" content="<?= e(obtener_token_csrf()) ?>">
     <?php endif; ?>

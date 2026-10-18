@@ -1,0 +1,145 @@
+/*
+ * Reporte del servicio diario (app/vistas/reporte_servicio.php). Lo usan la
+ * pantalla /reportes y el PDF de Dompdf, que lee este mismo archivo: solo
+ * CSS sencillo (tablas, colores, márgenes), sin flexbox, grid ni variables.
+ * Los tamaños van en em sobre la letra base: 10pt en el PDF y más grande en
+ * pantalla (al final). Colores de estado en tonos claros, legibles también
+ * impresos en blanco y negro.
+ */
+.reporte { font-family: Helvetica, Arial, sans-serif; font-size: 10pt; color: #1d2329; }
+.reporte table { border-collapse: collapse; width: 100%; }
+
+.reporte-encabezado td { vertical-align: bottom; padding: 0 0 .6em 0; border-bottom: 2pt solid #1f6f50; }
+.reporte-institucion { font-size: .8em; letter-spacing: .05em; color: #4b5560; }
+.reporte-titulo { font-size: 1.6em; font-weight: bold; color: #1f6f50; }
+.reporte-subtitulo { font-weight: bold; }
+.reporte-generado { text-align: right; font-size: .8em; color: #4b5560; width: 35%; }
+.reporte-nota { font-size: .75em; color: #6b747d; margin: .3em 0 0 0; }
+
+.reporte-seccion { font-size: 1.1em; font-weight: bold; color: #1f6f50; margin: 1.2em 0 .4em 0; padding-bottom: .2em; border-bottom: .5pt solid #c9d6cf; }
+.reporte-linea { margin: .4em 0; font-size: .9em; }
+.reporte-vacio { margin: .4em 0; font-size: .9em; color: #6b747d; font-style: italic; }
+
+/* Cifras principales al inicio: total, realizados y una casilla por división. */
+.reporte .reporte-tarjetas { border-collapse: separate; border-spacing: 4pt; margin-top: .6em; }
+.reporte-tarjetas td { width: 22%; padding: .6em .7em; border: .5pt solid #d8dde2; border-top: 3pt solid #8fa69a; background: #fafbfc; vertical-align: top; }
+/* El total se distingue de las divisiones: fondo verde lleno, texto blanco y más ancho. */
+.reporte-tarjetas .tarjeta-principal { width: 34%; border: 0; background: #1f6f50; }
+.reporte-tarjetas .tarjeta-principal .tarjeta-cifra { color: #ffffff; font-size: 2.6em; }
+.reporte-tarjetas .tarjeta-principal .tarjeta-titulo { color: #ffffff; font-size: .95em; }
+.reporte-tarjetas .tarjeta-principal .tarjeta-detalle { color: #cfe5d9; }
+.reporte-tarjetas .tarjeta-cifra { display: block; font-size: 2.2em; font-weight: bold; color: #1f6f50; line-height: 1.1; }
+.reporte-tarjetas .tarjeta-titulo { display: block; font-size: .85em; font-weight: bold; color: #1d2329; }
+.reporte-tarjetas .tarjeta-detalle { display: block; font-size: .75em; color: #6b747d; }
+
+/* Un color por división (tarjetas y filas de "Cumplimiento por unidad"), distinto de
+   los de los estados (verde, azul, rojo, naranja, amarillo y gris). */
+.reporte-tarjetas .division-divopus  { border-top-color: #3949ab; background: #eceefa; }
+.reporte-tarjetas .division-due      { border-top-color: #8e24aa; background: #f5e9f8; }
+.reporte-tarjetas .division-divincri { border-top-color: #00838f; background: #e3f4f5; }
+.reporte-tarjetas .division-divopus .tarjeta-cifra  { color: #3949ab; }
+.reporte-tarjetas .division-due .tarjeta-cifra      { color: #8e24aa; }
+.reporte-tarjetas .division-divincri .tarjeta-cifra { color: #00838f; }
+/* Personal y recursos: casillas blancas con borde fino gris y un ícono en un círculo
+   verde claro; sin franja de color, para que no se confundan con las divisiones. */
+.reporte .reporte-fuerzas { border-collapse: separate; border-spacing: 4pt; }
+.reporte-fuerzas td.fuerza { width: 25%; padding: .5em .6em; border: .5pt solid #d8dde2; border-radius: 4pt; background: #ffffff; vertical-align: middle; }
+.reporte .fuerza-contenido { border-collapse: collapse; width: 100%; }
+.reporte .fuerza-contenido td { padding: 0; border: 0; vertical-align: middle; }
+.reporte .fuerza-contenido td.fuerza-icono { width: 2.8em; padding-right: .5em; }
+.reporte .fuerza-icono img { box-sizing: content-box; /* Bootstrap usa border-box y achicaría el ícono */
+    width: 1.6em; height: 1.6em; padding: .45em; border-radius: 50%; background: #e6f1eb; }
+.reporte .fuerza-cifra { display: block; font-size: 1.7em; font-weight: bold; color: #1d2329; line-height: 1.1; }
+.reporte .fuerza-titulo { display: block; font-size: .8em; font-weight: bold; color: #1d2329; }
+.reporte .fuerza-detalle { display: block; font-size: .7em; color: #6b747d; }
+/* El total de efectivos se distingue del detalle: más ancho, fondo verde claro,
+   cifra verde más grande e ícono blanco sobre círculo verde lleno. */
+.reporte-fuerzas td.fuerza { width: 22%; }
+.reporte-fuerzas td.fuerza-total { width: 34%; border: 1pt solid #1f6f50; background: #eef6f1; }
+.reporte .fuerza-total .fuerza-icono img { background: #1f6f50; }
+.reporte .fuerza-total .fuerza-cifra { font-size: 2.1em; color: #1f6f50; }
+.reporte-fuerzas-division { color: #4b5560; }
+.reporte .marca-division { display: inline-block; width: .7em; height: .7em; margin-right: .3em; border-radius: 1pt; }
+.reporte .marca-division.division-divopus  { background: #3949ab; }
+.reporte .marca-division.division-due      { background: #8e24aa; }
+.reporte .marca-division.division-divincri { background: #00838f; }
+.reporte-matriz .fila-division.division-divopus td  { background: #eceefa; color: #283593; border-left: 3pt solid #3949ab; }
+.reporte-matriz .fila-division.division-due td      { background: #f5e9f8; color: #6a1b9a; border-left: 3pt solid #8e24aa; }
+.reporte-matriz .fila-division.division-divincri td { background: #e3f4f5; color: #006064; border-left: 3pt solid #00838f; }
+
+.reporte-resumen td { border: .5pt solid #d0d5da; padding: .4em .2em; text-align: center; font-size: .75em; width: 12.5%; }
+.reporte-resumen .reporte-cifra { display: block; font-size: 2em; font-weight: bold; }
+
+.reporte-tabla th { background: #eef3f0; color: #1d2329; font-size: .8em; text-align: left; padding: .3em .4em; border: .5pt solid #c9d1d8; }
+.reporte-tabla td { font-size: .8em; padding: .3em .4em; border: .5pt solid #d8dde2; vertical-align: top; }
+.reporte-tabla .numero { text-align: right; }
+.reporte-tabla thead { display: table-header-group; } /* el encabezado se repite en cada página del PDF */
+.reporte-tabla tr { page-break-inside: avoid; }
+/* Resultados: casillas con la cifra grande; las que quedaron en 0, en gris. */
+.reporte .reporte-resultados { border-collapse: separate; border-spacing: 4pt; }
+.reporte-resultados td { width: 33.33%; vertical-align: top; }
+.reporte-resultados .resultado { padding: .5em .6em; border: .5pt solid #d8dde2; border-left: 3pt solid #c9d1d8; background: #fafbfc; }
+.reporte-resultados .con-cantidad { border-left-color: #1f6f50; background: #eef6f1; }
+.reporte-resultados .resultado-icono { float: right; width: 2.2em; height: 2.2em; margin-left: .4em; }
+.reporte-resultados .resultado-cifra { display: block; font-size: 1.8em; font-weight: bold; color: #aab2ba; line-height: 1.1; }
+.reporte-resultados .con-cantidad .resultado-cifra { color: #1f6f50; }
+.reporte-resultados .resultado-nombre { display: block; font-size: .75em; font-weight: bold; color: #6b747d; }
+.reporte-resultados .con-cantidad .resultado-nombre { color: #1d2329; }
+.reporte-resultados .resultado-ayuda { display: block; font-size: .7em; color: #6b747d; }
+
+.reporte-matriz td.unidad { font-weight: bold; white-space: nowrap; width: 20%; }
+.reporte-matriz td { width: 20%; }
+.reporte-matriz .fila-division td { background: #f4f6f8; font-weight: bold; color: #4b5560; }
+.reporte-matriz .chip { display: block; margin: .1em 0; }
+.reporte-matriz .vacio { color: #aab2ba; }
+
+.reporte .chip { padding: .1em .3em; border-radius: 2pt; font-size: .95em; white-space: nowrap; }
+
+/* Estados (RN-14): mismos significados que en el tablero. */
+.reporte .estado-finalizado    { background: #dbe8fb; color: #0b3d91; }
+.reporte .estado-en_curso      { background: #d6f0e0; color: #145c35; }
+.reporte .estado-programado    { background: #e7e9ec; color: #3a4148; }
+.reporte .estado-no_iniciado   { background: #f8d7da; color: #842029; }
+.reporte .estado-sin_cierre    { background: #fde3cc; color: #8a3b00; }
+.reporte .estado-sin_programar { background: #fff1c2; color: #6b5200; }
+
+/* Solo en pantalla: letra más grande y tablas anchas que se desplazan en el celular. */
+@media screen {
+    .reporte { font-size: 1rem; }
+    .reporte-tabla td, .reporte-tabla th { font-size: .875em; }
+    .reporte-desplazable { overflow-x: auto; }
+    .reporte-matriz { min-width: 640px; }
+}
+@media screen and (max-width: 575.98px) {
+    /* El resumen pasa a dos filas de 4 casillas. */
+    .reporte-resumen, .reporte-resumen tbody, .reporte-resumen tr { display: block; }
+    .reporte-resumen tr { overflow: hidden; }
+    .reporte-resumen td { float: left; width: 25%; box-sizing: border-box; }
+    /* El encabezado pasa a una columna: título arriba y "Generado" debajo. */
+    .reporte-encabezado, .reporte-encabezado tbody, .reporte-encabezado tr { display: block; }
+    .reporte-encabezado { border-bottom: 2pt solid #1f6f50; padding-bottom: .4em; }
+    .reporte-encabezado td { display: block; border-bottom: 0; padding: 0; }
+    .reporte-generado { width: auto; text-align: left; margin-top: .3em; }
+    /* Personal y recursos: 2 por fila. */
+    .reporte .reporte-fuerzas { display: block; }
+    .reporte-fuerzas > tbody { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .reporte-fuerzas > tbody > tr { display: contents; }
+    .reporte-fuerzas td.fuerza { display: block; width: auto; }
+    .reporte-fuerzas td.fuerza-total { grid-column: 1 / -1; } /* el total ocupa toda la fila */
+    /* Cifras principales: 2 por fila. */
+    .reporte .reporte-tarjetas { display: block; }
+    .reporte-tarjetas tbody { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .reporte-tarjetas tr { display: contents; }
+    .reporte-tarjetas td { display: block; width: auto; }
+    /* El total ocupa toda la fila; las divisiones van debajo. */
+    .reporte-tarjetas .tarjeta-principal { grid-column: 1 / -1; width: auto; }
+    /* Resultados: 2 casillas por fila (las palabras largas no entran en 3). Solo
+       pantalla, así que puede usar grid aunque Dompdf no lo entienda. */
+    .reporte .reporte-resultados { display: block; }
+    .reporte-resultados tbody { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .reporte-resultados tr { display: contents; }
+    .reporte-resultados td.resultado { display: block; width: auto; position: relative; overflow-wrap: break-word; }
+    /* El ícono va en la esquina: así el nombre usa todo el ancho y no se corta a la mitad. */
+    .reporte-resultados .resultado-icono { float: none; position: absolute; top: .5em; right: .5em; width: 1.8em; height: 1.8em; }
+    .reporte-resultados .resultado-relleno { display: none; }
+}

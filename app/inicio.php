@@ -39,6 +39,7 @@ require RUTA_APP . '/sesion.php';
 require RUTA_APP . '/autorizacion.php';
 require RUTA_APP . '/formularios.php';
 require RUTA_APP . '/operativos.php';
+require RUTA_APP . '/reportes.php';
 
 set_exception_handler(static function (Throwable $error): void {
     error_log((string) $error);
