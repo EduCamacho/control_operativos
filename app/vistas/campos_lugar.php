@@ -21,6 +21,7 @@ declare(strict_types=1);
     <div class="input-group input-group-lg has-validation">
         <input type="text" id="lugar_coordenadas" name="lugar_coordenadas" x-model="texto" inputmode="decimal" autocomplete="off"
                @paste="$nextTick(() => analizar())" @change="analizar()" :data-valido="estado === 'error' ? 'false' : 'true'"
+               :data-enlace="estado === 'ok' ? enlaceVer() : ''"
                :class="{ 'is-invalid': estado === 'error', 'is-valid': estado === 'ok' }"
                required class="form-control<?= clase_error($errores, 'lugar_coordenadas') ?>" value="<?= e($valores['lugar_coordenadas'] ?? '') ?>"
                placeholder="Pegue aquí: -8.1116, -79.0288"<?= $deshabilitado('lugar_coordenadas') ?>

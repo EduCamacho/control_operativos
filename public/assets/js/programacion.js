@@ -268,6 +268,8 @@
                         tipos: tipos.join(', '),
                         lugar: valor('lugar_programado'),
                         coordenadas: valor('lugar_coordenadas'),
+                        // Lo arma coordenadasLugar cuando reconoce las coordenadas.
+                        enlaceMapa: this.campo('lugar_coordenadas') ? this.campo('lugar_coordenadas').dataset.enlace || '' : '',
                         jefe: (valor('jefe_grado') + ' ' + valor('jefe_nombres')).trim(),
                         celular: valor('jefe_celular'),
                         fuerzas: valor('fuerzas_propias') + ' propias · ' + valor('fuerzas_apoyo') + ' de apoyo · ' + valor('unidades_moviles') + ' móvil(es)',
