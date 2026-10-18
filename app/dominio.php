@@ -481,6 +481,19 @@ function armar_enlace_google_maps(float $latitud, float $longitud): string
     return 'https://www.google.com/maps/search/?api=1&query=' . sprintf('%.7F,%.7F', $latitud, $longitud);
 }
 
+/**
+ * Enlace de WhatsApp para un celular peruano de 9 dígitos ('987 654 321' o
+ * '+51 987654321'), o null si no lo es.
+ */
+function armar_enlace_whatsapp(string $celular): ?string
+{
+    $digitos = preg_replace('/\D/', '', $celular);
+    if (strlen($digitos) === 11 && str_starts_with($digitos, '51')) {
+        $digitos = substr($digitos, 2);
+    }
+    return preg_match('/^9\d{8}$/', $digitos) ? 'https://wa.me/51' . $digitos : null;
+}
+
 function armar_enlace_como_llegar(float $latitud, float $longitud): string
 {
     return 'https://www.google.com/maps/dir/?api=1&destination=' . sprintf('%.7F,%.7F', $latitud, $longitud);

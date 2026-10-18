@@ -129,6 +129,7 @@ Son funciones puras, sin acceso a la base de datos, y cada una tiene sus tests e
    - `BD_HOST` (normalmente `localhost`), `BD_NOMBRE`, `BD_USUARIO` y `BD_CLAVE` del paso 3.
    - `GOOGLE_MAPS_API_KEY` y `GOOGLE_MAPS_MAP_ID` de producción.
    - Tolerancias (15, 30 y 60 min) y `DURACION_SESION_S` (43200 = 12 h).
+   - Ayuda de las unidades: `SOPORTE_NOMBRE`, `SOPORTE_CELULAR`, `SOPORTE_WHATSAPP` y `VIDEO_TUTORIAL_UNIDAD_URL` (video de YouTube subido como "No listado"). Si un `config.php` ya creado no las tiene, el sistema las toma vacías y la Ayuda indica consultar al administrador; para completarlas, agregarlas a mano en el servidor.
 7. **Permisos**: `app/almacen/sesiones/` y `app/almacen/registros/` deben poder escribirse por PHP (755 suele bastar en cPanel). `app/config.php` con 600 o 640.
 8. **PHP**: en *MultiPHP Manager*, elegir 8.2 o superior para el subdominio.
 9. **HTTPS**: en *SSL/TLS Status*, ejecutar AutoSSL para el subdominio y comprobar que `http://operativos.tudominio.com` redirige a `https://` (lo fuerza `public/.htaccess`).

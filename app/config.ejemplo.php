@@ -22,6 +22,14 @@ const BD_CLAVE = '';
 const GOOGLE_MAPS_API_KEY = '';
 const GOOGLE_MAPS_MAP_ID = '';
 
+// Ayuda de las unidades (/ayuda): a quién llamar y el videotutorial.
+// El celular con 9 dígitos (por ejemplo '987654321'). Vacío: la página indica que se consulte al administrador.
+const SOPORTE_NOMBRE = '';
+const SOPORTE_CELULAR = '';
+const SOPORTE_WHATSAPP = true;   // true si ese celular atiende por WhatsApp.
+// Enlace de YouTube, subido como "No listado". Vacío: no se muestra el botón.
+const VIDEO_TUTORIAL_UNIDAD_URL = '';
+
 // Tolerancias y ventana de inicio, en minutos (RN-07, RN-14).
 const TOLERANCIA_NO_INICIADO_MIN = 15;
 const TOLERANCIA_SIN_CIERRE_MIN = 30;

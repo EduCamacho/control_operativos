@@ -61,6 +61,7 @@ require RUTA_APP . '/vistas/cabecera.php';
             </div>
             <button type="submit" class="btn btn-success btn-lg w-100 boton-accion">Ingresar</button>
         </form>
+        <p class="small text-body-secondary text-center mt-4">Creado por la UNITIC - REGPOL LA LIBERTAD</p>
     </div>
 </div>
 <?php require RUTA_APP . '/vistas/pie.php'; ?>

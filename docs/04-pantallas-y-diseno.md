@@ -6,7 +6,7 @@
 - Botones de acción grandes (mínimo 48 px de alto, de ancho completo en el celular).
 - **Menú en barra lateral izquierda**: fija en pantallas grandes (desde 992 px) y, en el celular, panel deslizable (offcanvas) que se abre con el botón ☰ de la barra superior, para no quitarle pantalla al jefe en campo.
 - Bootstrap 5.3 con tema claro. La tipografía es la del sistema (`system-ui`): carga rápido y se lee bien.
-- **Cambiar clave** (`/cuenta/clave`), para todas las cuentas, con el enlace al pie del menú lateral. Pide la clave actual, la nueva y su confirmación, y ofrece "Cerrar la sesión en los demás dispositivos" (desmarcado por defecto). En la cuenta de una unidad recuerda avisar la clave nueva a quienes la usan.
+- **Mi cuenta** (`/cuenta`), para todas las cuentas. Al pie del menú lateral, el bloque con el nombre y el usuario (sin el rol) es un enlace a esta página (con ›), y debajo van **Salir** y, solo en el servidor, la versión del paquete en letra pequeña (se usa para comprobar el despliegue, docs/03; en local no se muestra). El crédito "Creado por la UNITIC - REGPOL LA LIBERTAD" va al pie de la pantalla de ingreso. Muestra los datos de la cuenta, de solo lectura (usuario, nombre, rol, unidad y último ingreso; en la cuenta de una unidad aclara que el ingreso puede ser desde cualquier dispositivo, porque es compartida), con la nota de que los corrige el administrador. Debajo, en la misma página, **Cambiar clave**: pide la clave actual, la nueva y su confirmación, y ofrece "Cerrar la sesión en los demás dispositivos" (desmarcado por defecto). En la cuenta de una unidad recuerda avisar la clave nueva a quienes la usan.
 - **Color institucional** (`#1f6f50`, el del menú lateral; se define una sola vez en `--color-institucional` de `app.css`) para los botones de acción de los formularios (`.btn-institucional`, `.btn-outline-institucional`) y el foco de los campos. El azul de Bootstrap (`primary`) se reserva para el estado FINALIZADO.
 - Los textos de la interfaz van en español y con la terminología de la PNP (ver 05-glosario).
 
@@ -65,6 +65,10 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - **Resultados** como una lista compacta: una fila por concepto, con el nombre (y la descripción) a la izquierda y el contador − 0 + a la derecha, con 0 por defecto. Las filas con cantidad se resaltan en verde. En el encabezado de la tarjeta se ve el resultado en vivo: **Negativo** o **Positivo · N**.
    - Número de nota informativa (con el prefijo "N°") y observaciones, ambos opcionales.
    - Al final pide confirmación.
+6. **Ayuda** (`/ayuda`), solo para las unidades (al General se le explica en persona), en el menú lateral.
+   - **¿Necesita ayuda?**: nombre y celular de soporte con los botones **Llamar** y **WhatsApp** (este solo si `SOPORTE_WHATSAPP` y el número es un celular). Sin datos configurados, dice que se consulte al administrador.
+   - **Videotutorial**: botón **Ver el videotutorial**, que abre YouTube (la app, en el celular). Es un enlace y no un video incrustado, para que la página siga siendo liviana con poca señal. Sin video configurado, no se muestra.
+   - **Preguntas frecuentes** plegables: activar la ubicación (con el botón **Ver video (Android)**), el aviso de PC, copiar coordenadas de Google Maps (con **Ver video**), corregir un dato, la N.I después de finalizar y la clave olvidada. Los videos son de YouTube, de terceros.
 
 ## Rol SUPERVISOR (General)
 

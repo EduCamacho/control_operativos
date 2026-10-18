@@ -13,6 +13,12 @@ if (!is_file(RUTA_APP . '/config.php')) {
 }
 require RUTA_APP . '/config.php';
 
+// Constantes agregadas después de crear app/config.php en el servidor: vacías si faltan.
+defined('SOPORTE_NOMBRE') || define('SOPORTE_NOMBRE', '');
+defined('SOPORTE_CELULAR') || define('SOPORTE_CELULAR', '');
+defined('SOPORTE_WHATSAPP') || define('SOPORTE_WHATSAPP', false);
+defined('VIDEO_TUTORIAL_UNIDAD_URL') || define('VIDEO_TUTORIAL_UNIDAD_URL', '');
+
 date_default_timezone_set('America/Lima');
 mb_internal_encoding('UTF-8');
 

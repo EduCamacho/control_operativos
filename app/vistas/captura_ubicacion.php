@@ -72,11 +72,7 @@ declare(strict_types=1);
                 <button type="button" class="btn btn-link btn-sm" @click="pasarAManual()">Ingresar manualmente</button>
                 <details x-show="permisoDenegado" class="small mt-2">
                     <summary>¿Cómo activo la ubicación?</summary>
-                    <ul class="mb-1 mt-1 ps-3">
-                        <li><strong>Android (Chrome):</strong> toque el candado <i class="bi bi-lock"></i> junto a la dirección → <em>Permisos</em> → <em>Ubicación</em> → <em>Permitir</em>.</li>
-                        <li><strong>iPhone (Safari):</strong> <em>Ajustes</em> → <em>Privacidad y seguridad</em> → <em>Localización</em> → <em>Safari</em> → <em>Al usar la app</em>.</li>
-                        <li>Verifique también que la ubicación (GPS) del celular esté encendida.</li>
-                    </ul>
+                    <?php require RUTA_APP . '/vistas/pasos_activar_ubicacion.php'; ?>
                 </details>
             </div>
 

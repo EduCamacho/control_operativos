@@ -35,6 +35,7 @@ $menu = match ($usuario['rol'] ?? null) {
     'UNIDAD'     => [
         ''                     => ['Mis operativos', 'clipboard-check'],
         'operativos/programar' => ['Programar', 'calendar-plus'],
+        'ayuda'                => ['Ayuda', 'question-circle'],
     ],
     default      => [],
 };
@@ -83,14 +84,16 @@ $menu = match ($usuario['rol'] ?? null) {
                 <?php endforeach; ?>
             </nav>
             <div class="mt-auto p-3 border-top border-light border-opacity-25">
-                <div class="small mb-2 text-truncate" title="<?= e($usuario['nombre']) ?>">
-                    <i class="bi bi-person-circle" aria-hidden="true"></i>
-                    <?= e($usuario['unidad_nombre'] ?? $usuario['nombre']) ?>
-                    <span class="d-block opacity-75"><?= e($usuario['usuario']) ?> · <?= e($usuario['rol']) ?></span>
-                </div>
-                <a href="<?= e(armar_url('cuenta/clave')) ?>"
-                   class="btn btn-sm w-100 mb-2 enlace-cuenta<?= $ruta_actual === 'cuenta/clave' ? ' active' : '' ?>">
-                    <i class="bi bi-key" aria-hidden="true"></i> Cambiar clave
+                <!-- La cuenta es un enlace a Mi cuenta, donde también se cambia la clave. -->
+                <a href="<?= e(armar_url('cuenta')) ?>" title="Mi cuenta"
+                   class="enlace-cuenta d-flex align-items-center gap-2 small mb-2 text-decoration-none<?= $ruta_actual === 'cuenta' ? ' active' : '' ?>"
+                   <?= $ruta_actual === 'cuenta' ? 'aria-current="page"' : '' ?>>
+                    <i class="bi bi-person-circle fs-5" aria-hidden="true"></i>
+                    <span class="flex-fill text-truncate">
+                        <?= e($usuario['unidad_nombre'] ?? $usuario['nombre']) ?>
+                        <span class="d-block opacity-75"><?= e($usuario['usuario']) ?></span>
+                    </span>
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
                 </a>
                 <form method="post" action="<?= e(armar_url('salir')) ?>">
                     <?= campo_csrf() ?>
@@ -98,7 +101,11 @@ $menu = match ($usuario['rol'] ?? null) {
                         <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Salir
                     </button>
                 </form>
-                <div class="small opacity-50 mt-2 text-center">versión <?= e(obtener_version() ?? 'de desarrollo') ?></div>
+                <!-- La versión sirve para comprobar el paquete desplegado (docs/03); en local no hay y no se muestra nada. -->
+                <?php $version = obtener_version(); ?>
+                <?php if ($version !== null): ?>
+                    <div class="opacity-50 mt-2 text-center pie-version">versión <?= e($version) ?></div>
+                <?php endif; ?>
             </div>
         </div>
     </aside>

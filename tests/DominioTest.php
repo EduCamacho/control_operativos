@@ -410,6 +410,28 @@ final class DominioTest extends TestCase
         $this->assertSame($esperado, clasificar_dispositivo($user_agent));
     }
 
+    // --- armar_enlace_whatsapp ---------------------------------------------
+
+    public function test_whatsapp_con_celular_de_9_digitos(): void
+    {
+        $this->assertSame('https://wa.me/51987654321', armar_enlace_whatsapp('987654321'));
+        $this->assertSame('https://wa.me/51987654321', armar_enlace_whatsapp('987 654 321'));
+    }
+
+    public function test_whatsapp_con_codigo_de_pais(): void
+    {
+        $this->assertSame('https://wa.me/51987654321', armar_enlace_whatsapp('+51 987 654 321'));
+        $this->assertSame('https://wa.me/51987654321', armar_enlace_whatsapp('51987654321'));
+    }
+
+    public function test_whatsapp_rechaza_lo_que_no_es_celular(): void
+    {
+        $this->assertNull(armar_enlace_whatsapp(''));
+        $this->assertNull(armar_enlace_whatsapp('044 123456'));   // fijo de Trujillo
+        $this->assertNull(armar_enlace_whatsapp('98765432'));     // falta un dígito
+        $this->assertNull(armar_enlace_whatsapp('887654321'));    // no empieza con 9
+    }
+
     // --- enlaces de Google Maps ---------------------------------------------
 
     public function test_enlace_usa_punto_decimal_aunque_el_locale_use_coma(): void

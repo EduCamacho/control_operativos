@@ -9,7 +9,8 @@ const RUTAS = [
     ''       => 'paginas/inicio.php',
     'login'  => 'paginas/login.php',
     'salir'  => 'paginas/salir.php',
-    'cuenta/clave' => 'paginas/cuenta_clave.php',
+    'cuenta'       => 'paginas/cuenta.php',
+    'cuenta/clave' => 'paginas/cuenta_clave.php', // redirige a 'cuenta'
 
     // ADMIN (fase 1)
     'admin/unidades'         => 'paginas/admin_unidades.php',
@@ -22,6 +23,7 @@ const RUTAS = [
     'admin/operativos/editar' => 'paginas/admin_operativo_formulario.php',
 
     // UNIDAD (fase 2). La pantalla principal de la unidad es '' (mis_operativos.php).
+    'ayuda'                  => 'paginas/ayuda.php',
     'operativos/programar'   => 'paginas/operativo_programar.php',
     'operativos/ver'         => 'paginas/operativo_detalle.php',
     'operativos/eliminar'    => 'paginas/operativo_eliminar.php',

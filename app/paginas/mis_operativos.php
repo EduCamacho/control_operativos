@@ -106,7 +106,7 @@ require RUTA_APP . '/vistas/cabecera.php';
 <?php endforeach; ?>
 
 <!-- Los cuatro turnos del servicio diario vigente -->
-<h2 class="titulo-seccion">
+<h2 class="titulo-seccion titulo-seccion-principal">
     <i class="bi bi-calendar-day"></i> Servicio del día <?= e(formatear_servicio_diario(validar_fecha($vigente))) ?>
 </h2>
 <div class="turnos mb-4">
