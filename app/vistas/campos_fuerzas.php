@@ -7,7 +7,7 @@ declare(strict_types=1);
 
 $contadores = [
     'fuerzas_propias'  => ['Fuerzas propias', 1],
-    'fuerzas_apoyo'    => ['Fuerzas de apoyo', 0],
+    'fuerzas_apoyo'    => ['Fuerzas de apoyo (DIROPES, etc)', 0],
     'unidades_moviles' => ['Unidades móviles', 0],
 ];
 ?>

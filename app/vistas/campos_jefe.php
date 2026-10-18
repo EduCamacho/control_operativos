@@ -24,7 +24,7 @@ declare(strict_types=1);
         <?= mostrar_error($errores, 'jefe_grado') ?>
     </div>
     <div class="col-8">
-        <label for="jefe_nombres" class="form-label">Nombres y apellidos</label>
+        <label for="jefe_nombres" class="form-label">Apellidos y nombres</label>
         <input type="text" id="jefe_nombres" name="jefe_nombres" maxlength="150" required autocomplete="off" autocapitalize="words"
                class="form-control form-control-lg<?= clase_error($errores, 'jefe_nombres') ?>" value="<?= e($valores['jefe_nombres']) ?>"<?= $deshabilitado('jefe_nombres') ?>>
         <?= mostrar_error($errores, 'jefe_nombres') ?>
