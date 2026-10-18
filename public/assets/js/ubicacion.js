@@ -8,8 +8,8 @@
  * 3. Si el GPS falla (permiso, sin señal, PC sin GPS), explica cómo activarlo y
  *    ofrece el ingreso manual: se pegan las coordenadas copiadas de Google Maps
  *    y el servidor las separa en latitud y longitud.
- * 4. Pide confirmar que es la ubicación actual del operativo, y avisa si se usa
- *    una PC o si el inicio queda a más de 500 m del lugar programado (RN-09a).
+ * 4. El botón "Estoy aquí" es la confirmación; avisa si se usa una PC o si el
+ *    inicio queda a más de 500 m del lugar programado (RN-09a).
  * 5. Envía con reintento si no hay conexión (envio.js).
  *
  * Requiere envio.js cargado antes.
@@ -35,7 +35,7 @@ document.addEventListener('alpine:init', function () {
             longitudManual: '',
             errorManual: '',
             analizando: false,
-            confirmado: false,
+            otrasOpciones: false, // "¿No es mi ubicación?" desplegado
             errores: {},
             idEnvio: null,
             envio: null,
@@ -47,7 +47,8 @@ document.addEventListener('alpine:init', function () {
                 // El modal es estático: solo se cierra con la ✕ o Cancelar (ver cancelar()).
                 this.modal = window.bootstrap.Modal.getOrCreateInstance(this.$refs.modal);
                 this.$refs.modal.addEventListener('shown.bs.modal', () => {
-                    if (this.$refs.referencia) this.$refs.referencia.focus();
+                    // Solo si es obligatoria: en el celular, el teclado taparía el botón.
+                    if (this.referenciaObligatoria && this.$refs.referencia) this.$refs.referencia.focus();
                 });
                 this.$refs.modal.addEventListener('hidden.bs.modal', () => {
                     if (!this.bloqueado && this.fase !== 'hecho') {
@@ -68,7 +69,7 @@ document.addEventListener('alpine:init', function () {
                 this.textoPegado = '';
                 this.latitudManual = '';
                 this.longitudManual = '';
-                this.confirmado = false;
+                this.otrasOpciones = false;
                 this.modal.show();
                 this.obtenerGps();
             },
@@ -104,7 +105,7 @@ document.addEventListener('alpine:init', function () {
                 this.longitud = posicion.coords.longitude;
                 this.precision = Math.round(posicion.coords.accuracy);
                 this.origen = 'GPS';
-                this.confirmado = false;
+                this.otrasOpciones = false;
                 this.fase = this.dentroDeLaLibertad(this.latitud, this.longitud) ? 'lista' : 'fuera';
             },
 
@@ -165,7 +166,7 @@ document.addEventListener('alpine:init', function () {
                 this.longitud = longitud;
                 this.precision = null;
                 this.origen = 'MANUAL';
-                this.confirmado = false;
+                this.otrasOpciones = false;
                 this.fase = 'lista';
             },
 
@@ -214,27 +215,23 @@ document.addEventListener('alpine:init', function () {
                 return config.desdePc === true;
             },
 
-            get nombreLugar() {
-                return config.lugarProgramado ? config.lugarProgramado.nombre : '';
+            /** La referencia es obligatoria al iniciar y opcional en el nuevo punto (RN-10). */
+            get referenciaObligatoria() {
+                return config.accion === 'INICIAR';
             },
 
-            get textoUbicacion() {
-                if (this.latitud === null) {
-                    return '';
-                }
-                const coordenadas = this.latitud.toFixed(6) + ', ' + this.longitud.toFixed(6);
-                return this.origen === 'MANUAL' ? coordenadas + ' · ingresada a mano' : coordenadas;
+            /** "Estoy aquí · Iniciar": tocarlo es confirmar la ubicación (RN-09a). */
+            textoBoton(accion) {
+                if (this.fase === 'obteniendo') return 'Obteniendo ubicación…';
+                if (this.fase === 'enviando') return 'Enviando…';
+                return 'Estoy aquí · ' + accion;
             },
 
             enviar() {
                 this.errores = {};
-                if (this.referencia.trim() === '') {
+                if (this.referenciaObligatoria && this.referencia.trim() === '') {
                     this.errores = { referencia: 'Indique la referencia: calle, avenida o sector.' };
                     this.$refs.referencia && this.$refs.referencia.focus();
-                    return;
-                }
-                if (!this.confirmado) {
-                    this.errores = { confirmacion: 'Confirme que esta es la ubicación actual del operativo.' };
                     return;
                 }
                 this.fase = 'enviando';

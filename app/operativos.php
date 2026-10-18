@@ -119,7 +119,10 @@ function mostrar_ubicacion(array $ubicacion, bool $con_referencia = true, bool $
 {
     $partes = [];
     if ($con_referencia) {
-        $partes[] = e($ubicacion['referencia']);
+        // La referencia es opcional en el nuevo punto (RN-10).
+        $partes[] = ($ubicacion['referencia'] ?? '') === ''
+            ? '<span class="text-body-secondary">Sin referencia</span>'
+            : e($ubicacion['referencia']);
     }
     $partes[] = e(formatear_hora($ubicacion['registrado_en']));
     // La precisión se omite donde sobra texto (vistas del General); "Manual" siempre se muestra.

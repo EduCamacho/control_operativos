@@ -108,12 +108,12 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
   - Cada ubicación guarda su **origen** (`GPS` o `MANUAL`). Las manuales no tienen precisión y se muestran con el distintivo "Manual" en el mapa, la ficha y las listas, para que el supervisor sepa que no las capturó el GPS.
   - Las coordenadas manuales de un operativo también se validan con el rectángulo de La Libertad (RN-08). Las del supervisor no (RN-15).
 - **RN-09a** — **Evitar registrar la ubicación equivocada** (decisión de Eduardo, 18/10/2026). Un operador puede iniciar el operativo desde la PC de la comisaría y registrar la comisaría como lugar del operativo. Por eso, al iniciar o registrar un nuevo punto:
-  - Siempre se pide **confirmar** que el operativo está ahora en la ubicación capturada.
+  - Siempre se **confirma** que el operativo está ahora en la ubicación capturada: el botón de envío dice **Estoy aquí** (sin casilla aparte, para que sea simple).
   - Si se usa una **PC** (lo decide el servidor por el navegador), se avisa que se registrará la ubicación de ese equipo.
   - **Solo al iniciar**: si la ubicación está a **más de 500 m** del lugar programado, se avisa con la distancia.
   - Los avisos **no bloquean**. Cada ubicación guarda el **dispositivo** (`CELULAR` o `PC`) y, en el inicio, la **distancia al lugar programado**. La ficha y el recorrido muestran los distintivos "Desde PC" y "A 3,2 km del lugar programado".
   - En el nuevo punto no se compara con el lugar programado, porque el operativo se desplaza.
-- **RN-10** — **Nuevo punto**: solo en `EN_CURSO`. Requiere una ubicación (por GPS o manual, RN-09) y una **referencia obligatoria** (calle, avenida o sector). La última ubicación es la posición actual y el historial de puntos forma el recorrido. No hay límite de puntos.
+- **RN-10** — **Nuevo punto**: solo en `EN_CURSO`. Requiere una ubicación (por GPS o manual, RN-09). La **referencia** (calle, avenida o sector) es **opcional** en el nuevo punto y **obligatoria al iniciar** (decisión de Eduardo, 18/10/2026). La última ubicación es la posición actual y el historial de puntos forma el recorrido. No hay límite de puntos.
 - **RN-11** — Todas las horas las pone el **servidor** (America/Lima), nunca el celular.
 - **RN-11a** — **Sin conexión de datos**: si el envío de un inicio, un punto o un cierre falla, el celular avisa al usuario, conserva lo capturado en pantalla y reintenta el envío (de forma automática cuando vuelve la conexión, o con el botón **Reintentar**). La hora registrada es la de llegada al servidor (RN-11).
 - **RN-12** — **Finalizar**: solo desde `EN_CURSO`. Se registra:

@@ -21,7 +21,8 @@ if ($operativo_id === null || !in_array($accion, ['INICIAR', 'PUNTO'], true)) {
     responder_json(['error' => 'Solicitud incompleta.'], 400);
 }
 
-['datos' => $ubicacion, 'errores' => $errores] = validar_ubicacion($entrada, true, true);
+// La referencia es obligatoria al iniciar y opcional en el nuevo punto (RN-10).
+['datos' => $ubicacion, 'errores' => $errores] = validar_ubicacion($entrada, true, true, $accion === 'INICIAR');
 if ($errores !== []) {
     responder_json(['error' => reset($errores), 'errores' => $errores], 422);
 }

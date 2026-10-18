@@ -229,6 +229,21 @@ function fecha_servicio_vigente(DateTimeImmutable $ahora): string
     return $local->format('Y-m-d');
 }
 
+/**
+ * El servicio diario cruza la medianoche (RN-02): '18 al 19/10/2026'. Al cambiar
+ * de mes, '31/10 al 01/11/2026'; al cambiar de año, '31/12/2026 al 01/01/2027'.
+ */
+function formatear_servicio_diario(DateTimeImmutable $fecha_servicio): string
+{
+    $siguiente = $fecha_servicio->modify('+1 day');
+    $desde = match (true) {
+        $fecha_servicio->format('Y') !== $siguiente->format('Y') => $fecha_servicio->format('d/m/Y'),
+        $fecha_servicio->format('m') !== $siguiente->format('m') => $fecha_servicio->format('d/m'),
+        default                                                   => $fecha_servicio->format('d'),
+    };
+    return $desde . ' al ' . $siguiente->format('d/m/Y');
+}
+
 /** 'sábado 17 de octubre de 2026'. Sin la extensión intl, que no siempre está en el hosting. */
 function formatear_fecha_larga(DateTimeInterface $fecha): string
 {
@@ -343,9 +358,10 @@ function armar_coordenadas(float $latitud, float $longitud): ?array
  * la hora la pone el servidor (RN-11).
  *
  * @param bool $exigir_la_libertad false para la ubicación del supervisor (RN-15).
+ * @param bool $referencia_obligatoria false en el nuevo punto (RN-10): vacía se guarda como null.
  * @return array{datos: array<string, mixed>, errores: array<string, string>}
  */
-function validar_ubicacion(array $entrada, bool $exigir_la_libertad, bool $con_referencia): array
+function validar_ubicacion(array $entrada, bool $exigir_la_libertad, bool $con_referencia, bool $referencia_obligatoria = true): array
 {
     $datos = [];
     $errores = [];
@@ -383,7 +399,9 @@ function validar_ubicacion(array $entrada, bool $exigir_la_libertad, bool $con_r
 
     if ($con_referencia) {
         $referencia = trim((string) ($entrada['referencia'] ?? ''));
-        if ($referencia === '') {
+        if ($referencia === '' && !$referencia_obligatoria) {
+            $datos['referencia'] = null;
+        } elseif ($referencia === '') {
             $errores['referencia'] = 'Indique la referencia: calle, avenida o sector.';
         } elseif (mb_strlen($referencia) > 255) {
             $errores['referencia'] = 'La referencia admite hasta 255 caracteres.';

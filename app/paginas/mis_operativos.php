@@ -50,7 +50,7 @@ $calcular_accion = static function (?array $operativo, string $turno) use ($ahor
     $parametros = ['id' => $operativo['id']];
     return match (true) {
         puede_iniciar($operativo, $ahora, VENTANA_INICIO_MIN) => ['Iniciar operativo', 'operativos/ver', $parametros, 'btn-institucional', 'play-fill'],
-        $operativo['estado'] === 'EN_CURSO'                   => ['Nuevo punto / Finalizar', 'operativos/ver', $parametros, 'btn-institucional', 'geo-alt-fill'],
+        $operativo['estado'] === 'EN_CURSO'                   => ['Ver detalles', 'operativos/ver', $parametros, 'btn-institucional', 'eye'],
         puede_agregar_nota($operativo)                        => ['Agregar N.I', 'operativos/ver', $parametros, 'btn-outline-institucional', 'file-earmark-plus'],
         default                                               => null,
     };
@@ -80,7 +80,11 @@ $titulo = 'Mis operativos';
 require RUTA_APP . '/vistas/cabecera.php';
 ?>
 <div class="d-flex align-items-center gap-2 mb-3">
-    <h1 class="h4 mb-0 me-auto"><?= e(usuario_actual()['unidad_nombre']) ?></h1>
+    <!-- En el celular la barra superior ya dice "Mis operativos": ahí solo se muestra la unidad. -->
+    <div class="me-auto">
+        <h1 class="h4 mb-0 d-none d-lg-block">Mis operativos</h1>
+        <div class="fw-semibold text-body-secondary"><?= e(usuario_actual()['unidad_nombre']) ?></div>
+    </div>
     <a href="<?= e(armar_url('operativos/programar')) ?>" class="btn btn-institucional">
         <i class="bi bi-plus-lg"></i> Programar
     </a>
@@ -95,7 +99,7 @@ require RUTA_APP . '/vistas/cabecera.php';
                 del <?= e($titulo_dia($operativo['fecha_servicio'])) ?>.
             </span>
             <a href="<?= e(armar_url('operativos/ver', ['id' => $operativo['id']])) ?>" class="btn btn-sm btn-institucional">
-                <i class="bi bi-geo-alt-fill"></i> Nuevo punto / Finalizar
+                <i class="bi bi-eye"></i> Ver detalles
             </a>
         </div>
     </div>
@@ -103,8 +107,7 @@ require RUTA_APP . '/vistas/cabecera.php';
 
 <!-- Los cuatro turnos del servicio diario vigente -->
 <h2 class="titulo-seccion">
-    <i class="bi bi-calendar-day"></i> Servicio diario
-    <span class="titulo-seccion-detalle">· <?= e($titulo_dia($vigente)) ?> · <?= e($ahora->format('H:i')) ?></span>
+    <i class="bi bi-calendar-day"></i> Servicio del día <?= e(formatear_servicio_diario(validar_fecha($vigente))) ?>
 </h2>
 <div class="turnos mb-4">
     <?php foreach (TURNOS as $turno): ?>
@@ -156,7 +159,6 @@ require RUTA_APP . '/vistas/cabecera.php';
                             <?= mostrar_estado($estado, pendiente_nota($operativo)) ?>
                         </span>
                         <span class="d-block small text-body-secondary text-truncate"><i class="bi bi-geo-alt"></i> <?= e($operativo['lugar_programado']) ?></span>
-                        <span class="d-block small text-body-secondary text-truncate"><i class="bi bi-person-badge"></i> <?= e($operativo['jefe_grado'] . ' ' . $operativo['jefe_nombres']) ?></span>
                     </a>
                     <?php if ($operativo['estado'] === 'PROGRAMADO' && !puede_iniciar($operativo, $ahora, VENTANA_INICIO_MIN) && $ahora < convertir_a_fecha_hora($operativo['fin_programado'])): ?>
                         <div class="small text-body-secondary mt-1">

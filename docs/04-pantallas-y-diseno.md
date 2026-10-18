@@ -30,10 +30,10 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
 ## Rol UNIDAD
 
 1. **Mis operativos (inicio)**
-   - Encabezado con el nombre de la unidad y el botón **Programar** a la derecha. Debajo, el título de sección **Servicio diario · Sábado 17/10 · 13:20** sobre los turnos y **Otros días** sobre las pestañas, para dar contexto en el celular, donde no se ve el menú.
+   - Encabezado con el título **Mis operativos** y, debajo, el nombre de la unidad, con el botón **Programar** a la derecha. En el celular el título grande no se muestra (ya lo dice la barra superior) y queda solo el nombre de la unidad. Debajo, el título de sección **Servicio del día 17 al 18/10/2026** (todo en verde; el servicio cruza la medianoche, RN-02) sobre los turnos y **Otros días** sobre las pestañas, para dar contexto en el celular, donde no se ve el menú.
    - Los **4 turnos** del servicio diario vigente (MAÑANA, TARDE, NOCHE y MADRUGADA), en una columna en el celular y en cuatro en la PC, con el borde izquierdo del color del estado. El **turno actual** se resalta con "● AHORA".
      - Turno vacío: una sola línea con el rango de inicio y **+ Programar**; si ya no se puede programar, "Sin programar" en amarillo.
-     - Turno con operativos: **uno o más** (RN-01), cada uno con su horario, lugar, jefe, estado y **un solo botón** con la acción que toca: *Iniciar operativo*, *Nuevo punto / Finalizar* (verde institucional) o *Agregar N.I* (nota informativa; contorno). Si el turno tiene varios, lo indica ("2 operativos"); mientras se pueda programar, ofrece **+ Agregar otro operativo en este turno**.
+     - Turno con operativos: **uno o más** (RN-01), cada uno con su horario, lugar, estado (sin el jefe: casi siempre es el mismo) y **un solo botón** con la acción que toca: *Iniciar operativo*, *Ver detalles* si está en curso (verde institucional; en la ficha se registra el punto o se finaliza) o *Agregar N.I* (nota informativa; contorno). Si el turno tiene varios, lo indica ("2 operativos"); mientras se pueda programar, ofrece **+ Agregar otro operativo en este turno**.
    - Si un operativo del servicio anterior sigue en curso, aparece arriba como aviso naranja con su acción.
    - Debajo, pestañas **Próximos** (con la cantidad) e **Historial**, con los operativos agrupados por día ("Domingo 18/10"). El historial muestra los últimos 7 días con operativos y **Ver más** llega hasta 30.
 2. **Programar / editar**: asistente en **4 pasos**, con la barra de progreso arriba y los botones **Atrás** y **Siguiente** fijos al pie, al alcance del pulgar.
@@ -46,18 +46,19 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - El formulario del ADMIN usa los mismos bloques, pero en una sola página.
 3. **Ficha del operativo** (`/operativos/ver`)
    - **Encabezado** con la unidad, el estado, el turno y el horario, con el borde izquierdo del color del estado; debajo, la hora de inicio real y hace cuánto.
-   - **En curso**: tarjeta **Posición actual** (la referencia en grande, hora, hace cuánto, precisión o "Manual" y **Ver en Google Maps**). Debajo, dos botones grandes: **Registrar nuevo punto** (verde institucional) y **Finalizar operativo** (contorno rojo). No hay mapa (RN-21).
+   - **En curso**: tarjeta **Última ubicación registrada** (no "posición actual": es el último punto enviado, no un seguimiento en vivo) (la referencia en grande, hora, hace cuánto, precisión o "Manual" y **Ver en Google Maps**). Debajo, dos botones grandes: **Registrar nuevo punto** (verde institucional) y **Finalizar operativo** (contorno rojo). No hay mapa (RN-21).
    - **Programado**: botón **Iniciar operativo**, o el aviso "Podrá iniciarlo desde las HH:MM".
    - **Finalizado**: **Resultados** como recuadros con la cifra grande (o "Negativo") y la **Nota informativa**, con el campo para agregarla si falta.
    - **Recorrido** como línea de tiempo vertical, el punto más reciente arriba y resaltado, el primero marcado como "Inicio". Muestra los 5 más recientes y el botón **Ver los N puntos anteriores** despliega el resto. En el celular es la **última tarjeta** (después de los datos del operativo), porque puede crecer mucho.
    - **Datos del operativo** con ícono por dato (tipos, lugar programado con su enlace, jefe con el botón **Llamar** y fuerzas en tres recuadros con la cifra), y **Editar** en el encabezado de la tarjeta. **Eliminar** va al pie, discreto, solo cuando se permite (RN-06).
    - En la PC, dos columnas: a la izquierda la acción y el recorrido; a la derecha los datos.
-4. **Captura de ubicación** (al iniciar y al registrar un nuevo punto), en un **modal**: hoja inferior en el celular (sale desde abajo, hasta el 85 % de la altura) y centrado en la PC, con **Cancelar** y el botón de envío fijos al pie. Es estático (no se cierra al tocar fuera ni con Escape) y no se puede cerrar mientras hay un envío pendiente, para no perder la ubicación capturada.
-   - Mientras obtiene el GPS muestra el mensaje "Obteniendo ubicación…" y luego la precisión lograda.
-   - No muestra la precisión. Con la ubicación capturada ofrece *Volver a tomar la ubicación* o *Ingresar manualmente*, y pide confirmar que el operativo está ahí (RN-09a).
-   - Si el permiso está denegado o el GPS no responde, muestra los pasos para activar la ubicación en el navegador del celular, un botón **Reintentar** y la opción *Ingresar manualmente* (RN-09).
+4. **Captura de ubicación** (al iniciar y al registrar un nuevo punto), en un **modal**: hoja inferior en el celular (sale desde abajo, hasta el 85 % de la altura) y centrado en la PC. Pensado para el jefe del operativo: **una pregunta y un botón**. Al pie hay un solo botón grande, **Estoy aquí · Iniciar** (o **Estoy aquí · Registrar punto**), que es la confirmación de la ubicación (RN-09a); se cierra con la ✕. Es estático (no se cierra al tocar fuera ni con Escape) y no se puede cerrar mientras hay un envío pendiente, para no perder la ubicación capturada.
+   - Pregunta **¿Dónde está el operativo?** (la referencia): obligatoria al iniciar y opcional en el nuevo punto (RN-10). Solo al iniciar se pone el cursor ahí, para que en el nuevo punto el teclado no tape el botón.
+   - Mientras obtiene el GPS, el botón dice "Obteniendo ubicación…" y está desactivado. Luego muestra el enlace "✓ Ver mi ubicación actual" (abre Google Maps), sin coordenadas ni precisión.
+   - Debajo del botón, el enlace discreto **¿No es mi ubicación?** despliega *Volver a tomar* e *Ingresar manualmente*.
+   - Avisos de una línea, solo cuando corresponden (RN-09a): desde una PC, y al iniciar a más de 500 m del lugar programado ("Está a 3,2 km del lugar programado").
+   - Si el permiso está denegado o el GPS no responde, muestra el error en una línea, un botón **Reintentar** y la opción *Ingresar manualmente* (RN-09). Los pasos para activar la ubicación quedan plegados en *¿Cómo activo la ubicación?*.
    - **Ingreso manual**: tiene un campo "Pegar coordenadas de Google Maps", con la ayuda "En Google Maps, mantén presionado el lugar (o haz clic derecho en la PC) y copia las coordenadas". Al pegar, se llenan solos los campos de latitud y longitud, que el usuario revisa. Hay un enlace **Ver en Google Maps** para comprobar el punto antes de guardar. Si las coordenadas caen fuera de La Libertad, se muestra el error y no se guardan.
-   - Pide la referencia, que es obligatoria.
    - Si no hay conexión de datos al enviar, avisa "Sin conexión: se reintentará el envío", conserva lo capturado y reintenta solo cuando vuelve la señal o al pulsar **Reintentar** (RN-11a).
 5. **Finalizar**
    - Un campo numérico por cada concepto de resultado, con 0 por defecto y botones − y +.

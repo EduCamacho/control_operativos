@@ -339,6 +339,25 @@ final class DominioTest extends TestCase
         $this->assertEqualsWithDelta(11, distancia_m(-8.1116, -79.0288, -8.1117, -79.0288), 1);
     }
 
+    // --- formatear_servicio_diario ------------------------------------------
+
+    public function test_servicio_diario_dentro_del_mes(): void
+    {
+        $this->assertSame('18 al 19/10/2026', formatear_servicio_diario(new DateTimeImmutable('2026-10-18')));
+        $this->assertSame('01 al 02/11/2026', formatear_servicio_diario(new DateTimeImmutable('2026-11-01')));
+    }
+
+    public function test_servicio_diario_que_cambia_de_mes(): void
+    {
+        $this->assertSame('31/10 al 01/11/2026', formatear_servicio_diario(new DateTimeImmutable('2026-10-31')));
+        $this->assertSame('28/02 al 01/03/2027', formatear_servicio_diario(new DateTimeImmutable('2027-02-28')));
+    }
+
+    public function test_servicio_diario_que_cambia_de_anio(): void
+    {
+        $this->assertSame('31/12/2026 al 01/01/2027', formatear_servicio_diario(new DateTimeImmutable('2026-12-31')));
+    }
+
     // --- distancia al lugar programado (RN-09a) ------------------------------
 
     public function test_distancia_al_lugar_programado(): void
@@ -1131,6 +1150,25 @@ final class DominioTest extends TestCase
         $r = validar_ubicacion(self::ubicacion(['latitud' => -12.0464, 'longitud' => -77.0428, 'referencia' => '']), false, false);
         $this->assertSame([], $r['errores']);
         $this->assertArrayNotHasKey('referencia', $r['datos']);
+    }
+
+    public function test_referencia_opcional_vacia_se_guarda_como_null(): void
+    {
+        $r = validar_ubicacion(self::ubicacion(['referencia' => '   ']), true, true, false);
+        $this->assertSame([], $r['errores']);
+        $this->assertNull($r['datos']['referencia']);
+    }
+
+    public function test_referencia_opcional_escrita_se_guarda(): void
+    {
+        $r = validar_ubicacion(self::ubicacion(), true, true, false);
+        $this->assertSame('Av. España con Jr. Grau', $r['datos']['referencia']);
+    }
+
+    public function test_referencia_opcional_igual_tiene_largo_maximo(): void
+    {
+        $r = validar_ubicacion(self::ubicacion(['referencia' => str_repeat('a', 256)]), true, true, false);
+        $this->assertArrayHasKey('referencia', $r['errores']);
     }
 
     public function test_ubicacion_con_errores(): void

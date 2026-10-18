@@ -4,6 +4,10 @@
  * punto (docs/04). Hoja inferior en el celular (sale desde abajo) y centrado en la PC.
  * Es estático (no se cierra al tocar fuera ni con Escape) y no se puede cerrar
  * mientras hay un envío pendiente, para no perder la ubicación capturada.
+ *
+ * Pensado para el jefe del operativo: una pregunta y un botón. El botón
+ * "Estoy aquí" es la confirmación (RN-09a); el resto solo aparece si hace falta.
+ *
  * Va dentro de un elemento con x-data="capturaUbicacion(...)". Espera:
  *   $captura = ['titulo' => ..., 'boton' => ...]
  */
@@ -19,13 +23,15 @@ declare(strict_types=1);
             </div>
             <div class="modal-body">
                 <!-- RN-09a: desde la PC de la comisaría se registraría la ubicación de la comisaría. -->
-                <div x-show="desdePc" class="alert alert-warning py-2 mb-3">
-                    <i class="bi bi-pc-display"></i> <strong>Está usando una computadora.</strong>
-                    Se registrará la ubicación de este equipo, no la del operativo. Si el operativo está en otro lugar,
-                    use <em>Ingresar manualmente</em> con las coordenadas que le envíe el jefe del operativo.
+                <div x-show="desdePc" class="alert alert-warning py-2 small mb-3">
+                    <i class="bi bi-pc-display"></i> <strong>¡Detectamos que está en una PC!</strong> Se recomienda abrir el sistema desde el mismo lugar del operativo, en un celular con GPS,
+                    porque se guardarán las coordenadas. Si Ud. no está en el lugar del operativo, haga clic en <em>¿No es mi ubicación?</em> e ingrese las coordenadas brindadas por el jefe del operativo.
                 </div>
+
                 <div class="mb-3">
-                    <label class="form-label" :for="'referencia-' + $id('captura')">Referencia</label>
+                    <label class="form-label fw-semibold" :for="'referencia-' + $id('captura')">
+                        ¿Dónde está el operativo? <span x-show="!referenciaObligatoria" class="fw-normal text-body-secondary small">(opcional)</span>
+                    </label>
                     <input type="text" :id="'referencia-' + $id('captura')" x-ref="referencia" x-model="referencia" maxlength="255"
                            class="form-control form-control-lg" :class="errores.referencia && 'is-invalid'"
                            placeholder="Calle, avenida o sector" :disabled="bloqueado" @keydown.enter.prevent="fase === 'lista' && enviar()">
@@ -34,70 +40,44 @@ declare(strict_types=1);
 
         <div aria-live="polite">
             <!-- Obteniendo el GPS -->
-            <div x-show="fase === 'obteniendo'" class="fila-flex align-items-center gap-2 py-2">
-                <div class="spinner-border spinner-border-sm texto-institucional" role="status"></div>
-                <span>Obteniendo ubicación…</span>
+            <div x-show="fase === 'obteniendo'" class="text-body-secondary mb-3">
+                <span class="spinner-border spinner-border-sm" role="status"></span> Obteniendo ubicación…
             </div>
 
-            <!-- Ubicación lista para enviar -->
-            <div x-show="fase === 'lista' || fase === 'enviando' || fase === 'sin_conexion'" class="alert alert-success py-2 mb-3">
-                <i class="bi bi-check-circle-fill"></i>
-                <span x-text="textoUbicacion"></span>
-                <a :href="enlaceMaps(latitud, longitud)" target="_blank" rel="noopener" class="ms-1 text-nowrap">
-                    <i class="bi bi-geo-alt"></i> Ver en Google Maps
+            <!-- Ubicación lista: sin coordenadas, solo el enlace para quien quiera revisarla -->
+            <div x-show="fase === 'lista' || fase === 'enviando' || fase === 'sin_conexion'" class="mb-3">
+                <a :href="enlaceMaps(latitud, longitud)" target="_blank" rel="noopener" class="text-success">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span x-text="origen === 'MANUAL' ? 'Ver la ubicación ingresada' : 'Ver mi ubicación actual'"></span>
                 </a>
             </div>
 
             <!-- RN-09a: lejos del lugar programado (solo al iniciar). Solo se avisa. -->
             <div x-show="lejosDelLugar && (fase === 'lista' || fase === 'enviando' || fase === 'sin_conexion')" class="alert alert-warning py-2 mb-3">
                 <i class="bi bi-exclamation-triangle-fill"></i>
-                Esta ubicación está a <strong x-text="textoDistancia"></strong> del lugar programado
-                (<span x-text="nombreLugar"></span>). ¿Está en el lugar del operativo?
-                <div class="small mt-1">Si no lo está, cancele o ingrese manualmente las coordenadas correctas.</div>
-            </div>
-
-            <!-- RN-09a: confirmación antes de enviar -->
-            <div x-show="fase === 'lista'" class="mb-3">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" :id="'confirmar-' + $id('captura')" x-model="confirmado"
-                           :class="errores.confirmacion && !confirmado && 'is-invalid'">
-                    <label class="form-check-label" :for="'confirmar-' + $id('captura')">
-                        Confirmo que el operativo está <strong>ahora</strong> en esta ubicación.
-                    </label>
-                    <div class="invalid-feedback" x-text="errores.confirmacion"></div>
-                </div>
-                <!-- Sin aviso de precisión: si la ubicación no es la correcta, se vuelve a tomar o se ingresa a mano (RN-09). -->
-                <div class="small mt-2">
-                    <button type="button" class="btn btn-link btn-sm p-0 align-baseline" @click="obtenerGps()"><i class="bi bi-arrow-repeat"></i> Volver a tomar la ubicación</button>
-                    <span class="text-body-secondary mx-1">·</span>
-                    <button type="button" class="btn btn-link btn-sm p-0 align-baseline" @click="pasarAManual()"><i class="bi bi-pencil"></i> Ingresar manualmente</button>
-                </div>
+                Está a <strong x-text="textoDistancia"></strong> del lugar programado.
             </div>
 
             <!-- GPS fuera de La Libertad -->
-            <div x-show="fase === 'fuera'" class="alert alert-danger mb-3">
+            <div x-show="fase === 'fuera'" class="alert alert-danger py-2 mb-3">
                 <p class="mb-2"><i class="bi bi-x-octagon-fill"></i> El GPS indica una ubicación fuera de La Libertad.</p>
-                <div class="d-grid gap-2 d-sm-flex">
-                    <button type="button" class="btn btn-danger boton-accion" @click="obtenerGps()"><i class="bi bi-arrow-repeat"></i> Reintentar</button>
-                    <button type="button" class="btn btn-outline-dark boton-accion" @click="pasarAManual()">Ingresar manualmente</button>
-                </div>
+                <button type="button" class="btn btn-danger btn-sm" @click="obtenerGps()"><i class="bi bi-arrow-repeat"></i> Reintentar</button>
+                <button type="button" class="btn btn-link btn-sm" @click="pasarAManual()">Ingresar manualmente</button>
             </div>
 
             <!-- El GPS falló -->
-            <div x-show="fase === 'error'" class="alert alert-danger mb-3">
-                <p class="fw-semibold mb-2"><i class="bi bi-geo-alt"></i> <span x-text="mensajeError"></span></p>
-                <div x-show="permisoDenegado" class="small mb-2">
-                    <p class="mb-1">Para activar la ubicación:</p>
-                    <ul class="mb-1 ps-3">
+            <div x-show="fase === 'error'" class="alert alert-danger py-2 mb-3">
+                <p class="mb-2"><i class="bi bi-geo-alt"></i> <span x-text="mensajeError"></span></p>
+                <button type="button" class="btn btn-danger btn-sm" @click="obtenerGps()"><i class="bi bi-arrow-repeat"></i> Reintentar</button>
+                <button type="button" class="btn btn-link btn-sm" @click="pasarAManual()">Ingresar manualmente</button>
+                <details x-show="permisoDenegado" class="small mt-2">
+                    <summary>¿Cómo activo la ubicación?</summary>
+                    <ul class="mb-1 mt-1 ps-3">
                         <li><strong>Android (Chrome):</strong> toque el candado <i class="bi bi-lock"></i> junto a la dirección → <em>Permisos</em> → <em>Ubicación</em> → <em>Permitir</em>.</li>
                         <li><strong>iPhone (Safari):</strong> <em>Ajustes</em> → <em>Privacidad y seguridad</em> → <em>Localización</em> → <em>Safari</em> → <em>Al usar la app</em>.</li>
                         <li>Verifique también que la ubicación (GPS) del celular esté encendida.</li>
                     </ul>
-                </div>
-                <div class="d-grid gap-2 d-sm-flex">
-                    <button type="button" class="btn btn-danger boton-accion" @click="obtenerGps()"><i class="bi bi-arrow-repeat"></i> Reintentar</button>
-                    <button type="button" class="btn btn-outline-dark boton-accion" @click="pasarAManual()">Ingresar manualmente</button>
-                </div>
+                </details>
             </div>
 
             <!-- Ingreso manual: coordenadas pegadas de Google Maps (RN-09) -->
@@ -142,12 +122,21 @@ declare(strict_types=1);
             <div x-show="errores.general" class="alert alert-danger py-2 mb-3" x-text="errores.general"></div>
         </div>
             </div>
-            <div class="modal-footer barra-modal">
-                <button type="button" class="btn btn-outline-secondary boton-accion flex-fill" @click="cancelar()" :disabled="bloqueado">Cancelar</button>
-                <button type="button" class="btn btn-institucional boton-accion flex-fill" :disabled="fase !== 'lista'" @click="enviar()">
-                    <span x-show="fase === 'enviando'" class="spinner-border spinner-border-sm" role="status"></span>
-                    <span x-text="fase === 'enviando' ? 'Enviando…' : <?= e(json_encode($captura['boton'])) ?>"></span>
+            <div class="modal-footer barra-modal flex-column align-items-stretch">
+                <!-- El botón es la confirmación: "Estoy aquí" (RN-09a). -->
+                <button type="button" class="btn btn-institucional btn-lg boton-accion" :disabled="fase !== 'lista'" @click="enviar()">
+                    <span x-show="fase === 'enviando' || fase === 'obteniendo'" class="spinner-border spinner-border-sm" role="status"></span>
+                    <span x-text="textoBoton(<?= e(json_encode($captura['boton'])) ?>)"></span>
                 </button>
+                <!-- Solo si la ubicación no es la correcta: volver a tomarla o ingresarla a mano (RN-09). -->
+                <div x-show="fase === 'lista'" class="text-center small">
+                    <button type="button" x-show="!otrasOpciones" class="btn btn-link btn-sm text-body-secondary" @click="otrasOpciones = true">¿No es mi ubicación?</button>
+                    <div x-show="otrasOpciones">
+                        <button type="button" class="btn btn-link btn-sm" @click="obtenerGps()"><i class="bi bi-arrow-repeat"></i> Volver a tomar</button>
+                        <span class="text-body-secondary">·</span>
+                        <button type="button" class="btn btn-link btn-sm" @click="pasarAManual()"><i class="bi bi-pencil"></i> Ingresar manualmente</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
