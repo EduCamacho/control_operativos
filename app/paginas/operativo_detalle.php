@@ -36,8 +36,13 @@ $configuracion_captura = static fn (string $accion): string => e(json_encode([
     'urlCoordenadas'  => armar_url('api/coordenadas'),
     'urlDespues'      => armar_url('operativos/ver', ['id' => $id]),
     'urlIngreso'      => armar_url('login'),
-    'precisionMaxima' => PRECISION_ADVERTENCIA_M,
     'limites'         => ['latitudMin' => LATITUD_MIN, 'latitudMax' => LATITUD_MAX, 'longitudMin' => LONGITUD_MIN, 'longitudMax' => LONGITUD_MAX],
+    // RN-09a: avisos antes de enviar. La distancia al lugar programado solo se compara al iniciar.
+    'desdePc'         => clasificar_dispositivo((string) ($_SERVER['HTTP_USER_AGENT'] ?? '')) === 'PC',
+    'lugarProgramado' => $accion === 'INICIAR' && $operativo['lugar_latitud'] !== null
+        ? ['nombre' => $operativo['lugar_programado'], 'latitud' => (float) $operativo['lugar_latitud'], 'longitud' => (float) $operativo['lugar_longitud']]
+        : null,
+    'distanciaLejos'  => DISTANCIA_LEJOS_LUGAR_M,
 ]));
 
 $turno = obtener_etiqueta_turno($operativo['turno']);
@@ -114,6 +119,7 @@ require RUTA_APP . '/vistas/cabecera.php';
                             <?= $actual['origen'] === 'MANUAL'
                                 ? '<span class="badge text-bg-warning">Manual</span>'
                                 : 'precisión ' . e($actual['precision_m'] ?? '?') . ' m' ?>
+                            <?= mostrar_avisos_ubicacion($actual) ?>
                         </div>
                         <a href="<?= e(armar_enlace_google_maps((float) $actual['latitud'], (float) $actual['longitud'])) ?>"
                            target="_blank" rel="noopener" class="d-inline-block small mt-1 enlace-institucional">

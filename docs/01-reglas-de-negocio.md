@@ -98,15 +98,21 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 - **RN-08** — **Validación de la ubicación**:
   - Se usa el GPS del navegador en alta precisión.
   - Se rechaza un punto fuera del rectángulo de La Libertad (latitud de −9.00 a −6.90, longitud de −79.80 a −76.80).
-  - Si la precisión es peor que 100 m, se muestra una advertencia y el usuario decide si reintenta o acepta.
-  - Siempre se guarda la precisión.
+  - La precisión **no se muestra ni se advierte** al capturar: para el usuario es irrelevante (decisión de Eduardo, 18/10/2026).
+  - Siempre se guarda la precisión, y se ve en la ficha y el recorrido.
 - **RN-09** — **Primero el GPS, y el ingreso manual como respaldo**:
   - Siempre se intenta primero el GPS. Si el permiso está denegado o el GPS no responde, el sistema muestra cómo activar la ubicación en el navegador y un botón **Reintentar**.
-  - Si el GPS falla, o si la precisión es peor que 100 m (lo habitual en una PC de escritorio), se ofrece **Ingresar coordenadas manualmente**. Está disponible para todos los roles.
+  - **Ingresar coordenadas manualmente** se ofrece si el GPS falla y también con la ubicación ya capturada (por ejemplo, desde una PC de escritorio). Está disponible para todos los roles.
   - En el ingreso manual, el usuario pega las coordenadas copiadas de Google Maps en un solo campo, y el sistema las separa en latitud y longitud (`parsear_coordenadas()`). Luego se muestran los dos campos ya llenos, para que el usuario los revise antes de guardar.
   - Formatos aceptados: `-8.1116, -79.0287`; la URL de Google Maps con `@-8.1116,-79.0287,17z`; y grados, minutos y segundos (`8°06'41.8"S 79°01'43.3"W`). La coma decimal de la configuración regional (`-8,1116`) también se acepta.
   - Cada ubicación guarda su **origen** (`GPS` o `MANUAL`). Las manuales no tienen precisión y se muestran con el distintivo "Manual" en el mapa, la ficha y las listas, para que el supervisor sepa que no las capturó el GPS.
   - Las coordenadas manuales de un operativo también se validan con el rectángulo de La Libertad (RN-08). Las del supervisor no (RN-15).
+- **RN-09a** — **Evitar registrar la ubicación equivocada** (decisión de Eduardo, 18/10/2026). Un operador puede iniciar el operativo desde la PC de la comisaría y registrar la comisaría como lugar del operativo. Por eso, al iniciar o registrar un nuevo punto:
+  - Siempre se pide **confirmar** que el operativo está ahora en la ubicación capturada.
+  - Si se usa una **PC** (lo decide el servidor por el navegador), se avisa que se registrará la ubicación de ese equipo.
+  - **Solo al iniciar**: si la ubicación está a **más de 500 m** del lugar programado, se avisa con la distancia.
+  - Los avisos **no bloquean**. Cada ubicación guarda el **dispositivo** (`CELULAR` o `PC`) y, en el inicio, la **distancia al lugar programado**. La ficha y el recorrido muestran los distintivos "Desde PC" y "A 3,2 km del lugar programado".
+  - En el nuevo punto no se compara con el lugar programado, porque el operativo se desplaza.
 - **RN-10** — **Nuevo punto**: solo en `EN_CURSO`. Requiere una ubicación (por GPS o manual, RN-09) y una **referencia obligatoria** (calle, avenida o sector). La última ubicación es la posición actual y el historial de puntos forma el recorrido. No hay límite de puntos.
 - **RN-11** — Todas las horas las pone el **servidor** (America/Lima), nunca el celular.
 - **RN-11a** — **Sin conexión de datos**: si el envío de un inicio, un punto o un cierre falla, el celular avisa al usuario, conserva lo capturado en pantalla y reintenta el envío (de forma automática cuando vuelve la conexión, o con el botón **Reintentar**). La hora registrada es la de llegada al servidor (RN-11).

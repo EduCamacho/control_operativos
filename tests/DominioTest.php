@@ -339,6 +339,58 @@ final class DominioTest extends TestCase
         $this->assertEqualsWithDelta(11, distancia_m(-8.1116, -79.0288, -8.1117, -79.0288), 1);
     }
 
+    // --- distancia al lugar programado (RN-09a) ------------------------------
+
+    public function test_distancia_al_lugar_programado(): void
+    {
+        $operativo = ['lugar_latitud' => '-8.1116000', 'lugar_longitud' => '-79.0288000'];
+        $this->assertSame(0, distancia_al_lugar_programado($operativo, -8.1116, -79.0288));
+        $this->assertEqualsWithDelta(11, distancia_al_lugar_programado($operativo, -8.1117, -79.0288), 1);
+    }
+
+    public function test_sin_coordenadas_del_lugar_no_hay_distancia(): void
+    {
+        $operativo = ['lugar_latitud' => null, 'lugar_longitud' => null];
+        $this->assertNull(distancia_al_lugar_programado($operativo, -8.1116, -79.0288));
+    }
+
+    public function test_lejos_del_lugar_desde_mas_de_500_m(): void
+    {
+        $this->assertFalse(lejos_del_lugar_programado(0));
+        $this->assertFalse(lejos_del_lugar_programado(500));
+        $this->assertTrue(lejos_del_lugar_programado(501));
+        $this->assertTrue(lejos_del_lugar_programado(3200));
+        $this->assertFalse(lejos_del_lugar_programado(null));
+    }
+
+    public function test_formatear_distancia(): void
+    {
+        $this->assertSame('0 m', formatear_distancia(0));
+        $this->assertSame('999 m', formatear_distancia(999));
+        $this->assertSame('1,0 km', formatear_distancia(1000));
+        $this->assertSame('3,2 km', formatear_distancia(3240));
+        $this->assertSame('12,5 km', formatear_distancia(12460));
+    }
+
+    /** @return array<string, array{string, string}> */
+    public static function dispositivos(): array
+    {
+        return [
+            'Android Chrome'  => ['Mozilla/5.0 (Linux; Android 14; SM-A146M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36', 'CELULAR'],
+            'iPhone Safari'   => ['Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1', 'CELULAR'],
+            'tableta Android' => ['Mozilla/5.0 (Linux; Android 13; SM-X200) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36', 'CELULAR'],
+            'Windows Chrome'  => ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36', 'PC'],
+            'Mac Safari'      => ['Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15', 'PC'],
+            'sin navegador'   => ['', 'PC'],
+        ];
+    }
+
+    #[DataProvider('dispositivos')]
+    public function test_clasificar_dispositivo(string $user_agent, string $esperado): void
+    {
+        $this->assertSame($esperado, clasificar_dispositivo($user_agent));
+    }
+
     // --- enlaces de Google Maps ---------------------------------------------
 
     public function test_enlace_usa_punto_decimal_aunque_el_locale_use_coma(): void

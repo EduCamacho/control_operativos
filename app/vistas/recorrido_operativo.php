@@ -30,6 +30,7 @@ $ocultos = max(0, $total_puntos - $puntos_visibles);
                         <?= $ubicacion['origen'] === 'MANUAL'
                             ? '<span class="badge text-bg-warning">Manual</span>'
                             : 'precisión ' . e($ubicacion['precision_m'] ?? '?') . ' m' ?>
+                        <?= mostrar_avisos_ubicacion($ubicacion) ?>
                         · <a href="<?= e(armar_enlace_google_maps((float) $ubicacion['latitud'], (float) $ubicacion['longitud'])) ?>"
                              target="_blank" rel="noopener" class="enlace-institucional">Ver en Google Maps</a>
                     </div>

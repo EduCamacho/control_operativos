@@ -33,6 +33,7 @@ const LONGITUD_MIN = -79.80;
 const LONGITUD_MAX = -76.80;
 
 const PRECISION_ADVERTENCIA_M = 100;
+const DISTANCIA_LEJOS_LUGAR_M = 500;
 const MAX_INTENTOS_FALLIDOS = 5;
 const MINUTOS_BLOQUEO = 15;
 const MAX_FUERZAS = 9999;
@@ -409,6 +410,42 @@ function distancia_m(float $lat1, float $lng1, float $lat2, float $lng2): int
     $d_lng = deg2rad($lng2 - $lng1);
     $a = sin($d_lat / 2) ** 2 + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($d_lng / 2) ** 2;
     return (int) round(2 * $radio_tierra_m * asin(min(1.0, sqrt($a))));
+}
+
+/**
+ * Distancia del inicio al lugar programado (RN-09a), o null si el operativo
+ * no tiene coordenadas del lugar (los creados antes de sql/006).
+ */
+function distancia_al_lugar_programado(array $operativo, float $latitud, float $longitud): ?int
+{
+    if ($operativo['lugar_latitud'] === null || $operativo['lugar_longitud'] === null) {
+        return null;
+    }
+    return distancia_m((float) $operativo['lugar_latitud'], (float) $operativo['lugar_longitud'], $latitud, $longitud);
+}
+
+/** RN-09a: más de 500 m del lugar programado. Solo se avisa, no se bloquea. */
+function lejos_del_lugar_programado(?int $distancia_m): bool
+{
+    return $distancia_m !== null && $distancia_m > DISTANCIA_LEJOS_LUGAR_M;
+}
+
+/**
+ * CELULAR o PC según el navegador (RN-09a). Las tabletas cuentan como celular;
+ * el iPad con Safari se presenta como Mac y queda como PC.
+ */
+function clasificar_dispositivo(string $user_agent): string
+{
+    return preg_match('/Mobi|Android|iPhone|iPad|iPod|Windows Phone/i', $user_agent) ? 'CELULAR' : 'PC';
+}
+
+/** "350 m" o "3,2 km" (coma decimal, como se lee en Perú). */
+function formatear_distancia(int $metros): string
+{
+    if ($metros < 1000) {
+        return $metros . ' m';
+    }
+    return str_replace('.', ',', sprintf('%.1F', $metros / 1000)) . ' km';
 }
 
 /** "-8.111600, -79.028800" para mostrar o volver a editar; '' si no hay coordenadas. */

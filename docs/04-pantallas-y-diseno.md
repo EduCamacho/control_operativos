@@ -54,7 +54,7 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - En la PC, dos columnas: a la izquierda la acción y el recorrido; a la derecha los datos.
 4. **Captura de ubicación** (al iniciar y al registrar un nuevo punto), en un **modal**: hoja inferior en el celular (sale desde abajo, hasta el 85 % de la altura) y centrado en la PC, con **Cancelar** y el botón de envío fijos al pie. Es estático (no se cierra al tocar fuera ni con Escape) y no se puede cerrar mientras hay un envío pendiente, para no perder la ubicación capturada.
    - Mientras obtiene el GPS muestra el mensaje "Obteniendo ubicación…" y luego la precisión lograda.
-   - Si la precisión es peor que 100 m, ofrece *Reintentar*, *Usar de todos modos* o *Ingresar manualmente*.
+   - No muestra la precisión. Con la ubicación capturada ofrece *Volver a tomar la ubicación* o *Ingresar manualmente*, y pide confirmar que el operativo está ahí (RN-09a).
    - Si el permiso está denegado o el GPS no responde, muestra los pasos para activar la ubicación en el navegador del celular, un botón **Reintentar** y la opción *Ingresar manualmente* (RN-09).
    - **Ingreso manual**: tiene un campo "Pegar coordenadas de Google Maps", con la ayuda "En Google Maps, mantén presionado el lugar (o haz clic derecho en la PC) y copia las coordenadas". Al pegar, se llenan solos los campos de latitud y longitud, que el usuario revisa. Hay un enlace **Ver en Google Maps** para comprobar el punto antes de guardar. Si las coordenadas caen fuera de La Libertad, se muestra el error y no se guardan.
    - Pide la referencia, que es obligatoria.

@@ -18,6 +18,12 @@ declare(strict_types=1);
                 <button type="button" class="btn-close btn-close-white" aria-label="Cerrar" @click="cancelar()" :disabled="bloqueado"></button>
             </div>
             <div class="modal-body">
+                <!-- RN-09a: desde la PC de la comisaría se registraría la ubicación de la comisaría. -->
+                <div x-show="desdePc" class="alert alert-warning py-2 mb-3">
+                    <i class="bi bi-pc-display"></i> <strong>Está usando una computadora.</strong>
+                    Se registrará la ubicación de este equipo, no la del operativo. Si el operativo está en otro lugar,
+                    use <em>Ingresar manualmente</em> con las coordenadas que le envíe el jefe del operativo.
+                </div>
                 <div class="mb-3">
                     <label class="form-label" :for="'referencia-' + $id('captura')">Referencia</label>
                     <input type="text" :id="'referencia-' + $id('captura')" x-ref="referencia" x-model="referencia" maxlength="255"
@@ -42,17 +48,29 @@ declare(strict_types=1);
                 </a>
             </div>
 
-            <!-- Precisión peor que 100 m -->
-            <div x-show="fase === 'imprecisa'" class="alert alert-warning mb-3">
-                <p class="mb-2">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                    La precisión es de <strong x-text="precision + ' m'"></strong> (lo recomendable es 100 m o menos).
-                    Al aire libre el GPS suele mejorar en unos segundos.
-                </p>
-                <div class="d-grid gap-2 d-sm-flex">
-                    <button type="button" class="btn btn-warning boton-accion" @click="obtenerGps()"><i class="bi bi-arrow-repeat"></i> Reintentar</button>
-                    <button type="button" class="btn btn-outline-dark boton-accion" @click="usarDeTodosModos()">Usar de todos modos</button>
-                    <button type="button" class="btn btn-outline-dark boton-accion" @click="pasarAManual()">Ingresar manualmente</button>
+            <!-- RN-09a: lejos del lugar programado (solo al iniciar). Solo se avisa. -->
+            <div x-show="lejosDelLugar && (fase === 'lista' || fase === 'enviando' || fase === 'sin_conexion')" class="alert alert-warning py-2 mb-3">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                Esta ubicación está a <strong x-text="textoDistancia"></strong> del lugar programado
+                (<span x-text="nombreLugar"></span>). ¿Está en el lugar del operativo?
+                <div class="small mt-1">Si no lo está, cancele o ingrese manualmente las coordenadas correctas.</div>
+            </div>
+
+            <!-- RN-09a: confirmación antes de enviar -->
+            <div x-show="fase === 'lista'" class="mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" :id="'confirmar-' + $id('captura')" x-model="confirmado"
+                           :class="errores.confirmacion && !confirmado && 'is-invalid'">
+                    <label class="form-check-label" :for="'confirmar-' + $id('captura')">
+                        Confirmo que el operativo está <strong>ahora</strong> en esta ubicación.
+                    </label>
+                    <div class="invalid-feedback" x-text="errores.confirmacion"></div>
+                </div>
+                <!-- Sin aviso de precisión: si la ubicación no es la correcta, se vuelve a tomar o se ingresa a mano (RN-09). -->
+                <div class="small mt-2">
+                    <button type="button" class="btn btn-link btn-sm p-0 align-baseline" @click="obtenerGps()"><i class="bi bi-arrow-repeat"></i> Volver a tomar la ubicación</button>
+                    <span class="text-body-secondary mx-1">·</span>
+                    <button type="button" class="btn btn-link btn-sm p-0 align-baseline" @click="pasarAManual()"><i class="bi bi-pencil"></i> Ingresar manualmente</button>
                 </div>
             </div>
 
