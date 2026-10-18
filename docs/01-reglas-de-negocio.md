@@ -108,7 +108,7 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
   - Cada ubicación guarda su **origen** (`GPS` o `MANUAL`). Las manuales no tienen precisión y se muestran con el distintivo "Manual" en el mapa, la ficha y las listas, para que el supervisor sepa que no las capturó el GPS.
   - Las coordenadas manuales de un operativo también se validan con el rectángulo de La Libertad (RN-08). Las del supervisor no (RN-15).
 - **RN-09a** — **Evitar registrar la ubicación equivocada** (decisión de Eduardo, 18/10/2026). Un operador puede iniciar el operativo desde la PC de la comisaría y registrar la comisaría como lugar del operativo. Por eso, al iniciar o registrar un nuevo punto:
-  - Siempre se **confirma** que el operativo está ahora en la ubicación capturada: el botón de envío dice **Estoy aquí** (sin casilla aparte, para que sea simple).
+  - Siempre se **confirma** que el operativo está ahora en la ubicación capturada: el botón de envío dice **Ubicación correcta · Iniciar** o **Ubicación correcta · Registrar punto** (sin casilla aparte, para que sea simple; confirma el punto, así que sirve también cuando se ingresan a mano las coordenadas que envía el jefe).
   - Si se usa una **PC** (lo decide el servidor por el navegador), se avisa que se registrará la ubicación de ese equipo.
   - **Solo al iniciar**: si la ubicación está a **más de 500 m** del lugar programado, se avisa con la distancia.
   - Los avisos **no bloquean**. Cada ubicación guarda el **dispositivo** (`CELULAR` o `PC`) y, en el inicio, la **distancia al lugar programado**. La ficha y el recorrido muestran los distintivos "Desde PC" y "A 3,2 km del lugar programado".

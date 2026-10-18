@@ -6,7 +6,7 @@
  * mientras hay un envío pendiente, para no perder la ubicación capturada.
  *
  * Pensado para el jefe del operativo: una pregunta y un botón. El botón
- * "Estoy aquí" es la confirmación (RN-09a); el resto solo aparece si hace falta.
+ * "Ubicación correcta" es la confirmación (RN-09a); el resto solo aparece si hace falta.
  *
  * Va dentro de un elemento con x-data="capturaUbicacion(...)". Espera:
  *   $captura = ['titulo' => ..., 'boton' => ...]
@@ -123,7 +123,7 @@ declare(strict_types=1);
         </div>
             </div>
             <div class="modal-footer barra-modal flex-column align-items-stretch">
-                <!-- El botón es la confirmación: "Estoy aquí" (RN-09a). -->
+                <!-- El botón es la confirmación: "Ubicación correcta" (RN-09a). -->
                 <button type="button" class="btn btn-institucional btn-lg boton-accion" :disabled="fase !== 'lista'" @click="enviar()">
                     <span x-show="fase === 'enviando' || fase === 'obteniendo'" class="spinner-border spinner-border-sm" role="status"></span>
                     <span x-text="textoBoton(<?= e(json_encode($captura['boton'])) ?>)"></span>

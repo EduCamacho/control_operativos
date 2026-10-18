@@ -8,7 +8,7 @@
  * 3. Si el GPS falla (permiso, sin señal, PC sin GPS), explica cómo activarlo y
  *    ofrece el ingreso manual: se pegan las coordenadas copiadas de Google Maps
  *    y el servidor las separa en latitud y longitud.
- * 4. El botón "Estoy aquí" es la confirmación; avisa si se usa una PC o si el
+ * 4. El botón "Ubicación correcta" es la confirmación; avisa si se usa una PC o si el
  *    inicio queda a más de 500 m del lugar programado (RN-09a).
  * 5. Envía con reintento si no hay conexión (envio.js).
  *
@@ -220,11 +220,11 @@ document.addEventListener('alpine:init', function () {
                 return config.accion === 'INICIAR';
             },
 
-            /** "Estoy aquí · Iniciar": tocarlo es confirmar la ubicación (RN-09a). */
+            /** "Ubicación correcta · Iniciar": tocarlo es confirmar la ubicación (RN-09a). */
             textoBoton(accion) {
                 if (this.fase === 'obteniendo') return 'Obteniendo ubicación…';
                 if (this.fase === 'enviando') return 'Enviando…';
-                return 'Estoy aquí · ' + accion;
+                return 'Ubicación correcta · ' + accion;
             },
 
             enviar() {

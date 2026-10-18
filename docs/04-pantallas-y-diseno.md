@@ -52,7 +52,7 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - **Recorrido** como línea de tiempo vertical, el punto más reciente arriba y resaltado, el primero marcado como "Inicio". Muestra los 5 más recientes y el botón **Ver los N puntos anteriores** despliega el resto. En el celular es la **última tarjeta** (después de los datos del operativo), porque puede crecer mucho.
    - **Datos del operativo** con ícono por dato (tipos, lugar programado con su enlace, jefe con el botón **Llamar** y fuerzas en tres recuadros con la cifra), y **Editar** en el encabezado de la tarjeta. **Eliminar** va al pie, discreto, solo cuando se permite (RN-06).
    - En la PC, dos columnas: a la izquierda la acción y el recorrido; a la derecha los datos.
-4. **Captura de ubicación** (al iniciar y al registrar un nuevo punto), en un **modal**: hoja inferior en el celular (sale desde abajo, hasta el 85 % de la altura) y centrado en la PC. Pensado para el jefe del operativo: **una pregunta y un botón**. Al pie hay un solo botón grande, **Estoy aquí · Iniciar** (o **Estoy aquí · Registrar punto**), que es la confirmación de la ubicación (RN-09a); se cierra con la ✕. Es estático (no se cierra al tocar fuera ni con Escape) y no se puede cerrar mientras hay un envío pendiente, para no perder la ubicación capturada.
+4. **Captura de ubicación** (al iniciar y al registrar un nuevo punto), en un **modal**: hoja inferior en el celular (sale desde abajo, hasta el 85 % de la altura) y centrado en la PC. Pensado para el jefe del operativo: **una pregunta y un botón**. Al pie hay un solo botón grande, **Ubicación correcta · Iniciar** (o **Ubicación correcta · Registrar punto**), que es la confirmación de la ubicación (RN-09a); se cierra con la ✕. Es estático (no se cierra al tocar fuera ni con Escape) y no se puede cerrar mientras hay un envío pendiente, para no perder la ubicación capturada.
    - Pregunta **¿Dónde está el operativo?** (la referencia): obligatoria al iniciar y opcional en el nuevo punto (RN-10). Solo al iniciar se pone el cursor ahí, para que en el nuevo punto el teclado no tape el botón.
    - Mientras obtiene el GPS, el botón dice "Obteniendo ubicación…" y está desactivado. Luego muestra el enlace "✓ Ver mi ubicación actual" (abre Google Maps), sin coordenadas ni precisión.
    - Debajo del botón, el enlace discreto **¿No es mi ubicación?** despliega *Volver a tomar* e *Ingresar manualmente*.
@@ -61,8 +61,9 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - **Ingreso manual**: tiene un campo "Pegar coordenadas de Google Maps", con la ayuda "En Google Maps, mantén presionado el lugar (o haz clic derecho en la PC) y copia las coordenadas". Al pegar, se llenan solos los campos de latitud y longitud, que el usuario revisa. Hay un enlace **Ver en Google Maps** para comprobar el punto antes de guardar. Si las coordenadas caen fuera de La Libertad, se muestra el error y no se guardan.
    - Si no hay conexión de datos al enviar, avisa "Sin conexión: se reintentará el envío", conserva lo capturado y reintenta solo cuando vuelve la señal o al pulsar **Reintentar** (RN-11a).
 5. **Finalizar**
-   - Un campo numérico por cada concepto de resultado, con 0 por defecto y botones − y +.
-   - Observaciones y número de nota informativa, ambos opcionales.
+   - Encabezado con la unidad, el turno y la hora de inicio real ("hace cuánto").
+   - **Resultados** como una lista compacta: una fila por concepto, con el nombre (y la descripción) a la izquierda y el contador − 0 + a la derecha, con 0 por defecto. Las filas con cantidad se resaltan en verde. En el encabezado de la tarjeta se ve el resultado en vivo: **Negativo** o **Positivo · N**.
+   - Número de nota informativa (con el prefijo "N°") y observaciones, ambos opcionales.
    - Al final pide confirmación.
 
 ## Rol SUPERVISOR (General)
