@@ -878,11 +878,76 @@ final class DominioTest extends TestCase
         $this->assertNull($r['bloqueado_hasta']);
     }
 
-    public function test_el_quinto_intento_bloquea_15_min_y_reinicia_el_contador(): void
+    public function test_el_quinto_intento_espera_1_min_y_el_contador_sigue(): void
     {
         $r = calcular_intento_fallido(4, self::lima('2026-10-17 10:00:00'));
-        $this->assertSame(0, $r['intentos']);
+        $this->assertSame(5, $r['intentos']);
+        $this->assertSame('2026-10-17 10:01:00', $r['bloqueado_hasta']->format(FORMATO_FECHA_HORA));
+    }
+
+    public function test_la_espera_crece_hasta_15_min(): void
+    {
+        $esperas = array_map(static fn (int $n): int => minutos_de_espera($n), range(1, 12));
+        $this->assertSame([0, 0, 0, 0, 1, 2, 4, 8, 15, 15, 15, 15], $esperas);
+    }
+
+    public function test_el_contador_no_pasa_de_99(): void
+    {
+        $r = calcular_intento_fallido(99, self::lima('2026-10-17 10:00:00'));
+        $this->assertSame(99, $r['intentos']);
         $this->assertSame('2026-10-17 10:15:00', $r['bloqueado_hasta']->format(FORMATO_FECHA_HORA));
+    }
+
+    // --- límite por IP e IP real (RN-19a) -------------------------------------
+
+    public function test_ip_excede_desde_15_fallidos(): void
+    {
+        $this->assertFalse(ip_excede_intentos(14));
+        $this->assertTrue(ip_excede_intentos(15));
+    }
+
+    public function test_ip_en_rango_ipv4(): void
+    {
+        $this->assertTrue(ip_en_rango('104.16.0.1', '104.16.0.0/13'));
+        $this->assertTrue(ip_en_rango('104.23.255.255', '104.16.0.0/13'));
+        $this->assertFalse(ip_en_rango('104.24.0.0', '104.16.0.0/13'));
+        $this->assertTrue(ip_en_rango('190.93.240.5', '190.93.240.0/20'));
+    }
+
+    public function test_ip_en_rango_ipv6_y_mezclas(): void
+    {
+        $this->assertTrue(ip_en_rango('2606:4700:10::6816:1', '2606:4700::/32'));
+        $this->assertFalse(ip_en_rango('2606:4701::1', '2606:4700::/32'));
+        $this->assertTrue(ip_en_rango('2a06:98c7::1', '2a06:98c0::/29'));
+        $this->assertFalse(ip_en_rango('2a06:98c8::1', '2a06:98c0::/29'));
+        $this->assertFalse(ip_en_rango('104.16.0.1', '2606:4700::/32'));
+        $this->assertFalse(ip_en_rango('no-es-ip', '104.16.0.0/13'));
+    }
+
+    public function test_cf_connecting_ip_solo_si_viene_de_cloudflare(): void
+    {
+        $this->assertSame('181.65.10.20', obtener_ip_cliente(['REMOTE_ADDR' => '172.70.1.1', 'HTTP_CF_CONNECTING_IP' => '181.65.10.20']));
+        // Alguien que llama directo al servidor no puede inventar su IP.
+        $this->assertSame('200.48.1.1', obtener_ip_cliente(['REMOTE_ADDR' => '200.48.1.1', 'HTTP_CF_CONNECTING_IP' => '1.2.3.4']));
+        $this->assertSame('172.70.1.1', obtener_ip_cliente(['REMOTE_ADDR' => '172.70.1.1', 'HTTP_CF_CONNECTING_IP' => 'basura']));
+        $this->assertSame('127.0.0.1', obtener_ip_cliente(['REMOTE_ADDR' => '127.0.0.1']));
+        $this->assertSame('', obtener_ip_cliente([]));
+    }
+
+    // --- duración de la sesión (RN-18) ---------------------------------------
+
+    public function test_sesion_vence_por_inactividad(): void
+    {
+        // ADMIN: 30 min sin actividad, 8 h como máximo.
+        $this->assertFalse(sesion_vencida(10_000 + 1800, 10_000, 10_000, 1800, 28800));
+        $this->assertTrue(sesion_vencida(10_000 + 1801, 10_000, 10_000, 1800, 28800));
+    }
+
+    public function test_sesion_vence_por_tiempo_maximo_aunque_haya_actividad(): void
+    {
+        $ingreso = 10_000;
+        $this->assertFalse(sesion_vencida($ingreso + 28800, $ingreso, $ingreso + 28790, 1800, 28800));
+        $this->assertTrue(sesion_vencida($ingreso + 28801, $ingreso, $ingreso + 28790, 1800, 28800));
     }
 
     public function test_cuenta_bloqueada_hasta_la_hora_indicada(): void
@@ -1032,6 +1097,25 @@ final class DominioTest extends TestCase
     }
 
     // --- calcular_cambios ---------------------------------------------------
+
+    public function test_coordenadas_iguales_con_ceros_de_relleno_no_son_cambio(): void
+    {
+        $antes = ['lugar_latitud' => '-8.1050000', 'lugar_longitud' => '-79.0300000'];
+        $this->assertSame([], calcular_cambios($antes, ['lugar_latitud' => -8.105, 'lugar_longitud' => -79.03]));
+    }
+
+    public function test_coordenada_distinta_si_es_cambio(): void
+    {
+        $cambios = calcular_cambios(['lugar_latitud' => '-8.1050000'], ['lugar_latitud' => -8.1051]);
+        $this->assertSame(['lugar_latitud' => ['antes' => '-8.1050000', 'despues' => -8.1051]], $cambios);
+    }
+
+    public function test_textos_de_digitos_se_comparan_tal_cual(): void
+    {
+        // Una nota informativa con cero adelante no es la misma.
+        $this->assertArrayHasKey('nota_informativa', calcular_cambios(['nota_informativa' => '0123'], ['nota_informativa' => '123']));
+        $this->assertSame([], calcular_cambios(['jefe_celular' => '987654321'], ['jefe_celular' => '987654321']));
+    }
 
     public function test_solo_devuelve_los_campos_que_cambiaron(): void
     {
@@ -1281,6 +1365,30 @@ final class DominioTest extends TestCase
     {
         $r = validar_control(['resultado' => 'EXCELENTE', 'observacion' => str_repeat('a', 5001)]);
         $this->assertEqualsCanonicalizing(['resultado', 'observacion', 'id_envio'], array_keys($r['errores']));
+    }
+
+    // --- restaurar_segundos -------------------------------------------------
+
+    public function test_hora_real_sin_cambios_conserva_los_segundos(): void
+    {
+        $this->assertSame('2026-10-18T12:20:33', restaurar_segundos('2026-10-18T12:20', '2026-10-18 12:20:33'));
+        $r = validar_ejecucion(
+            ['estado' => 'FINALIZADO', 'inicio_real' => '2026-10-18T11:02:00', 'fin_real' => restaurar_segundos('2026-10-18T12:20', '2026-10-18 12:20:33')],
+            true,
+            self::lima('2026-10-18 13:00:00'),
+        );
+        $this->assertSame('2026-10-18 12:20:33', $r['datos']['fin_real']);
+    }
+
+    public function test_hora_real_cambiada_usa_la_nueva(): void
+    {
+        $this->assertSame('2026-10-18T12:25', restaurar_segundos('2026-10-18T12:25', '2026-10-18 12:20:33'));
+        $this->assertSame('', restaurar_segundos('', '2026-10-18 12:20:33'));
+    }
+
+    public function test_sin_hora_guardada_usa_la_enviada(): void
+    {
+        $this->assertSame('2026-10-18T12:20', restaurar_segundos('2026-10-18T12:20', null));
     }
 
     // --- convertir_fecha_hora_local -----------------------------------------

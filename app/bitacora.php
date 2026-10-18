@@ -23,7 +23,7 @@ function registrar_bitacora(
             'entidad'    => $entidad,
             'entidad_id' => $entidad_id,
             'detalle'    => $detalle === [] ? null : json_encode($detalle, JSON_UNESCAPED_UNICODE),
-            'ip'         => $_SERVER['REMOTE_ADDR'] ?? null,
+            'ip'         => obtener_ip_cliente($_SERVER) ?: null, // la real, también detrás de Cloudflare
             'user_agent' => mb_substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255) ?: null,
         ],
     );

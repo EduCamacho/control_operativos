@@ -134,7 +134,10 @@ $texto_guardar = $actual === null ? 'Programar operativo' : 'Guardar cambios';
     <button type="button" class="btn btn-institucional boton-accion flex-fill" x-show="paso < 4" @click="siguiente()">
         <span x-text="editando ? 'Listo' : (paso === 3 ? 'Revisar' : 'Siguiente')"></span> <i class="bi bi-arrow-right"></i>
     </button>
-    <button type="submit" class="btn btn-institucional boton-accion flex-fill" x-show="paso === 4" x-cloak>
-        <i class="bi bi-check-lg"></i> <?= e($texto_guardar) ?>
+    <!-- Se desactiva al enviar: un segundo toque no manda el formulario otra vez. -->
+    <button type="submit" class="btn btn-institucional boton-accion flex-fill" x-show="paso === 4" x-cloak :disabled="enviando">
+        <span x-show="enviando" class="spinner-border spinner-border-sm" role="status"></span>
+        <i x-show="!enviando" class="bi bi-check-lg"></i>
+        <span x-text="enviando ? 'Guardando…' : <?= e(json_encode($texto_guardar)) ?>"></span>
     </button>
 </div>

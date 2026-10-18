@@ -31,7 +31,8 @@ erDiagram
 | `operativo_ubicaciones` | Puntos del recorrido | La última por `registrado_en` es la posición actual. `origen` es `GPS` (con precisión en metros) o `MANUAL` (sin precisión), RN-09. |
 | `operativo_resultados` | Cantidad por concepto | Clave primaria `(operativo_id, concepto_resultado_id)`. Se crean al finalizar. |
 | `controles_inopinados` | Controles del General | Resultado y observación. Desde el 17/10/2026 no se guardan la ubicación del supervisor ni la distancia (puede controlar con un dron); esas columnas quedan para los controles anteriores. |
-| `bitacora` | Auditoría de acciones | Es obligatoria porque las cuentas de unidad son compartidas (RN-17). |
+| `bitacora` | Auditoría de acciones | Es obligatoria porque las cuentas de unidad son compartidas (RN-17). La IP es la real del visitante, también detrás de Cloudflare. |
+| `intentos_ingreso` | Ingresos fallidos por IP (RN-19a) | `motivo`: `CLAVE`, `TRAMPA` (campo trampa lleno) o `VERIFICACION` (Turnstile). Se cuentan los de los últimos 15 minutos por IP; los de más de un día se borran al registrar uno nuevo (no hay cron). Se agrega con `sql/011`. |
 
 ## Decisiones de diseño
 

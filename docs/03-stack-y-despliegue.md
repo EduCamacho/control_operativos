@@ -50,7 +50,7 @@ En cPanel, crear un subdominio (por ejemplo `operativos.tudominio.com`) con el *
 
 ## Configuración crítica en hosting compartido
 
-- **Sesiones de 12 horas (RN-18).** En un hosting compartido, la limpieza de sesiones de otros sitios del servidor puede borrar las tuyas a los ~24 minutos. Por eso hay que usar una carpeta propia y fijar los tiempos antes de `session_start()`:
+- **Sesiones de hasta 12 horas sin actividad (RN-18).** En un hosting compartido, la limpieza de sesiones de otros sitios del servidor puede borrar las tuyas a los ~24 minutos. Por eso hay que usar una carpeta propia y fijar los tiempos antes de `session_start()`:
   ```php
   ini_set('session.save_path', __DIR__.'/almacen/sesiones');
   ini_set('session.gc_maxlifetime', 43200);
@@ -70,10 +70,27 @@ En cPanel, crear un subdominio (por ejemplo `operativos.tudominio.com`) con el *
 - Todas las consultas con **PDO y sentencias preparadas**, sin concatenar SQL.
 - **Escapar toda salida** con el helper `e()` (`htmlspecialchars`).
 - **Token CSRF** en todos los POST.
-- `password_hash()` y `password_verify()`, `session_regenerate_id(true)` al ingresar, y bloqueo tras 5 intentos fallidos (RN-19).
+- `password_hash()` y `password_verify()`, `session_regenerate_id(true)` al ingresar, y espera creciente de la cuenta desde el 5.º intento fallido (RN-19).
+- **Defensas del ingreso** (RN-19a, `procesar_ingreso()`), en este orden: límite por IP (tabla `intentos_ingreso`), campo trampa para bots, Cloudflare Turnstile y, al final, usuario y clave.
+- **IP real** con `obtener_ip_cliente()`: detrás de Cloudflare se toma `CF-Connecting-IP`, pero solo si la petición llega desde un rango de Cloudflare (`RANGOS_CLOUDFLARE` en `app/dominio.php`; revisar https://www.cloudflare.com/ips/ si Cloudflare los cambia). La bitácora usa esa IP.
+- **Cabeceras**: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS en producción, `X-Robots-Tag: noindex` (y `public/robots.txt`), y la **CSP** de `armar_politica_contenido()`. La CSP empieza en modo informe (`CSP_APLICAR = false`): revisar la consola del navegador en el ingreso, las pantallas de la unidad y el mapa del supervisor, y recién entonces poner `true`.
 - **Toda consulta de una cuenta UNIDAD se filtra por `unidad_de_sesion()` en el servidor (RN-16)**. Nunca se confía en un `unidad_id` que llegue del navegador.
 - Las horas las pone el servidor (RN-11). Del navegador solo se aceptan latitud, longitud y precisión, y se validan con `dentro_de_la_libertad()`.
 - Se registra en bitácora cada acción sobre operativos, usuarios y controles.
+
+## Cloudflare (delante del servidor)
+
+El dominio pasa por Cloudflare (plan gratuito). Configuración en el panel de Cloudflare:
+
+1. **DNS**: el registro del subdominio con la nube **naranja** (proxy activado).
+2. **SSL/TLS**: modo **Full (strict)**. En cPanel, el certificado de AutoSSL sigue siendo necesario.
+3. **Turnstile**: en *Turnstile → Add widget*, el dominio del sistema y el modo **Managed**. Copiar la *Site key* y la *Secret key* en `TURNSTILE_SITE_KEY` y `TURNSTILE_SECRET_KEY` de `app/config.php`. La secreta no se comparte ni se versiona. Son dos valores **distintos**.
+   - Las claves reales solo funcionan en los dominios del widget. **En local** se usan las claves de prueba de Cloudflare (ver `app/config.ejemplo.php`).
+   - Si la verificación no carga, el ingreso muestra un aviso con un **código para soporte**: `110200` = dominio no autorizado en el widget (o claves reales en local); `sin-conexion` = el script de Cloudflare no llegó a cargar (bloqueador o sin red); otros códigos, ver la documentación de Turnstile.
+4. **Bloqueo por país** (decisión de Eduardo, 18/10/2026): en *Security → WAF → Custom rules*, regla "Solo Perú": si `ip.src.country ne "PE"`, acción **Block**. Quien esté fuera del Perú no puede ingresar.
+5. **Límite de peticiones al ingreso**: en *Security → WAF → Rate limiting rules*, si la ruta es `/login` y el método `POST`, más de 10 peticiones en 1 minuto por IP → **Block** durante 10 minutos. Es un primer filtro; el sistema tiene además su propio límite (RN-19a).
+6. **Bots**: en *Security → Bots*, activar **Bot Fight Mode**.
+7. **Origen solo para Cloudflare** (recomendado): que el servidor solo acepte conexiones desde las IP de Cloudflare, para que nadie se salte estas defensas llamando directo a la IP del hosting. En cPanel no siempre se puede en el firewall; se puede con un `Require ip` de los rangos de Cloudflare en `public/.htaccess`. Probarlo primero, porque un error deja el sistema fuera de línea.
 
 ## Lógica de dominio (`app/dominio.php`, con tests)
 
@@ -122,13 +139,14 @@ Son funciones puras, sin acceso a la base de datos, y cada una tiene sus tests e
 3. **Base de datos**: en *Bases de datos MySQL*:
    - Crear la base (por ejemplo `usuario_operativos`) y un usuario con clave larga.
    - Dar al usuario solo **SELECT, INSERT, UPDATE y DELETE** sobre esa base. Los cambios de estructura se aplican desde phpMyAdmin con la cuenta de cPanel, no con este usuario.
-4. **Esquema**: en phpMyAdmin, elegir la base e importar **en orden** `sql/001_esquema.sql`, `002_datos_iniciales.sql`, `003_madrugada_origen_sesion.sql`, `004_id_envio_ubicaciones.sql`, `005_id_envio_controles.sql`, `006_coordenadas_lugar_programado.sql`, `007_quitar_nombre_plan.sql`, `008_varios_operativos_por_turno.sql`, `009_dispositivo_distancia_ubicaciones.sql` y `010_referencia_opcional_ubicaciones.sql`. Anotar en la tabla de abajo cuáles se aplicaron.
+4. **Esquema**: en phpMyAdmin, elegir la base e importar **en orden** `sql/001_esquema.sql`, `002_datos_iniciales.sql`, `003_madrugada_origen_sesion.sql`, `004_id_envio_ubicaciones.sql`, `005_id_envio_controles.sql`, `006_coordenadas_lugar_programado.sql`, `007_quitar_nombre_plan.sql`, `008_varios_operativos_por_turno.sql`, `009_dispositivo_distancia_ubicaciones.sql`, `010_referencia_opcional_ubicaciones.sql` y `011_intentos_ingreso.sql`. Anotar en la tabla de abajo cuáles se aplicaron.
 5. **Archivos**: en el *Administrador de archivos*, crear `/home/USUARIO/control_operativos/`, subir el `.zip` ahí y usar *Extract*. Borrar el `.zip` después.
 6. **Configuración**: copiar `app/config.ejemplo.php` como `app/config.php` y completar:
    - `ENTORNO = 'produccion'` y `URL_BASE = ''`.
    - `BD_HOST` (normalmente `localhost`), `BD_NOMBRE`, `BD_USUARIO` y `BD_CLAVE` del paso 3.
    - `GOOGLE_MAPS_API_KEY` y `GOOGLE_MAPS_MAP_ID` de producción.
-   - Tolerancias (15, 30 y 60 min) y `DURACION_SESION_S` (43200 = 12 h).
+   - Tolerancias (15, 30 y 60 min), `SESION_INACTIVIDAD_S` y `SESION_MAXIMA_S` por rol (RN-18; si faltan, se usan los valores de `config.ejemplo.php`) y `DURACION_SESION_S` (43200 = 12 h: vida de la cookie, al menos la mayor inactividad).
+   - Cloudflare Turnstile: `TURNSTILE_SITE_KEY` y `TURNSTILE_SECRET_KEY` (ver "Cloudflare"), y `CSP_APLICAR` (empieza en `false`).
    - Ayuda de las unidades: `SOPORTE_NOMBRE`, `SOPORTE_CELULAR`, `SOPORTE_WHATSAPP` y `VIDEO_TUTORIAL_UNIDAD_URL` (video de YouTube subido como "No listado"). Si un `config.php` ya creado no las tiene, el sistema las toma vacías y la Ayuda indica consultar al administrador; para completarlas, agregarlas a mano en el servidor.
 7. **Permisos**: `app/almacen/sesiones/` y `app/almacen/registros/` deben poder escribirse por PHP (755 suele bastar en cPanel). `app/config.php` con 600 o 640.
 8. **PHP**: en *MultiPHP Manager*, elegir 8.2 o superior para el subdominio.
@@ -180,3 +198,4 @@ No hay tareas programadas (cron), así que el respaldo es manual: al menos una v
 | `008_varios_operativos_por_turno.sql` | | |
 | `009_dispositivo_distancia_ubicaciones.sql` | | |
 | `010_referencia_opcional_ubicaciones.sql` | | |
+| `011_intentos_ingreso.sql` | | |

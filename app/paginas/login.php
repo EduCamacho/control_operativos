@@ -11,15 +11,15 @@ $nombre_usuario = '';
 if (es_post()) {
     verificar_csrf();
     $nombre_usuario = trim((string) ($_POST['usuario'] ?? ''));
-    $clave = (string) ($_POST['clave'] ?? '');
-
-    if ($nombre_usuario === '' || $clave === '') {
-        $error = 'Ingrese su usuario y su clave.';
-    } else {
-        $error = intentar_ingreso($nombre_usuario, $clave);
-        if ($error === null) {
-            redirigir('');
-        }
+    // Defensas del ingreso: límite por IP, campo trampa y Turnstile (RN-19a).
+    $error = procesar_ingreso(
+        $nombre_usuario,
+        (string) ($_POST['clave'] ?? ''),
+        trim((string) ($_POST['sitio_web'] ?? '')),
+        (string) ($_POST['cf-turnstile-response'] ?? ''),
+    );
+    if ($error === null) {
+        redirigir('');
     }
 }
 
@@ -59,8 +59,40 @@ require RUTA_APP . '/vistas/cabecera.php';
                     </button>
                 </div>
             </div>
+            <!-- Trampa para bots (honeypot): invisible para las personas, que no la llenan (RN-19a). -->
+            <div class="campo-trampa" aria-hidden="true">
+                <label for="sitio_web">Sitio web</label>
+                <input type="text" id="sitio_web" name="sitio_web" tabindex="-1" autocomplete="off" value="">
+            </div>
+            <?php if (TURNSTILE_SITE_KEY !== ''): ?>
+                <!-- Cloudflare Turnstile: casi siempre invisible; solo pide un clic si duda. -->
+                <div class="cf-turnstile mb-3" data-sitekey="<?= e(TURNSTILE_SITE_KEY) ?>" data-language="es"
+                     data-appearance="interaction-only" data-action="login"
+                     data-error-callback="alFallarVerificacion" data-unsupported-callback="alFallarVerificacion"></div>
+                <!-- Si la verificación no carga, se avisa: si no, el ingreso falla sin explicación (RN-19a). -->
+                <div id="aviso-verificacion" class="alert alert-warning small py-2 mb-3" role="alert" hidden>
+                    <i class="bi bi-shield-exclamation"></i>
+                    No se pudo cargar la verificación de seguridad. Recargue la página o pruebe con otra red
+                    (datos móviles o wifi).<span id="codigo-verificacion" class="d-block text-body-secondary mt-1"></span>
+                </div>
+            <?php endif; ?>
             <button type="submit" class="btn btn-success btn-lg w-100 boton-accion">Ingresar</button>
         </form>
+        <?php if (TURNSTILE_SITE_KEY !== ''): ?>
+            <script>
+                // Turnstile llama a esta función si falla (dominio no autorizado, navegador antiguo, sin red);
+                // también se usa si su script no llega a cargar (bloqueador o sin conexión).
+                function alFallarVerificacion(codigo) {
+                    document.getElementById('aviso-verificacion').hidden = false;
+                    if (codigo) {
+                        document.getElementById('codigo-verificacion').textContent = 'Código para soporte: ' + codigo;
+                    }
+                    return true; // Turnstile no lanza el error en la consola: ya se avisó.
+                }
+            </script>
+            <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer
+                    onerror="alFallarVerificacion('sin-conexion')"></script>
+        <?php endif; ?>
         <p class="small text-body-secondary text-center mt-4">Creado por la UNITIC - REGPOL LA LIBERTAD</p>
     </div>
 </div>

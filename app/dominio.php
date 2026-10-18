@@ -35,7 +35,23 @@ const LONGITUD_MAX = -76.80;
 const PRECISION_ADVERTENCIA_M = 100;
 const DISTANCIA_LEJOS_LUGAR_M = 500;
 const MAX_INTENTOS_FALLIDOS = 5;
-const MINUTOS_BLOQUEO = 15;
+const MINUTOS_BLOQUEO = 15;          // espera máxima de la cuenta (RN-19)
+const MAX_FALLIDOS_POR_IP = 15;      // por conexión, en la ventana de abajo (RN-19a)
+const VENTANA_FALLIDOS_IP_MIN = 15;
+
+/**
+ * Rangos de IP de Cloudflare (https://www.cloudflare.com/ips/, revisados el
+ * 18/10/2026). Solo si la petición llega desde uno de ellos se confía en la
+ * cabecera CF-Connecting-IP; si Cloudflare agrega rangos, hay que sumarlos aquí.
+ */
+const RANGOS_CLOUDFLARE = [
+    '173.245.48.0/20', '103.21.244.0/22', '103.22.200.0/22', '103.31.4.0/22',
+    '141.101.64.0/18', '108.162.192.0/18', '190.93.240.0/20', '188.114.96.0/20',
+    '197.234.240.0/22', '198.41.128.0/17', '162.158.0.0/15', '104.16.0.0/13',
+    '104.24.0.0/14', '172.64.0.0/13', '131.0.72.0/22',
+    '2400:cb00::/32', '2606:4700::/32', '2803:f800::/32', '2405:b500::/32',
+    '2405:8100::/32', '2a06:98c0::/29', '2c0f:f248::/32',
+];
 const MAX_FUERZAS = 9999;
 const MAX_CANTIDAD_RESULTADO = 9999;
 const MAX_DIGITOS_NOTA = 20;
@@ -876,11 +892,90 @@ function es_resultado_negativo(array $cantidades): bool
  */
 function calcular_intento_fallido(int $intentos_previos, DateTimeImmutable $ahora): array
 {
-    $intentos = $intentos_previos + 1;
-    if ($intentos >= MAX_INTENTOS_FALLIDOS) {
-        return ['intentos' => 0, 'bloqueado_hasta' => $ahora->modify('+' . MINUTOS_BLOQUEO . ' minutes')];
+    // El contador sigue creciendo (hasta 99, cabe en la columna) para que la espera aumente.
+    $intentos = min(99, $intentos_previos + 1);
+    $minutos = minutos_de_espera($intentos);
+    return [
+        'intentos'        => $intentos,
+        'bloqueado_hasta' => $minutos === 0 ? null : $ahora->modify("+$minutos minutes"),
+    ];
+}
+
+/**
+ * Espera creciente de la cuenta (RN-19): sin espera hasta el 4.º fallo; desde el
+ * 5.º, 1, 2, 4 y 8 minutos, y luego 15 como máximo. Así un atacante no puede
+ * dejar a una unidad sin acceso por mucho tiempo con pocos intentos.
+ */
+function minutos_de_espera(int $intentos): int
+{
+    if ($intentos < MAX_INTENTOS_FALLIDOS) {
+        return 0;
     }
-    return ['intentos' => $intentos, 'bloqueado_hasta' => null];
+    return min(MINUTOS_BLOQUEO, 2 ** min(10, $intentos - MAX_INTENTOS_FALLIDOS));
+}
+
+/** RN-19a: demasiados fallos desde la misma conexión en la ventana. */
+function ip_excede_intentos(int $fallidos_recientes): bool
+{
+    return $fallidos_recientes >= MAX_FALLIDOS_POR_IP;
+}
+
+/** IPv4 o IPv6 dentro de un rango CIDR ('104.16.0.0/13', '2606:4700::/32'). */
+function ip_en_rango(string $ip, string $rango): bool
+{
+    [$red, $bits] = explode('/', $rango) + [1 => null];
+    $ip_binaria = @inet_pton($ip);
+    $red_binaria = @inet_pton($red);
+    if ($ip_binaria === false || $red_binaria === false || strlen($ip_binaria) !== strlen($red_binaria)) {
+        return false;
+    }
+    $bits = $bits === null ? strlen($ip_binaria) * 8 : (int) $bits;
+    $bytes_completos = intdiv($bits, 8);
+    if (substr($ip_binaria, 0, $bytes_completos) !== substr($red_binaria, 0, $bytes_completos)) {
+        return false;
+    }
+    $resto = $bits % 8;
+    if ($resto === 0) {
+        return true;
+    }
+    $mascara = (0xFF << (8 - $resto)) & 0xFF;
+    return (ord($ip_binaria[$bytes_completos]) & $mascara) === (ord($red_binaria[$bytes_completos]) & $mascara);
+}
+
+function es_ip_de_cloudflare(string $ip): bool
+{
+    foreach (RANGOS_CLOUDFLARE as $rango) {
+        if (ip_en_rango($ip, $rango)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * IP real del visitante (RN-19a). Detrás de Cloudflare, REMOTE_ADDR es de
+ * Cloudflare y la del visitante viene en CF-Connecting-IP; esa cabecera solo se
+ * cree si la petición llegó desde Cloudflare, porque cualquiera puede enviarla.
+ *
+ * @param array<string, mixed> $servidor $_SERVER
+ */
+function obtener_ip_cliente(array $servidor): string
+{
+    $remota = (string) ($servidor['REMOTE_ADDR'] ?? '');
+    $de_cloudflare = trim((string) ($servidor['HTTP_CF_CONNECTING_IP'] ?? ''));
+    if ($de_cloudflare !== '' && filter_var($de_cloudflare, FILTER_VALIDATE_IP) && es_ip_de_cloudflare($remota)) {
+        return $de_cloudflare;
+    }
+    return $remota;
+}
+
+/**
+ * RN-18: la sesión vence por inactividad o por tiempo máximo desde el ingreso,
+ * con límites distintos por rol (app/config.php). Tiempos en segundos (time()).
+ */
+function sesion_vencida(int $ahora, int $ingreso, int $ultima_actividad, int $inactividad_s, int $maxima_s): bool
+{
+    return $ahora - $ultima_actividad > $inactividad_s || $ahora - $ingreso > $maxima_s;
 }
 
 function cuenta_bloqueada(string|DateTimeInterface|null $bloqueado_hasta, DateTimeImmutable $ahora): bool
@@ -1092,6 +1187,20 @@ function convertir_fecha_hora_local(string $valor): ?DateTimeImmutable
 }
 
 /**
+ * El campo datetime-local solo tiene horas y minutos: si ADMIN no cambió la hora
+ * real, se devuelve la guardada con sus segundos para no alterarla (RN-11).
+ * Si la cambió, se devuelve lo enviado.
+ */
+function restaurar_segundos(string $enviado, ?string $guardado): string
+{
+    if ($guardado === null || $guardado === '') {
+        return $enviado;
+    }
+    $guardada = convertir_a_fecha_hora($guardado);
+    return trim($enviado) === $guardada->format('Y-m-d\TH:i') ? $guardada->format('Y-m-d\TH:i:s') : $enviado;
+}
+
+/**
  * Estado y horas reales que fija ADMIN al corregir un operativo (RN-05).
  * Mantiene la coherencia del ciclo de vida: PROGRAMADO sin horas reales ni
  * puntos; EN_CURSO con inicio y sin fin; FINALIZADO con inicio y fin.
@@ -1165,7 +1274,8 @@ function validar_motivo(string $motivo): ?string
 /**
  * Campos que cambiaron, para la bitácora: ['campo' => ['antes' => x, 'despues' => y]].
  * Compara como texto, para que 5 y '5' (como vienen de la base de datos) sean iguales.
- * Solo revisa las claves de $despues.
+ * Los decimales se comparan sin ceros de relleno: la base devuelve '-8.1050000' y el
+ * formulario -8.105, y son el mismo valor. Solo revisa las claves de $despues.
  *
  * @return array<string, array{antes: mixed, despues: mixed}>
  */
@@ -1179,6 +1289,11 @@ function calcular_cambios(array $antes, array $despues): array
         }
         if (is_bool($valor)) {
             return (string) (int) $valor;
+        }
+        // Solo números con decimales (coordenadas): un texto de dígitos como la nota '0123' se deja igual.
+        if (is_float($valor) || (is_string($valor) && is_numeric($valor) && str_contains($valor, '.'))) {
+            $texto = rtrim(rtrim(sprintf('%.7F', (float) $valor), '0'), '.');
+            return $texto === '-0' ? '0' : $texto;
         }
         return $valor === null ? null : (string) $valor;
     };

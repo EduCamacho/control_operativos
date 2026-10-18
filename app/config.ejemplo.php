@@ -30,10 +30,24 @@ const SOPORTE_WHATSAPP = true;   // true si ese celular atiende por WhatsApp.
 // Enlace de YouTube, subido como "No listado". Vacío: no se muestra el botón.
 const VIDEO_TUTORIAL_UNIDAD_URL = '';
 
+// Cloudflare Turnstile en el ingreso (RN-19a). Vacías: no se usa (por ejemplo, en local).
+// Para probar en local, las claves de prueba de Cloudflare que siempre aprueban:
+// '1x00000000000000000000AA' y '1x0000000000000000000000000000000AA'.
+const TURNSTILE_SITE_KEY = '';
+const TURNSTILE_SECRET_KEY = '';
+
+// Política de contenido (CSP): false solo informa en la consola del navegador lo que
+// bloquearía (Report-Only); true la aplica. Activarla después de revisar que nada se rompe.
+const CSP_APLICAR = false;
+
 // Tolerancias y ventana de inicio, en minutos (RN-07, RN-14).
 const TOLERANCIA_NO_INICIADO_MIN = 15;
 const TOLERANCIA_SIN_CIERRE_MIN = 30;
 const VENTANA_INICIO_MIN = 60;
 
-// Duración de la sesión sin actividad, en segundos (RN-18: al menos 12 horas).
+// Duración de la sesión por rol, en segundos (RN-18). "Inactividad": sin usar el sistema;
+// "máxima": desde el ingreso, aunque se use todo el tiempo.
+const SESION_INACTIVIDAD_S = ['ADMIN' => 1800, 'SUPERVISOR' => 14400, 'UNIDAD' => 43200];   // 30 min, 4 h, 12 h
+const SESION_MAXIMA_S = ['ADMIN' => 28800, 'SUPERVISOR' => 57600, 'UNIDAD' => 86400];       // 8 h, 16 h, 24 h
+// Vida de la cookie y de los archivos de sesión: al menos la mayor inactividad de arriba.
 const DURACION_SESION_S = 43200;

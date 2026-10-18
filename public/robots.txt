@@ -1,0 +1,3 @@
+# Sistema interno de la REGPOL La Libertad: no indexar.
+User-agent: *
+Disallow: /
