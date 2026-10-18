@@ -1240,3 +1240,21 @@
     color: var(--bs-secondary-color);
     font-weight: 700;
 }
+
+/* Barra de filtros (Reportes): fondo verde grisáceo, sin sombra, para que se lea como
+   un control de la pantalla y no como parte del reporte que está debajo. */
+.barra-filtros {
+    padding: .75rem 1rem;
+    background: #eef3f0;
+    border: 1px solid #d5e3db;
+    border-radius: var(--bs-border-radius-lg);
+}
+
+.barra-filtros-titulo {
+    font-size: .8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--color-institucional);
+    margin-bottom: .4rem;
+}

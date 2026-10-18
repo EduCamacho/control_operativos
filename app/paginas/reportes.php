@@ -25,7 +25,9 @@ require RUTA_APP . '/vistas/cabecera.php';
     </a>
 </div>
 
-<form method="get" action="<?= e(armar_url('reportes')) ?>" class="card card-body shadow-sm mb-3">
+<!-- Barra de filtros: otro fondo y sin sombra, para que no parezca parte del reporte. -->
+<form method="get" action="<?= e(armar_url('reportes')) ?>" class="barra-filtros mb-4">
+    <div class="barra-filtros-titulo"><i class="bi bi-funnel"></i> Filtrar</div>
     <div class="row g-2 align-items-end">
         <div class="col-sm-4">
             <label for="fecha" class="form-label small mb-1">Servicio diario</label>

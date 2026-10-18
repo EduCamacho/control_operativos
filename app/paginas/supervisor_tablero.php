@@ -101,6 +101,11 @@ require RUTA_APP . '/vistas/cabecera.php';
         <?php endif; ?>
     </div>
 </div>
+<!-- El servicio diario cruza la medianoche (RN-02): se dice el rango completo, como en Mis operativos.
+     Cambia con el selector, porque elegir otra fecha recarga la página. -->
+<h2 class="titulo-seccion titulo-seccion-principal">
+    <i class="bi bi-calendar-day"></i> Servicio del día <?= e(formatear_servicio_diario($dia)) ?>
+</h2>
 
 <!-- División y "Solo alertas" -->
 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
