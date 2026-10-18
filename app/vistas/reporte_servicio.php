@@ -103,14 +103,16 @@ $orden_resumen = ['FINALIZADO', 'EN_CURSO', 'PROGRAMADO', 'NO_INICIADO', 'SIN_CI
     </table>
 
     <!-- Personal y recursos de los operativos realizados (los mismos de las casillas de arriba).
+         Se suma lo que declaró cada operativo: las mismas personas o vehículos en dos operativos cuentan
+         dos veces; por eso dice "suma por operativo" (decisión de Eduardo, 18/10/2026).
          Diseño propio, sin franja de color: no se confunde con las divisiones. -->
     <?php
     $fuerzas = $reporte['fuerzas'];
     $casillas_fuerzas = [
-        ['users', $fuerzas['efectivos'], 'Efectivos', 'propios y de apoyo'],
+        ['users', $fuerzas['efectivos'], 'Efectivos empleados', 'propios y de apoyo · suma por operativo'],
         ['user-shield', $fuerzas['propias'], 'Propios', 'de las unidades'],
         ['users-plus', $fuerzas['apoyo'], 'De apoyo', 'de otras unidades'],
-        ['car-suv', $fuerzas['moviles'], 'Unidades móviles', 'vehículos'],
+        ['car-suv', $fuerzas['moviles'], 'Unidades móviles', 'suma por operativo'],
     ];
     ?>
     <h2 class="reporte-seccion">Personal y recursos empleados</h2>
@@ -153,7 +155,9 @@ $orden_resumen = ['FINALIZADO', 'EN_CURSO', 'PROGRAMADO', 'NO_INICIADO', 'SIN_CI
                 </tr>
             </thead>
             <tbody>
-                <?php $division_actual = null; ?>
+                <?php // Agrupa por división siguiendo el orden de las unidades: si el ADMIN mezcla divisiones en el orden,
+                      // el título se repite (lo avisa detectar_divisiones_partidas() en la lista de unidades).
+                      $division_actual = null; ?>
                 <?php foreach ($matriz['filas'] as $fila): ?>
                     <?php if ($reporte['division'] === '' && $fila['unidad']['division'] !== $division_actual): ?>
                         <?php $division_actual = $fila['unidad']['division']; ?>

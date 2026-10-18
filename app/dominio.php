@@ -734,7 +734,8 @@ function contar_realizados_por_division(array $matriz): array
 /**
  * Personal y recursos empleados en los operativos realizados (los mismos que
  * cuenta contar_realizados_por_division()): fuerzas propias, de apoyo, su total
- * (efectivos) y unidades móviles, en total y por división.
+ * (efectivos) y unidades móviles, en total y por división. Es la suma de lo que
+ * declaró cada operativo: no distingue si son las mismas personas en dos operativos.
  *
  * @return array{propias: int, apoyo: int, efectivos: int, moviles: int, divisiones: array<string, array{efectivos: int, moviles: int}>}
  */
@@ -764,6 +765,31 @@ function sumar_fuerzas_realizadas(array $matriz): array
     $orden = array_flip(array_keys(DIVISIONES));
     uksort($suma['divisiones'], static fn (string $a, string $b): int => ($orden[$a] ?? 99) <=> ($orden[$b] ?? 99));
     return $suma;
+}
+
+/**
+ * Divisiones cuyas unidades activas no están en un solo bloque del orden (por
+ * ejemplo, una unidad de la DUE con orden entre dos de la DIVOPUS). El tablero y
+ * los reportes agrupan por división siguiendo ese orden: si una división queda
+ * partida, su título se repite. Se avisa al ADMIN en la lista de unidades.
+ *
+ * @param list<array{division: string}> $unidades En el orden del tablero.
+ * @return list<string> Divisiones partidas, sin repetir; vacío si el orden está bien.
+ */
+function detectar_divisiones_partidas(array $unidades): array
+{
+    $vistas = [];
+    $partidas = [];
+    $anterior = null;
+    foreach ($unidades as $unidad) {
+        $division = $unidad['division'];
+        if ($division !== $anterior && isset($vistas[$division])) {
+            $partidas[$division] = true;
+        }
+        $vistas[$division] = true;
+        $anterior = $division;
+    }
+    return array_keys($partidas);
 }
 
 /** Ordena los operativos de cada celda por hora de inicio programada. */

@@ -184,7 +184,9 @@ require RUTA_APP . '/vistas/cabecera.php';
             </tr>
         </thead>
         <tbody>
-            <?php $division_actual = null; ?>
+            <?php // Agrupa por división siguiendo el orden de las unidades: si el ADMIN mezcla divisiones en el orden,
+                  // el título se repite (lo avisa detectar_divisiones_partidas() en la lista de unidades).
+                  $division_actual = null; ?>
             <?php foreach ($filas as $unidad): ?>
                 <?php if ($unidad['division'] !== $division_actual): ?>
                     <?php $division_actual = $unidad['division']; ?>

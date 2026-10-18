@@ -421,6 +421,17 @@ final class DominioTest extends TestCase
         );
     }
 
+    public function test_divisiones_partidas_por_el_orden(): void
+    {
+        $orden = static fn (string ...$divisiones): array => array_map(static fn (string $d): array => ['division' => $d], $divisiones);
+        $this->assertSame([], detectar_divisiones_partidas($orden('DIVOPUS', 'DIVOPUS', 'DUE', 'DUE', 'DIVINCRI')));
+        $this->assertSame([], detectar_divisiones_partidas([]));
+        // Una unidad de la DUE en medio de la DIVOPUS parte a la DIVOPUS.
+        $this->assertSame(['DIVOPUS'], detectar_divisiones_partidas($orden('DIVOPUS', 'DUE', 'DIVOPUS', 'DIVINCRI')));
+        // En el orden en que se detectan, sin repetir.
+        $this->assertSame(['DIVOPUS', 'DUE'], detectar_divisiones_partidas($orden('DIVOPUS', 'DUE', 'DIVOPUS', 'DUE', 'DIVOPUS')));
+    }
+
     public function test_nombre_del_archivo_del_reporte(): void
     {
         $this->assertSame('reporte_servicio_2026-10-18.pdf', nombre_archivo_reporte('2026-10-18', ''));

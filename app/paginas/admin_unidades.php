@@ -36,6 +36,11 @@ foreach ($unidades as $unidad) {
 }
 $secciones = array_values($secciones);
 
+// El tablero y los reportes agrupan por división siguiendo el orden de las unidades
+// activas: si una división queda partida, su título se repite. Se avisa aquí, que es
+// donde se cambia el orden (al guardar una unidad se vuelve a esta lista).
+$divisiones_partidas = detectar_divisiones_partidas(listar_unidades_activas());
+
 $titulo = 'Unidades';
 $scripts = ['assets/js/unidades.js'];
 require RUTA_APP . '/vistas/cabecera.php';
@@ -47,6 +52,17 @@ require RUTA_APP . '/vistas/cabecera.php';
             <i class="bi bi-plus-lg"></i> Nueva unidad
         </a>
     </div>
+
+    <?php if ($divisiones_partidas !== []): ?>
+        <div class="alert alert-warning" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>El orden de las unidades mezcla divisiones</strong>
+            (<?= e(implode(', ', $divisiones_partidas)) ?>). En el tablero y en los reportes, el título de
+            <?= count($divisiones_partidas) === 1 ? 'esa división' : 'esas divisiones' ?> se repetirá y sus unidades
+            aparecerán separadas. Para corregirlo, dé a las unidades de cada división números de orden seguidos
+            (por ejemplo, DIVOPUS del 1 al 18, DUE del 19 al 23 y DIVINCRI del 24 al 26).
+        </div>
+    <?php endif; ?>
 
     <!-- Búsqueda y chips de división (filtran sin recargar) -->
     <div class="input-group mb-2">
