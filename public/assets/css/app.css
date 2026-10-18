@@ -1359,3 +1359,78 @@
     .ingreso-panel { padding: 3rem; }
     .ingreso-panel::after { display: none; } /* en la PC el crédito va en el panel verde */
 }
+
+/* Inicio del ADMIN: tarjetas de estado, pendientes, avance por división y accesos rápidos. */
+.inicio-estado {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+    height: 100%;
+    padding: .75rem .9rem;
+    border: 1px solid var(--bs-border-color);
+    border-left: 4px solid;
+    border-radius: var(--bs-border-radius-lg);
+    background: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    text-decoration: none;
+    box-shadow: var(--bs-box-shadow-sm);
+}
+.inicio-estado:hover { color: var(--bs-body-color); background: var(--bs-tertiary-bg); }
+.inicio-estado-icono {
+    position: absolute;
+    top: .7rem;
+    right: .8rem;
+    font-size: 1.3rem;
+    opacity: .45;
+}
+.inicio-estado-cifra { font-size: 1.9rem; font-weight: 700; line-height: 1.1; }
+.inicio-estado-etiqueta { font-size: .875rem; color: var(--bs-secondary-color); }
+.inicio-estado.en-cero .inicio-estado-cifra { color: var(--bs-secondary-color); font-weight: 500; }
+.inicio-estado.con-problema.tarjeta-no_iniciado { background: var(--bs-danger-bg-subtle); }
+.inicio-estado.con-problema.tarjeta-sin_cierre { background: #ffe8d6; }
+.inicio-estado.con-problema.tarjeta-sin_programar { background: var(--bs-warning-bg-subtle); }
+.inicio-estado.con-problema .inicio-estado-etiqueta { color: var(--bs-body-color); font-weight: 600; }
+.inicio-estado.con-problema .inicio-estado-icono { opacity: .8; }
+
+.inicio-vacio {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    color: var(--color-institucional);
+}
+.inicio-vacio > i { font-size: 2rem; }
+
+.inicio-pendiente {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+}
+.inicio-pendiente-icono { font-size: 1.25rem; color: var(--color-institucional); }
+.inicio-pendiente.en-cero .inicio-pendiente-icono { color: var(--bs-secondary-color); opacity: .6; }
+
+/* Mismos colores de división que el reporte (reporte.css). */
+.inicio-avance + .inicio-avance { margin-top: .9rem; }
+.inicio-avance .progress { height: .6rem; }
+.inicio-avance.division-divopus .progress-bar  { background: #3949ab; }
+.inicio-avance.division-due .progress-bar      { background: #8e24aa; }
+.inicio-avance.division-divincri .progress-bar { background: #00838f; }
+
+.inicio-acceso {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .3rem;
+    height: 100%;
+    padding: .8rem .4rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius-lg);
+    background: var(--bs-body-bg);
+    color: var(--color-institucional);
+    font-size: .875rem;
+    font-weight: 500;
+    text-align: center;
+    text-decoration: none;
+}
+.inicio-acceso > i { font-size: 1.5rem; }
+.inicio-acceso:hover { background: rgba(var(--color-institucional-rgb), .08); color: var(--color-institucional-oscuro); }
