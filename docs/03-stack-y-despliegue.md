@@ -36,6 +36,9 @@ control-operativos/
 │   ├── bitacora.php
 │   ├── formularios.php        # ayudas para formularios (errores, marcar, ids de la URL)
 │   ├── operativos.php         # consultas de operativos compartidas por páginas y API
+│   ├── reportes.php           # datos de los reportes y su PDF (Dompdf)
+│   ├── lib/dompdf/            # Dompdf 3.1.6 con sus dependencias incluidas (paquete oficial, sin Composer)
+│   ├── iconos/                # íconos SVG de los conceptos de resultado (Tabler Icons, MIT)
 │   ├── paginas/               # un archivo por pantalla/acción (controlador + vista)
 │   ├── api/                   # endpoints JSON: ubicaciones, finalizar, coordenadas (y mapa en la fase 3)
 │   ├── vistas/                # layout, parciales
@@ -139,7 +142,7 @@ Son funciones puras, sin acceso a la base de datos, y cada una tiene sus tests e
 3. **Base de datos**: en *Bases de datos MySQL*:
    - Crear la base (por ejemplo `usuario_operativos`) y un usuario con clave larga.
    - Dar al usuario solo **SELECT, INSERT, UPDATE y DELETE** sobre esa base. Los cambios de estructura se aplican desde phpMyAdmin con la cuenta de cPanel, no con este usuario.
-4. **Esquema**: en phpMyAdmin, elegir la base e importar **en orden** `sql/001_esquema.sql`, `002_datos_iniciales.sql`, `003_madrugada_origen_sesion.sql`, `004_id_envio_ubicaciones.sql`, `005_id_envio_controles.sql`, `006_coordenadas_lugar_programado.sql`, `007_quitar_nombre_plan.sql`, `008_varios_operativos_por_turno.sql`, `009_dispositivo_distancia_ubicaciones.sql`, `010_referencia_opcional_ubicaciones.sql` y `011_intentos_ingreso.sql`. Anotar en la tabla de abajo cuáles se aplicaron.
+4. **Esquema**: en phpMyAdmin, elegir la base e importar **en orden** `sql/001_esquema.sql`, `002_datos_iniciales.sql`, `003_madrugada_origen_sesion.sql`, `004_id_envio_ubicaciones.sql`, `005_id_envio_controles.sql`, `006_coordenadas_lugar_programado.sql`, `007_quitar_nombre_plan.sql`, `008_varios_operativos_por_turno.sql`, `009_dispositivo_distancia_ubicaciones.sql`, `010_referencia_opcional_ubicaciones.sql`, `011_intentos_ingreso.sql` y `012_icono_conceptos.sql`. Anotar en la tabla de abajo cuáles se aplicaron.
 5. **Archivos**: en el *Administrador de archivos*, crear `/home/USUARIO/control_operativos/`, subir el `.zip` ahí y usar *Extract*. Borrar el `.zip` después.
 6. **Configuración**: copiar `app/config.ejemplo.php` como `app/config.php` y completar:
    - `ENTORNO = 'produccion'` y `URL_BASE = ''`.
@@ -199,3 +202,11 @@ No hay tareas programadas (cron), así que el respaldo es manual: al menos una v
 | `009_dispositivo_distancia_ubicaciones.sql` | | |
 | `010_referencia_opcional_ubicaciones.sql` | | |
 | `011_intentos_ingreso.sql` | | |
+| `012_icono_conceptos.sql` | | |
+
+## Dompdf (reportes en PDF)
+
+- Está en `app/lib/dompdf/`, versionado en Git, para que `empaquetar.php` lo suba sin Composer. Es el paquete oficial que ya incluye sus dependencias (`dompdf-X.Y.Z.zip` de https://github.com/dompdf/dompdf/releases), cargado con `autoload.inc.php`.
+- Requiere las extensiones `dom` y `mbstring` (cPanel las trae casi siempre).
+- Configuración en `enviar_pdf()` (`app/reportes.php`): sin PHP embebido ni archivos remotos, `chroot` en `app/` y estilos de impresión (`defaultMediaType = print`).
+- **Actualizar**: descargar el zip nuevo, reemplazar la carpeta `app/lib/dompdf/`, generar un reporte de prueba y revisar el PDF.

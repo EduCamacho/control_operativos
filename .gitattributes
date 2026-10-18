@@ -8,6 +8,7 @@
 *.gif binary
 *.ico binary
 *.pdf binary
+*.ttf binary
 *.xlsx binary
 *.woff binary
 *.woff2 binary

@@ -339,6 +339,94 @@ final class DominioTest extends TestCase
         $this->assertEqualsWithDelta(11, distancia_m(-8.1116, -79.0288, -8.1117, -79.0288), 1);
     }
 
+    // --- reporte del servicio diario ----------------------------------------
+
+    /** Operativo mínimo para la matriz del reporte. */
+    private static function operativo_reporte(int $unidad_id, string $turno, string $estado, string $inicio, string $fin, ?string $nota = null): array
+    {
+        return [
+            'unidad_id' => $unidad_id, 'turno' => $turno, 'estado' => $estado,
+            'inicio_programado' => $inicio, 'fin_programado' => $fin, 'nota_informativa' => $nota,
+        ];
+    }
+
+    public function test_matriz_del_servicio_con_estados_y_totales(): void
+    {
+        $unidades = [['id' => 1, 'nombre_corto' => 'COM. A'], ['id' => 2, 'nombre_corto' => 'COM. B']];
+        $operativos = [
+            // Dos en la mañana de la unidad 1, desordenados: deben salir por hora.
+            self::operativo_reporte(1, 'MANANA', 'FINALIZADO', '2026-10-18 10:00:00', '2026-10-18 11:00:00'),
+            self::operativo_reporte(1, 'MANANA', 'FINALIZADO', '2026-10-18 07:00:00', '2026-10-18 09:00:00', '123'),
+            self::operativo_reporte(1, 'TARDE', 'PROGRAMADO', '2026-10-18 13:00:00', '2026-10-18 15:00:00'),
+            self::operativo_reporte(2, 'TARDE', 'EN_CURSO', '2026-10-18 12:00:00', '2026-10-18 13:00:00'),
+        ];
+        $m = armar_matriz_servicio($unidades, $operativos, '2026-10-18', self::lima('2026-10-18 14:00:00'), 15, 30);
+
+        $this->assertSame(4, $m['operativos']);
+        $this->assertSame(1, $m['sin_nota']);
+        $manana = $m['filas'][0]['turnos']['MANANA']['operativos'];
+        $this->assertSame(['2026-10-18 07:00:00', '2026-10-18 10:00:00'], array_map(static fn ($c) => $c['operativo']['inicio_programado'], $manana));
+        $this->assertSame('NO_INICIADO', $m['filas'][0]['turnos']['TARDE']['operativos'][0]['estado']);
+        $this->assertSame('SIN_CIERRE', $m['filas'][1]['turnos']['TARDE']['operativos'][0]['estado']);
+        // A las 14:00 la mañana ya pasó: la unidad 2 no la programó.
+        $this->assertSame('SIN_PROGRAMAR', $m['filas'][1]['turnos']['MANANA']['estado_vacio']);
+        // La noche y la madrugada todavía se pueden programar.
+        $this->assertNull($m['filas'][1]['turnos']['NOCHE']['estado_vacio']);
+        $this->assertEquals(['FINALIZADO' => 2, 'NO_INICIADO' => 1, 'SIN_CIERRE' => 1, 'SIN_PROGRAMAR' => 1],
+            array_filter($m['totales']));
+        $this->assertSame([3, 1], array_column($m['filas'], 'total'));
+    }
+
+    public function test_realizados_por_division(): void
+    {
+        $unidades = [
+            ['id' => 1, 'division' => 'DUE'],
+            ['id' => 2, 'division' => 'DIVOPUS'],
+            ['id' => 3, 'division' => 'DIVOPUS'],
+        ];
+        $operativos = [
+            self::operativo_reporte(2, 'MANANA', 'FINALIZADO', '2026-10-18 07:00:00', '2026-10-18 09:00:00'),
+            self::operativo_reporte(2, 'TARDE', 'EN_CURSO', '2026-10-18 12:00:00', '2026-10-18 13:00:00'),
+            self::operativo_reporte(3, 'NOCHE', 'PROGRAMADO', '2026-10-18 20:00:00', '2026-10-18 22:00:00'),
+            self::operativo_reporte(1, 'MANANA', 'PROGRAMADO', '2026-10-18 08:00:00', '2026-10-18 10:00:00'),
+        ];
+        $matriz = armar_matriz_servicio($unidades, $operativos, '2026-10-18', self::lima('2026-10-18 14:00:00'), 15, 30);
+        $c = contar_realizados_por_division($matriz);
+
+        // FINALIZADO y EN_CURSO pasado de hora (SIN_CIERRE) cuentan; los programados, no.
+        $this->assertSame(2, $c['realizados']);
+        // En el orden de DIVISIONES, aunque la DUE venga primero; la DUE aparece aunque tenga 0.
+        $this->assertSame(['DIVOPUS' => 2, 'DUE' => 0], $c['divisiones']);
+    }
+
+    public function test_fuerzas_de_los_operativos_realizados(): void
+    {
+        $unidades = [['id' => 1, 'division' => 'DUE'], ['id' => 2, 'division' => 'DIVOPUS']];
+        $con_fuerzas = static fn (array $o, int $propias, int $apoyo, int $moviles): array => $o + [
+            'fuerzas_propias' => $propias, 'fuerzas_apoyo' => $apoyo, 'unidades_moviles' => $moviles,
+        ];
+        $operativos = [
+            $con_fuerzas(self::operativo_reporte(2, 'MANANA', 'FINALIZADO', '2026-10-18 07:00:00', '2026-10-18 09:00:00'), 10, 2, 1),
+            $con_fuerzas(self::operativo_reporte(2, 'TARDE', 'EN_CURSO', '2026-10-18 12:00:00', '2026-10-18 13:00:00'), 5, 0, 2),
+            // Programado: su personal todavía no se empleó.
+            $con_fuerzas(self::operativo_reporte(1, 'NOCHE', 'PROGRAMADO', '2026-10-18 20:00:00', '2026-10-18 22:00:00'), 30, 5, 4),
+        ];
+        $matriz = armar_matriz_servicio($unidades, $operativos, '2026-10-18', self::lima('2026-10-18 14:00:00'), 15, 30);
+        $f = sumar_fuerzas_realizadas($matriz);
+
+        $this->assertSame([15, 2, 17, 3], [$f['propias'], $f['apoyo'], $f['efectivos'], $f['moviles']]);
+        $this->assertSame(
+            ['DIVOPUS' => ['efectivos' => 17, 'moviles' => 3], 'DUE' => ['efectivos' => 0, 'moviles' => 0]],
+            $f['divisiones'],
+        );
+    }
+
+    public function test_nombre_del_archivo_del_reporte(): void
+    {
+        $this->assertSame('reporte_servicio_2026-10-18.pdf', nombre_archivo_reporte('2026-10-18', ''));
+        $this->assertSame('reporte_servicio_2026-10-18_DIVOPUS.pdf', nombre_archivo_reporte('2026-10-18', 'DIVOPUS'));
+    }
+
     // --- formatear_servicio_diario ------------------------------------------
 
     public function test_servicio_diario_dentro_del_mes(): void
@@ -1067,6 +1155,25 @@ final class DominioTest extends TestCase
     }
 
     // --- validar_elemento_catalogo ------------------------------------------
+
+    public function test_icono_del_concepto(): void
+    {
+        $base = ['nombre' => 'Detenidos', 'orden' => '1'];
+        $this->assertSame('lock', validar_elemento_catalogo($base + ['icono' => 'lock'], 120, true, true)['datos']['icono']);
+        $this->assertNull(validar_elemento_catalogo($base + ['icono' => ''], 120, true, true)['datos']['icono']);
+        // Solo los de la lista: nada de rutas ni nombres inventados.
+        $this->assertArrayHasKey('icono', validar_elemento_catalogo($base + ['icono' => '../config'], 120, true, true)['errores']);
+        // Los tipos de operativo no llevan ícono.
+        $this->assertArrayNotHasKey('icono', validar_elemento_catalogo($base + ['icono' => 'lock'], 100, false)['datos']);
+    }
+
+    public function test_cada_icono_de_la_lista_tiene_su_archivo(): void
+    {
+        foreach (array_keys(ICONOS_RESULTADO) as $icono) {
+            $this->assertFileExists(__DIR__ . "/../app/iconos/$icono.svg");
+        }
+        $this->assertArrayHasKey(ICONO_RESULTADO_PREDETERMINADO, ICONOS_RESULTADO);
+    }
 
     public function test_elemento_de_catalogo_en_mayusculas(): void
     {
