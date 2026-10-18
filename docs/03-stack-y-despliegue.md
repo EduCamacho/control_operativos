@@ -39,7 +39,6 @@ control-operativos/
 │   ├── reportes.php           # datos de los reportes y su PDF (Dompdf)
 │   ├── lib/dompdf/            # Dompdf 3.1.6 con sus dependencias incluidas (paquete oficial, sin Composer)
 │   ├── iconos/                # íconos SVG de los conceptos de resultado (Tabler Icons, MIT)
-│   ├── img/logo.png           # logo del encabezado de los reportes (opcional; versionado para que se suba)
 │   ├── paginas/               # un archivo por pantalla/acción (controlador + vista)
 │   ├── api/                   # endpoints JSON: ubicaciones, finalizar, coordenadas (y mapa en la fase 3)
 │   ├── vistas/                # layout, parciales
@@ -47,7 +46,7 @@ control-operativos/
 └── public/                    # DOCUMENT ROOT del subdominio
     ├── index.php              # front controller: enruta ?r= o path → app/paginas/*
     ├── .htaccess              # reescritura a index.php, fuerza HTTPS
-    └── assets/ (css, js, img, vendor/)  # js/envio.js (reintento sin conexión), js/ubicacion.js (GPS e ingreso manual)
+    └── assets/ (css, js, img/logo.png = escudo de la PNP del ingreso y los reportes, vendor/)  # js/envio.js (reintento sin conexión), js/ubicacion.js (GPS e ingreso manual)
 ```
 
 En cPanel, crear un subdominio (por ejemplo `operativos.tudominio.com`) con el **document root apuntando a `control-operativos/public`**, de modo que `app/` quede fuera del alcance web.

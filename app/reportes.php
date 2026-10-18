@@ -35,18 +35,20 @@ function armar_icono(string $nombre, string $color): string
 }
 
 /**
- * Logo del encabezado del reporte (app/img/logo.png, o .jpg) como data URI, o
- * null si no se puso. Sirve igual en la pantalla y en el PDF.
+ * Logo de la PNP (public/assets/img/logo.png). Una sola copia: la pantalla de
+ * ingreso lo carga como imagen (queda en caché) y el reporte lo incrusta.
  */
+function obtener_archivo_logo(): ?string
+{
+    $archivo = dirname(RUTA_APP) . '/public/assets/img/logo.png';
+    return is_file($archivo) ? $archivo : null;
+}
+
+/** Logo como data URI para el reporte (igual en la pantalla y el PDF), o null si no hay. */
 function armar_logo_reporte(): ?string
 {
-    foreach (['png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg'] as $extension => $tipo) {
-        $archivo = RUTA_APP . "/img/logo.$extension";
-        if (is_file($archivo)) {
-            return "data:$tipo;base64," . base64_encode((string) file_get_contents($archivo));
-        }
-    }
-    return null;
+    $archivo = obtener_archivo_logo();
+    return $archivo === null ? null : 'data:image/png;base64,' . base64_encode((string) file_get_contents($archivo));
 }
 
 /**

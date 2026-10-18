@@ -5,6 +5,7 @@
  *   $sin_menu  true para ocultar el menú (ingreso).
  *   $scripts   Rutas de JS propios de la página (se cargan antes de Alpine).
  *   $estilos   Rutas de CSS propios de la página (después de app.css).
+ *   $mensajes_propios  true si la página muestra ella misma los avisos (obtener_mensajes()).
  *   $pagina_completa  true para ocupar todo el espacio sin márgenes (mapa).
  *
  * Menú en barra lateral izquierda: fija desde pantallas grandes (lg) y,
@@ -128,7 +129,8 @@ $menu = match ($usuario['rol'] ?? null) {
         </header>
 <?php endif; ?>
 <main class="<?= empty($pagina_completa) ? 'container-fluid contenedor-pagina py-3' : 'pagina-completa' ?>">
-<?php foreach (obtener_mensajes() as $mensaje): ?>
+<?php // Una página puede mostrar los avisos dentro de su propio diseño ($mensajes_propios, como el ingreso).
+foreach (empty($mensajes_propios) ? obtener_mensajes() : [] as $mensaje): ?>
     <div class="alert alert-<?= e($mensaje['tipo']) ?> alert-dismissible fade show" role="alert">
         <?= e($mensaje['texto']) ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>

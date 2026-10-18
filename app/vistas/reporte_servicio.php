@@ -16,7 +16,7 @@ $orden_resumen = ['FINALIZADO', 'EN_CURSO', 'PROGRAMADO', 'NO_INICIADO', 'SIN_CI
 <div class="reporte">
     <table class="reporte-encabezado">
         <tr>
-            <?php $logo = armar_logo_reporte(); // app/img/logo.png; sin archivo, no se muestra ?>
+            <?php $logo = armar_logo_reporte(); // public/assets/img/logo.png; sin archivo, no se muestra ?>
             <?php if ($logo !== null): ?>
                 <td class="reporte-logo"><img src="<?= e($logo) ?>" alt="Logo"></td>
             <?php endif; ?>
