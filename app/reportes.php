@@ -35,6 +35,21 @@ function armar_icono(string $nombre, string $color): string
 }
 
 /**
+ * Logo del encabezado del reporte (app/img/logo.png, o .jpg) como data URI, o
+ * null si no se puso. Sirve igual en la pantalla y en el PDF.
+ */
+function armar_logo_reporte(): ?string
+{
+    foreach (['png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg'] as $extension => $tipo) {
+        $archivo = RUTA_APP . "/img/logo.$extension";
+        if (is_file($archivo)) {
+            return "data:$tipo;base64," . base64_encode((string) file_get_contents($archivo));
+        }
+    }
+    return null;
+}
+
+/**
  * Filtros del reporte desde la URL: fecha de servicio (por defecto, la vigente)
  * y división ('' = todas). Un valor inválido vuelve al predeterminado.
  *

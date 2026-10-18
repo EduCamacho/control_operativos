@@ -39,6 +39,7 @@ control-operativos/
 │   ├── reportes.php           # datos de los reportes y su PDF (Dompdf)
 │   ├── lib/dompdf/            # Dompdf 3.1.6 con sus dependencias incluidas (paquete oficial, sin Composer)
 │   ├── iconos/                # íconos SVG de los conceptos de resultado (Tabler Icons, MIT)
+│   ├── img/logo.png           # logo del encabezado de los reportes (opcional; versionado para que se suba)
 │   ├── paginas/               # un archivo por pantalla/acción (controlador + vista)
 │   ├── api/                   # endpoints JSON: ubicaciones, finalizar, coordenadas (y mapa en la fase 3)
 │   ├── vistas/                # layout, parciales

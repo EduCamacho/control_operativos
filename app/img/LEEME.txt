@@ -1,0 +1,4 @@
+Logo del encabezado de los reportes: poner aquí logo.png (o logo.jpg).
+Recomendado: PNG con fondo transparente, unos 300 px de ancho.
+Si no hay archivo, el reporte se muestra sin logo.
+Debe quedar versionado en Git: empaquetar.php solo sube los archivos versionados.

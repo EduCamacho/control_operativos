@@ -10,6 +10,8 @@
 .reporte table { border-collapse: collapse; width: 100%; }
 
 .reporte-encabezado td { vertical-align: bottom; padding: 0 0 .6em 0; border-bottom: 2pt solid #1f6f50; }
+.reporte-encabezado td.reporte-logo { width: 1%; padding-right: .7em; } /* la celda se ajusta al logo */
+.reporte-logo img { display: block; height: 4.2em; width: auto; } /* por altura: sirve igual para logos altos o anchos */
 .reporte-institucion { font-size: .8em; letter-spacing: .05em; color: #4b5560; }
 .reporte-titulo { font-size: 1.6em; font-weight: bold; color: #1f6f50; }
 .reporte-subtitulo { font-weight: bold; }
@@ -119,6 +121,7 @@
     .reporte-encabezado, .reporte-encabezado tbody, .reporte-encabezado tr { display: block; }
     .reporte-encabezado { border-bottom: 2pt solid #1f6f50; padding-bottom: .4em; }
     .reporte-encabezado td { display: block; border-bottom: 0; padding: 0; }
+    .reporte-encabezado td.reporte-logo { margin-bottom: .5em; }
     .reporte-generado { width: auto; text-align: left; margin-top: .3em; }
     /* Personal y recursos: 2 por fila. */
     .reporte .reporte-fuerzas { display: block; }
