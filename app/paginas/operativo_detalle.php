@@ -36,8 +36,13 @@ $configuracion_captura = static fn (string $accion): string => e(json_encode([
     'urlCoordenadas'  => armar_url('api/coordenadas'),
     'urlDespues'      => armar_url('operativos/ver', ['id' => $id]),
     'urlIngreso'      => armar_url('login'),
-    'precisionMaxima' => PRECISION_ADVERTENCIA_M,
     'limites'         => ['latitudMin' => LATITUD_MIN, 'latitudMax' => LATITUD_MAX, 'longitudMin' => LONGITUD_MIN, 'longitudMax' => LONGITUD_MAX],
+    // RN-09a: avisos antes de enviar. La distancia al lugar programado solo se compara al iniciar.
+    'desdePc'         => clasificar_dispositivo((string) ($_SERVER['HTTP_USER_AGENT'] ?? '')) === 'PC',
+    'lugarProgramado' => $accion === 'INICIAR' && $operativo['lugar_latitud'] !== null
+        ? ['latitud' => (float) $operativo['lugar_latitud'], 'longitud' => (float) $operativo['lugar_longitud']]
+        : null,
+    'distanciaLejos'  => DISTANCIA_LEJOS_LUGAR_M,
 ]));
 
 $turno = obtener_etiqueta_turno($operativo['turno']);
@@ -88,7 +93,7 @@ require RUTA_APP . '/vistas/cabecera.php';
                     <button type="button" class="btn btn-institucional btn-lg w-100 boton-accion mb-3" @click="abrir()">
                         <i class="bi bi-play-fill"></i> Iniciar operativo
                     </button>
-                    <?php $captura = ['titulo' => 'Iniciar operativo', 'boton' => 'Iniciar operativo']; ?>
+                    <?php $captura = ['titulo' => 'Iniciar operativo', 'boton' => 'Iniciar']; ?>
                     <?php require RUTA_APP . '/vistas/captura_ubicacion.php'; ?>
                 <?php elseif ($ahora < $desde_inicio): ?>
                     <div class="aviso-estado mb-3">
@@ -104,16 +109,17 @@ require RUTA_APP . '/vistas/cabecera.php';
         <?php elseif ($operativo['estado'] === 'EN_CURSO'): ?>
             <div class="card shadow-sm mb-3">
                 <div class="card-body">
-                    <h2 class="h6 titulo-tarjeta"><i class="bi bi-geo-alt-fill"></i> Posición actual</h2>
+                    <h2 class="h6 titulo-tarjeta"><i class="bi bi-geo-alt-fill"></i> Última ubicación registrada</h2>
                     <?php if ($actual === null): ?>
                         <p class="text-body-secondary mb-0">Todavía no hay puntos registrados.</p>
                     <?php else: ?>
-                        <div class="fs-5 fw-semibold lh-sm"><?= e($actual['referencia']) ?></div>
+                        <div class="fs-5 fw-semibold lh-sm"><?= e($actual['referencia'] ?? 'Punto sin referencia') ?></div>
                         <div class="text-body-secondary small mt-1">
                             <?= e(formatear_hora($actual['registrado_en'])) ?> · <?= e(formatear_hace($actual['registrado_en'], $ahora)) ?> ·
                             <?= $actual['origen'] === 'MANUAL'
                                 ? '<span class="badge text-bg-warning">Manual</span>'
                                 : 'precisión ' . e($actual['precision_m'] ?? '?') . ' m' ?>
+                            <?= mostrar_avisos_ubicacion($actual) ?>
                         </div>
                         <a href="<?= e(armar_enlace_google_maps((float) $actual['latitud'], (float) $actual['longitud'])) ?>"
                            target="_blank" rel="noopener" class="d-inline-block small mt-1 enlace-institucional">

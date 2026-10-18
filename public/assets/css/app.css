@@ -260,6 +260,39 @@
     min-width: 3.25rem;
 }
 
+/* Resultados al finalizar: una fila por concepto, el contador a la derecha. */
+.fila-resultado {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding-top: .6rem;
+    padding-bottom: .6rem;
+}
+.fila-resultado-nombre {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+}
+.fila-resultado.con-cantidad {
+    background: var(--bs-success-bg-subtle);
+}
+.fila-resultado.con-cantidad .fila-resultado-nombre {
+    font-weight: 600;
+}
+.contador-compacto {
+    flex: 0 0 auto;
+    width: auto;
+}
+.contador-compacto .btn {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+}
+.contador-compacto input {
+    width: 3.5rem;
+    flex: 0 0 3.5rem;
+    font-weight: 600;
+}
+
 /* Mapa del supervisor: ocupa todo el alto disponible. */
 .pagina-completa {
     padding: 0;

@@ -33,6 +33,7 @@ const LONGITUD_MIN = -79.80;
 const LONGITUD_MAX = -76.80;
 
 const PRECISION_ADVERTENCIA_M = 100;
+const DISTANCIA_LEJOS_LUGAR_M = 500;
 const MAX_INTENTOS_FALLIDOS = 5;
 const MINUTOS_BLOQUEO = 15;
 const MAX_FUERZAS = 9999;
@@ -228,6 +229,21 @@ function fecha_servicio_vigente(DateTimeImmutable $ahora): string
     return $local->format('Y-m-d');
 }
 
+/**
+ * El servicio diario cruza la medianoche (RN-02): '18 al 19/10/2026'. Al cambiar
+ * de mes, '31/10 al 01/11/2026'; al cambiar de año, '31/12/2026 al 01/01/2027'.
+ */
+function formatear_servicio_diario(DateTimeImmutable $fecha_servicio): string
+{
+    $siguiente = $fecha_servicio->modify('+1 day');
+    $desde = match (true) {
+        $fecha_servicio->format('Y') !== $siguiente->format('Y') => $fecha_servicio->format('d/m/Y'),
+        $fecha_servicio->format('m') !== $siguiente->format('m') => $fecha_servicio->format('d/m'),
+        default                                                   => $fecha_servicio->format('d'),
+    };
+    return $desde . ' al ' . $siguiente->format('d/m/Y');
+}
+
 /** 'sábado 17 de octubre de 2026'. Sin la extensión intl, que no siempre está en el hosting. */
 function formatear_fecha_larga(DateTimeInterface $fecha): string
 {
@@ -342,9 +358,10 @@ function armar_coordenadas(float $latitud, float $longitud): ?array
  * la hora la pone el servidor (RN-11).
  *
  * @param bool $exigir_la_libertad false para la ubicación del supervisor (RN-15).
+ * @param bool $referencia_obligatoria false en el nuevo punto (RN-10): vacía se guarda como null.
  * @return array{datos: array<string, mixed>, errores: array<string, string>}
  */
-function validar_ubicacion(array $entrada, bool $exigir_la_libertad, bool $con_referencia): array
+function validar_ubicacion(array $entrada, bool $exigir_la_libertad, bool $con_referencia, bool $referencia_obligatoria = true): array
 {
     $datos = [];
     $errores = [];
@@ -382,7 +399,9 @@ function validar_ubicacion(array $entrada, bool $exigir_la_libertad, bool $con_r
 
     if ($con_referencia) {
         $referencia = trim((string) ($entrada['referencia'] ?? ''));
-        if ($referencia === '') {
+        if ($referencia === '' && !$referencia_obligatoria) {
+            $datos['referencia'] = null;
+        } elseif ($referencia === '') {
             $errores['referencia'] = 'Indique la referencia: calle, avenida o sector.';
         } elseif (mb_strlen($referencia) > 255) {
             $errores['referencia'] = 'La referencia admite hasta 255 caracteres.';
@@ -409,6 +428,42 @@ function distancia_m(float $lat1, float $lng1, float $lat2, float $lng2): int
     $d_lng = deg2rad($lng2 - $lng1);
     $a = sin($d_lat / 2) ** 2 + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($d_lng / 2) ** 2;
     return (int) round(2 * $radio_tierra_m * asin(min(1.0, sqrt($a))));
+}
+
+/**
+ * Distancia del inicio al lugar programado (RN-09a), o null si el operativo
+ * no tiene coordenadas del lugar (los creados antes de sql/006).
+ */
+function distancia_al_lugar_programado(array $operativo, float $latitud, float $longitud): ?int
+{
+    if ($operativo['lugar_latitud'] === null || $operativo['lugar_longitud'] === null) {
+        return null;
+    }
+    return distancia_m((float) $operativo['lugar_latitud'], (float) $operativo['lugar_longitud'], $latitud, $longitud);
+}
+
+/** RN-09a: más de 500 m del lugar programado. Solo se avisa, no se bloquea. */
+function lejos_del_lugar_programado(?int $distancia_m): bool
+{
+    return $distancia_m !== null && $distancia_m > DISTANCIA_LEJOS_LUGAR_M;
+}
+
+/**
+ * CELULAR o PC según el navegador (RN-09a). Las tabletas cuentan como celular;
+ * el iPad con Safari se presenta como Mac y queda como PC.
+ */
+function clasificar_dispositivo(string $user_agent): string
+{
+    return preg_match('/Mobi|Android|iPhone|iPad|iPod|Windows Phone/i', $user_agent) ? 'CELULAR' : 'PC';
+}
+
+/** "350 m" o "3,2 km" (coma decimal, como se lee en Perú). */
+function formatear_distancia(int $metros): string
+{
+    if ($metros < 1000) {
+        return $metros . ' m';
+    }
+    return str_replace('.', ',', sprintf('%.1F', $metros / 1000)) . ' km';
 }
 
 /** "-8.111600, -79.028800" para mostrar o volver a editar; '' si no hay coordenadas. */

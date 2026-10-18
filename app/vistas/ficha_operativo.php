@@ -17,7 +17,7 @@ $recorrido = array_map(static fn (array $u): array => [
     'lat'        => (float) $u['latitud'],
     'lng'        => (float) $u['longitud'],
     'hora'       => formatear_hora($u['registrado_en']),
-    'referencia' => $u['referencia'],
+    'referencia' => $u['referencia'] ?? 'Sin referencia',
 ], $ubicaciones);
 
 // "Cómo llegar": a la última posición o, si todavía no hay, al lugar programado.
@@ -66,7 +66,7 @@ $moviles = (int) $operativo['unidades_moviles'];
 
     <div class="alert alert-light border py-2 small">
         <?php if ($ultima !== null): ?>
-            <div class="text-body-secondary">Posición actual</div>
+            <div class="text-body-secondary">Última ubicación registrada</div>
             <?= mostrar_ubicacion($ultima, true, false) ?>
         <?php else: ?>
             <div class="text-body-secondary">Lugar programado (todavía sin ubicación)</div>

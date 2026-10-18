@@ -97,14 +97,18 @@ $texto_guardar = $actual === null ? 'Programar operativo' : 'Guardar cambios';
                     <?php endif; ?>
                 </div>
                 <?php if ($numero === 1): ?>
-                    <div><span class="badge text-bg-dark" x-text="turno"></span> <span class="small" x-text="resumen"></span></div>
+                    <div><span class="small">Turno</span> <span class="badge text-bg-dark" x-text="turno"></span> <span class="small" x-text="resumen"></span></div>
                 <?php elseif ($numero === 2): ?>
                     <dl class="row small mb-0">
                         <dt class="col-4">Tipo(s)</dt><dd class="col-8 mb-1" x-text="revision.tipos"></dd>
                         <dt class="col-4">Lugar</dt><dd class="col-8 mb-1" x-text="revision.lugar"></dd>
-                        <dt class="col-4">Coordenadas</dt>
+                        <dt class="col-4">Ubicación</dt>
                         <dd class="col-8 mb-1">
-                            <span x-show="revision.coordenadas" x-text="revision.coordenadas"></span>
+                            <a x-show="revision.enlaceMapa" :href="revision.enlaceMapa" target="_blank" rel="noopener">
+                                <i class="bi bi-geo-alt"></i> Ver en Google Maps
+                            </a>
+                            <!-- Sin conexión no se pudieron reconocer: se muestra lo pegado y el servidor las revisa al guardar. -->
+                            <span x-show="!revision.enlaceMapa && revision.coordenadas" x-text="revision.coordenadas"></span>
                             <span x-show="!revision.coordenadas" class="text-body-secondary">Sin coordenadas</span>
                         </dd>
                     </dl>

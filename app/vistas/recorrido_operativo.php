@@ -23,13 +23,14 @@ $ocultos = max(0, $total_puntos - $puntos_visibles);
                     <?php if ($posicion === $puntos_visibles && $ocultos > 0): ?>:class="{ 'sin-linea': !todos }"<?php endif; ?>>
                     <div class="d-flex flex-wrap align-items-baseline gap-2">
                         <span class="fw-semibold"><?= e(formatear_hora($ubicacion['registrado_en'])) ?></span>
-                        <span><?= e($ubicacion['referencia']) ?></span>
+                        <?php if ($ubicacion['referencia'] !== null): ?><span><?= e($ubicacion['referencia']) ?></span><?php endif; ?>
                         <?php if ($indice === 0): ?><span class="badge text-bg-success">Inicio</span><?php endif; ?>
                     </div>
                     <div class="small text-body-secondary">
                         <?= $ubicacion['origen'] === 'MANUAL'
                             ? '<span class="badge text-bg-warning">Manual</span>'
                             : 'precisión ' . e($ubicacion['precision_m'] ?? '?') . ' m' ?>
+                        <?= mostrar_avisos_ubicacion($ubicacion) ?>
                         · <a href="<?= e(armar_enlace_google_maps((float) $ubicacion['latitud'], (float) $ubicacion['longitud'])) ?>"
                              target="_blank" rel="noopener" class="enlace-institucional">Ver en Google Maps</a>
                     </div>

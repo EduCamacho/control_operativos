@@ -21,7 +21,8 @@ if ($operativo_id === null || !in_array($accion, ['INICIAR', 'PUNTO'], true)) {
     responder_json(['error' => 'Solicitud incompleta.'], 400);
 }
 
-['datos' => $ubicacion, 'errores' => $errores] = validar_ubicacion($entrada, true, true);
+// La referencia es obligatoria al iniciar y opcional en el nuevo punto (RN-10).
+['datos' => $ubicacion, 'errores' => $errores] = validar_ubicacion($entrada, true, true, $accion === 'INICIAR');
 if ($errores !== []) {
     responder_json(['error' => reset($errores), 'errores' => $errores], 422);
 }
@@ -67,25 +68,35 @@ try {
         responder_json(['error' => 'El operativo no está en curso: no se pueden registrar puntos.'], 409);
     }
 
+    // RN-09a: el dispositivo lo decide el servidor; la distancia al lugar programado, solo al iniciar.
+    $dispositivo = clasificar_dispositivo((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''));
+    $distancia_lugar_m = $accion === 'INICIAR'
+        ? distancia_al_lugar_programado($operativo, $ubicacion['latitud'], $ubicacion['longitud'])
+        : null;
+
     consultar(
         'INSERT INTO operativo_ubicaciones
-            (operativo_id, latitud, longitud, precision_m, origen, referencia, registrado_por, id_envio, registrado_en)
-         VALUES (:operativo_id, :latitud, :longitud, :precision_m, :origen, :referencia, :registrado_por, :id_envio, :ahora)',
+            (operativo_id, latitud, longitud, precision_m, origen, dispositivo, distancia_lugar_m, referencia, registrado_por, id_envio, registrado_en)
+         VALUES (:operativo_id, :latitud, :longitud, :precision_m, :origen, :dispositivo, :distancia_lugar_m, :referencia, :registrado_por, :id_envio, :ahora)',
         $ubicacion + [
-            'operativo_id'   => $operativo_id,
-            'registrado_por' => usuario_actual()['id'],
-            'ahora'          => $ahora->format(FORMATO_FECHA_HORA),
+            'operativo_id'      => $operativo_id,
+            'dispositivo'       => $dispositivo,
+            'distancia_lugar_m' => $distancia_lugar_m,
+            'registrado_por'    => usuario_actual()['id'],
+            'ahora'             => $ahora->format(FORMATO_FECHA_HORA),
         ],
     );
     $ubicacion_id = (int) $pdo->lastInsertId();
 
     registrar_bitacora($accion === 'INICIAR' ? 'INICIAR' : 'NUEVO_PUNTO', 'operativos', $operativo_id, [
-        'ubicacion_id' => $ubicacion_id,
-        'latitud'      => $ubicacion['latitud'],
-        'longitud'     => $ubicacion['longitud'],
-        'precision_m'  => $ubicacion['precision_m'],
-        'origen'       => $ubicacion['origen'],
-        'referencia'   => $ubicacion['referencia'],
+        'ubicacion_id'      => $ubicacion_id,
+        'latitud'           => $ubicacion['latitud'],
+        'longitud'          => $ubicacion['longitud'],
+        'precision_m'       => $ubicacion['precision_m'],
+        'origen'            => $ubicacion['origen'],
+        'dispositivo'       => $dispositivo,
+        'distancia_lugar_m' => $distancia_lugar_m,
+        'referencia'        => $ubicacion['referencia'],
     ]);
     $pdo->commit();
 } catch (PDOException $error) {

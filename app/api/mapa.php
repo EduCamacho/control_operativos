@@ -40,7 +40,7 @@ foreach (listar_operativos_para_mapa($servicio) as $fila) {
             'longitud'    => (float) $fila['longitud'],
             'precision_m' => $fila['precision_m'] === null ? null : (int) $fila['precision_m'],
             'origen'      => $fila['origen'],
-            'referencia'  => $fila['referencia'],
+            'referencia'  => $fila['referencia'] ?? 'Sin referencia',
             'hora'        => formatear_hora($fila['ubicacion_en']),
             'hace'        => formatear_hace($fila['ubicacion_en'], $ahora),
         ],

@@ -56,7 +56,7 @@ function obtener_tipos_de_operativo(int $operativo_id): array
 function obtener_ubicaciones(int $operativo_id): array
 {
     return consultar(
-        'SELECT id, latitud, longitud, precision_m, origen, referencia, registrado_en
+        'SELECT id, latitud, longitud, precision_m, origen, dispositivo, distancia_lugar_m, referencia, registrado_en
          FROM operativo_ubicaciones
          WHERE operativo_id = :id
          ORDER BY registrado_en, id',
@@ -119,7 +119,10 @@ function mostrar_ubicacion(array $ubicacion, bool $con_referencia = true, bool $
 {
     $partes = [];
     if ($con_referencia) {
-        $partes[] = e($ubicacion['referencia']);
+        // La referencia es opcional en el nuevo punto (RN-10).
+        $partes[] = ($ubicacion['referencia'] ?? '') === ''
+            ? '<span class="text-body-secondary">Sin referencia</span>'
+            : e($ubicacion['referencia']);
     }
     $partes[] = e(formatear_hora($ubicacion['registrado_en']));
     // La precisión se omite donde sobra texto (vistas del General); "Manual" siempre se muestra.
@@ -128,10 +131,29 @@ function mostrar_ubicacion(array $ubicacion, bool $con_referencia = true, bool $
     } elseif ($con_precision) {
         $partes[] = 'precisión ' . e($ubicacion['precision_m'] ?? '?') . ' m';
     }
+    $avisos = mostrar_avisos_ubicacion($ubicacion);
+    if ($avisos !== '') {
+        $partes[] = $avisos;
+    }
     $enlace = armar_enlace_google_maps((float) $ubicacion['latitud'], (float) $ubicacion['longitud']);
     return implode(' · ', $partes)
         . ' <a href="' . e($enlace) . '" target="_blank" rel="noopener" class="text-nowrap">'
         . '<i class="bi bi-geo-alt"></i> Ver en Google Maps</a>';
+}
+
+/** Distintivos "Desde PC" y "A 3,2 km del lugar programado" (RN-09a); '' si no hay nada que avisar. */
+function mostrar_avisos_ubicacion(array $ubicacion): string
+{
+    $avisos = [];
+    if (($ubicacion['dispositivo'] ?? null) === 'PC') {
+        $avisos[] = '<span class="badge text-bg-warning"><i class="bi bi-pc-display"></i> Desde PC</span>';
+    }
+    $distancia = $ubicacion['distancia_lugar_m'] ?? null;
+    $distancia = $distancia === null ? null : (int) $distancia;
+    if (lejos_del_lugar_programado($distancia)) {
+        $avisos[] = '<span class="badge text-bg-warning"><i class="bi bi-signpost"></i> A ' . e(formatear_distancia($distancia)) . ' del lugar programado</span>';
+    }
+    return implode(' ', $avisos);
 }
 
 // ---------------------------------------------------------------------------

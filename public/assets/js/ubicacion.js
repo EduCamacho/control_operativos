@@ -3,11 +3,14 @@
  * operativo o registrar un nuevo punto (RN-07 a RN-10, docs/04).
  *
  * 1. Intenta el GPS en alta precisión.
- * 2. Si la precisión es peor que 100 m, ofrece reintentar, usarla o ingresar a mano.
+ * 2. La precisión no se muestra ni se advierte (se guarda igual, RN-08); siempre
+ *    se puede pasar al ingreso manual.
  * 3. Si el GPS falla (permiso, sin señal, PC sin GPS), explica cómo activarlo y
  *    ofrece el ingreso manual: se pegan las coordenadas copiadas de Google Maps
  *    y el servidor las separa en latitud y longitud.
- * 4. Envía con reintento si no hay conexión (envio.js).
+ * 4. El botón "Ubicación correcta" es la confirmación; avisa si se usa una PC o si el
+ *    inicio queda a más de 500 m del lugar programado (RN-09a).
+ * 5. Envía con reintento si no hay conexión (envio.js).
  *
  * Requiere envio.js cargado antes.
  */
@@ -18,7 +21,7 @@ document.addEventListener('alpine:init', function () {
 
     window.Alpine.data('capturaUbicacion', function (config) {
         return {
-            // inactiva | obteniendo | lista | imprecisa | fuera | error | manual | enviando | sin_conexion | hecho
+            // inactiva | obteniendo | lista | fuera | error | manual | enviando | sin_conexion | hecho
             fase: 'inactiva',
             mensajeError: '',
             permisoDenegado: false,
@@ -32,6 +35,7 @@ document.addEventListener('alpine:init', function () {
             longitudManual: '',
             errorManual: '',
             analizando: false,
+            otrasOpciones: false, // "¿No es mi ubicación?" desplegado
             errores: {},
             idEnvio: null,
             envio: null,
@@ -43,7 +47,8 @@ document.addEventListener('alpine:init', function () {
                 // El modal es estático: solo se cierra con la ✕ o Cancelar (ver cancelar()).
                 this.modal = window.bootstrap.Modal.getOrCreateInstance(this.$refs.modal);
                 this.$refs.modal.addEventListener('shown.bs.modal', () => {
-                    if (this.$refs.referencia) this.$refs.referencia.focus();
+                    // Solo si es obligatoria: en el celular, el teclado taparía el botón.
+                    if (this.referenciaObligatoria && this.$refs.referencia) this.$refs.referencia.focus();
                 });
                 this.$refs.modal.addEventListener('hidden.bs.modal', () => {
                     if (!this.bloqueado && this.fase !== 'hecho') {
@@ -64,6 +69,7 @@ document.addEventListener('alpine:init', function () {
                 this.textoPegado = '';
                 this.latitudManual = '';
                 this.longitudManual = '';
+                this.otrasOpciones = false;
                 this.modal.show();
                 this.obtenerGps();
             },
@@ -99,13 +105,8 @@ document.addEventListener('alpine:init', function () {
                 this.longitud = posicion.coords.longitude;
                 this.precision = Math.round(posicion.coords.accuracy);
                 this.origen = 'GPS';
-                if (!this.dentroDeLaLibertad(this.latitud, this.longitud)) {
-                    this.fase = 'fuera';
-                } else if (this.precision > config.precisionMaxima) {
-                    this.fase = 'imprecisa';
-                } else {
-                    this.fase = 'lista';
-                }
+                this.otrasOpciones = false;
+                this.fase = this.dentroDeLaLibertad(this.latitud, this.longitud) ? 'lista' : 'fuera';
             },
 
             alFallarGps(error) {
@@ -121,10 +122,6 @@ document.addEventListener('alpine:init', function () {
             fallar(mensaje) {
                 this.mensajeError = mensaje;
                 this.fase = 'error';
-            },
-
-            usarDeTodosModos() {
-                this.fase = 'lista';
             },
 
             pasarAManual() {
@@ -169,6 +166,7 @@ document.addEventListener('alpine:init', function () {
                 this.longitud = longitud;
                 this.precision = null;
                 this.origen = 'MANUAL';
+                this.otrasOpciones = false;
                 this.fase = 'lista';
             },
 
@@ -185,17 +183,53 @@ document.addEventListener('alpine:init', function () {
                 return 'https://www.google.com/maps/search/?api=1&query=' + Number(latitud).toFixed(7) + ',' + Number(longitud).toFixed(7);
             },
 
-            get textoUbicacion() {
-                if (this.latitud === null) {
+            /** Metros hasta el lugar programado (solo al iniciar), o null. Haversine, como distancia_m() en app/dominio.php. */
+            get distanciaLugar() {
+                const lugar = config.lugarProgramado;
+                if (!lugar || this.latitud === null) {
+                    return null;
+                }
+                const radianes = (grados) => grados * Math.PI / 180;
+                const dLat = radianes(this.latitud - lugar.latitud);
+                const dLng = radianes(this.longitud - lugar.longitud);
+                const a = Math.sin(dLat / 2) ** 2
+                    + Math.cos(radianes(lugar.latitud)) * Math.cos(radianes(this.latitud)) * Math.sin(dLng / 2) ** 2;
+                return Math.round(2 * 6371000 * Math.asin(Math.min(1, Math.sqrt(a))));
+            },
+
+            get lejosDelLugar() {
+                return this.distanciaLugar !== null && this.distanciaLugar > config.distanciaLejos;
+            },
+
+            /** "350 m" o "3,2 km", como formatear_distancia() en app/dominio.php. */
+            get textoDistancia() {
+                const metros = this.distanciaLugar;
+                if (metros === null) {
                     return '';
                 }
-                const coordenadas = this.latitud.toFixed(6) + ', ' + this.longitud.toFixed(6);
-                return this.origen === 'MANUAL' ? coordenadas + ' · ingresada a mano' : coordenadas + ' · precisión ' + this.precision + ' m';
+                return metros < 1000 ? metros + ' m' : (metros / 1000).toFixed(1).replace('.', ',') + ' km';
+            },
+
+            /** Lo decide el servidor con clasificar_dispositivo(), igual que lo que se guarda. */
+            get desdePc() {
+                return config.desdePc === true;
+            },
+
+            /** La referencia es obligatoria al iniciar y opcional en el nuevo punto (RN-10). */
+            get referenciaObligatoria() {
+                return config.accion === 'INICIAR';
+            },
+
+            /** "Ubicación correcta · Iniciar": tocarlo es confirmar la ubicación (RN-09a). */
+            textoBoton(accion) {
+                if (this.fase === 'obteniendo') return 'Obteniendo ubicación…';
+                if (this.fase === 'enviando') return 'Enviando…';
+                return 'Ubicación correcta · ' + accion;
             },
 
             enviar() {
                 this.errores = {};
-                if (this.referencia.trim() === '') {
+                if (this.referenciaObligatoria && this.referencia.trim() === '') {
                     this.errores = { referencia: 'Indique la referencia: calle, avenida o sector.' };
                     this.$refs.referencia && this.$refs.referencia.focus();
                     return;
