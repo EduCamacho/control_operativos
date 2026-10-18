@@ -74,8 +74,14 @@ if ($actual !== null) {
 $jefe_sugerido = $actual === null && $valores['jefe_nombres'] !== '';
 
 $errores = [];
+$id_formulario = (string) ($_POST['id_formulario'] ?? '');
 if (es_post()) {
     verificar_csrf();
+    // El mismo formulario enviado dos veces (doble toque o reintento): no se crea otro operativo.
+    if ($actual === null && ($creado = obtener_creado_con_formulario($id_formulario)) !== null) {
+        guardar_mensaje('info', 'Ese operativo ya estaba programado.');
+        redirigir('operativos/ver', ['id' => $creado]);
+    }
     $tipos_formulario = obtener_tipos_para_formulario($tipos_actuales);
     $ids_tipos = array_map(static fn (array $t): int => (int) $t['id'], $tipos_formulario);
     $campos_datos = array_values(array_intersect(CAMPOS_DATOS, $editables));
@@ -124,6 +130,7 @@ if (es_post()) {
                     $datos + ['unidad_id' => $unidad_id, 'creado_por' => usuario_actual()['id']],
                 );
                 $id = (int) $pdo->lastInsertId();
+                marcar_formulario_usado($id_formulario, $id);
                 $accion_bitacora = 'PROGRAMAR';
                 $detalle = $datos + ['tipos' => $tipos];
             } else {
@@ -234,6 +241,9 @@ require RUTA_APP . '/vistas/cabecera.php';
               'ocupados'       => $ocupados,
           ])) ?>)">
         <?= campo_csrf() ?>
+        <?php if ($actual === null): ?>
+            <input type="hidden" name="id_formulario" value="<?= e(reusar_id_formulario($id_formulario)) ?>">
+        <?php endif; ?>
         <?php require RUTA_APP . '/vistas/asistente_programacion.php'; ?>
     </form>
 </div>

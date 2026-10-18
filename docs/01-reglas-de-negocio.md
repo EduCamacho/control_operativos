@@ -140,8 +140,19 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 **Cuentas y seguridad**
 
 - **RN-17** — Hay **una sola cuenta por unidad**, compartida. Puede estar abierta a la vez en varios dispositivos (la PC de la comisaría y el celular del jefe). Cada acción queda en bitácora con usuario, IP y dispositivo, y el operativo guarda el jefe declarado.
-- **RN-18** — La sesión dura **al menos 12 horas**, para que el jefe no tenga que volver a ingresar en campo.
-- **RN-19** — Cada usuario puede **cambiar su propia clave** (clave actual, nueva de al menos 8 caracteres y distinta, y confirmación). La sesión actual sigue abierta y las de los demás dispositivos solo se cierran si el usuario lo elige, porque la cuenta UNIDAD es compartida (RN-17). Tras 5 intentos fallidos de ingreso, la cuenta se bloquea 15 minutos. El bloqueo es **por cuenta**, sin importar la IP. ADMIN puede resetear claves y desbloquear. Al resetear la clave o desactivar una cuenta, **se cierran todas sus sesiones abiertas**. **HTTPS es obligatorio**, porque sin él el navegador no entrega el GPS.
+- **RN-18** — La sesión dura según el rol (decisión de Eduardo, 18/10/2026), con dos límites: **sin actividad** y **máximo desde el ingreso** (aunque se use todo el tiempo):
+  - **UNIDAD**: 12 horas sin actividad y 24 horas como máximo, para que el jefe no tenga que volver a ingresar en campo.
+  - **SUPERVISOR**: 4 horas sin actividad y 16 horas como máximo.
+  - **ADMIN**: 30 minutos sin actividad y 8 horas como máximo, porque puede cambiar todo.
+  - Al vencer, se vuelve al ingreso con el aviso "Su sesión se cerró por inactividad" (o "Por seguridad, su sesión se cerró") y queda `SESION_VENCIDA` en la bitácora. Los tiempos se cambian en `app/config.php` (`SESION_INACTIVIDAD_S` y `SESION_MAXIMA_S`).
+  - Toda consulta al servidor cuenta como actividad; el mapa del supervisor consulta cada 30 s, así que mientras esté abierto solo vence por el máximo.
+- **RN-19** — Cada usuario puede **cambiar su propia clave** (clave actual, nueva de al menos 8 caracteres y distinta, y confirmación). La sesión actual sigue abierta y las de los demás dispositivos solo se cierran si el usuario lo elige, porque la cuenta UNIDAD es compartida (RN-17). Desde el 5.º intento fallido de ingreso, la cuenta pide **esperas crecientes**: 1, 2, 4 y 8 minutos, y luego 15 como máximo en cada fallo; el contador vuelve a 0 al ingresar bien (decisión de Eduardo, 18/10/2026: antes eran 15 minutos fijos, y un atacante que conoce los usuarios, que son predecibles, podía dejar sin acceso a todas las unidades). La espera es **por cuenta**, sin importar la IP. ADMIN puede resetear claves y desbloquear. Al resetear la clave o desactivar una cuenta, **se cierran todas sus sesiones abiertas**. **HTTPS es obligatorio**, porque sin él el navegador no entrega el GPS.
+- **RN-19a** — **Defensas del ingreso**, porque el sistema está expuesto a internet (decisión de Eduardo, 18/10/2026):
+  - **Límite por conexión**: 15 intentos fallidos desde la misma IP en 15 minutos frenan esa IP 15 minutos, aunque luego escriba la clave correcta. No bloquea la cuenta. Ojo: varios celulares de la misma red móvil pueden compartir IP; por eso el límite es holgado.
+  - **Campo trampa (honeypot)**: un campo invisible que solo llenan los bots. Si viene lleno, se rechaza con el mensaje genérico.
+  - **Cloudflare Turnstile**: verificación de que es una persona, casi siempre invisible. Se activa al configurar sus claves.
+  - Cada rechazo queda en `intentos_ingreso` y en la bitácora, con la IP real del visitante (detrás de Cloudflare, `CF-Connecting-IP`).
+  - En Cloudflare se bloquean las conexiones de fuera del Perú (docs/03).
 - **RN-20** — Una cuenta con rol UNIDAD debe tener una unidad asignada, y cada unidad tiene como máximo una cuenta. Las cuentas ADMIN y SUPERVISOR no tienen unidad.
 
 ## Flujo típico de un turno

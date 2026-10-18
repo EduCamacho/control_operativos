@@ -18,6 +18,11 @@ defined('SOPORTE_NOMBRE') || define('SOPORTE_NOMBRE', '');
 defined('SOPORTE_CELULAR') || define('SOPORTE_CELULAR', '');
 defined('SOPORTE_WHATSAPP') || define('SOPORTE_WHATSAPP', false);
 defined('VIDEO_TUTORIAL_UNIDAD_URL') || define('VIDEO_TUTORIAL_UNIDAD_URL', '');
+defined('TURNSTILE_SITE_KEY') || define('TURNSTILE_SITE_KEY', '');
+defined('TURNSTILE_SECRET_KEY') || define('TURNSTILE_SECRET_KEY', '');
+defined('CSP_APLICAR') || define('CSP_APLICAR', false);
+defined('SESION_INACTIVIDAD_S') || define('SESION_INACTIVIDAD_S', ['ADMIN' => 1800, 'SUPERVISOR' => 14400, 'UNIDAD' => 43200]);
+defined('SESION_MAXIMA_S') || define('SESION_MAXIMA_S', ['ADMIN' => 28800, 'SUPERVISOR' => 57600, 'UNIDAD' => 86400]);
 
 date_default_timezone_set('America/Lima');
 mb_internal_encoding('UTF-8');
@@ -160,7 +165,36 @@ function enviar_cabeceras_seguridad(): void
     header('X-Frame-Options: SAMEORIGIN');
     header('Referrer-Policy: same-origin');
     header('Permissions-Policy: geolocation=(self), camera=(), microphone=()');
+    // Sistema interno: que los buscadores no lo indexen (también public/robots.txt).
+    header('X-Robots-Tag: noindex, nofollow');
+    // CSP (RN-19a): con CSP_APLICAR = false solo informa en la consola lo que bloquearía.
+    header((CSP_APLICAR ? 'Content-Security-Policy: ' : 'Content-Security-Policy-Report-Only: ') . armar_politica_contenido());
     if (ENTORNO === 'produccion') {
         header('Strict-Transport-Security: max-age=31536000');
     }
+}
+
+/**
+ * Política de contenido: solo recursos propios, más Cloudflare Turnstile (ingreso)
+ * y Google Maps (pantallas del SUPERVISOR, RN-21). Alpine.js necesita 'unsafe-eval'
+ * y hay scripts y estilos en línea, por eso 'unsafe-inline'; aun así impide cargar
+ * scripts de otros dominios, enviar datos a ellos y que el sitio se incruste en otro.
+ */
+function armar_politica_contenido(): string
+{
+    $google = 'https://maps.googleapis.com https://maps.gstatic.com';
+    return implode('; ', [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com $google",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "img-src 'self' data: blob: $google https://*.googleapis.com https://*.gstatic.com https://*.ggpht.com",
+        "font-src 'self' data: https://fonts.gstatic.com",
+        "connect-src 'self' https://challenges.cloudflare.com $google https://*.googleapis.com",
+        'frame-src https://challenges.cloudflare.com',
+        "worker-src 'self' blob:",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'self'",
+    ]);
 }

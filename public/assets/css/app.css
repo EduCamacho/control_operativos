@@ -826,6 +826,15 @@
     margin-bottom: .6rem;
 }
 
+/* Ingreso: campo trampa para bots, fuera de la vista (no display:none, que algunos bots detectan). */
+.campo-trampa {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
 /* Ayuda: preguntas frecuentes plegables. */
 .preguntas-frecuentes summary {
     cursor: pointer;

@@ -99,7 +99,12 @@ if ($accion === 'guardar') {
         $errores['hora_inicio'] = $error->getMessage();
     }
 
-    ['datos' => $ejecucion, 'errores' => $errores_ejecucion] = validar_ejecucion($_POST, $puntos > 0, $ahora);
+    // Las horas reales que ADMIN no cambió conservan sus segundos (el campo solo tiene minutos).
+    $entrada_ejecucion = $_POST;
+    foreach (['inicio_real', 'fin_real'] as $campo) {
+        $entrada_ejecucion[$campo] = restaurar_segundos((string) ($_POST[$campo] ?? ''), $actual[$campo] ?? null);
+    }
+    ['datos' => $ejecucion, 'errores' => $errores_ejecucion] = validar_ejecucion($entrada_ejecucion, $puntos > 0, $ahora);
     $errores += $errores_ejecucion;
     $finalizado = ($ejecucion['estado'] ?? null) === 'FINALIZADO';
 

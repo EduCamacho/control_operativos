@@ -146,6 +146,7 @@
                 editables: config.pasosEditables,
                 ocupados: config.ocupados,
                 error: '',
+                enviando: false,
                 revision: {},
                 pasos: [
                     { numero: 1, titulo: 'Cuándo' },
@@ -158,6 +159,18 @@
                     if (this.paso === 4) {
                         this.$nextTick(() => this.armarRevision());
                     }
+                    // Un solo envío: el segundo toque no vuelve a mandar el formulario.
+                    this.$root.addEventListener('submit', (evento) => {
+                        if (this.enviando) {
+                            evento.preventDefault();
+                            return;
+                        }
+                        this.enviando = true;
+                    });
+                    // Al volver con "Atrás" del navegador, la página restaurada debe poder enviarse otra vez.
+                    window.addEventListener('pageshow', (evento) => {
+                        if (evento.persisted) this.enviando = false;
+                    });
                     // Enter en un campo pasa al paso siguiente en vez de enviar el formulario.
                     this.$root.addEventListener('keydown', (evento) => {
                         if (evento.key === 'Enter' && this.paso < 4 && evento.target.tagName !== 'TEXTAREA') {
