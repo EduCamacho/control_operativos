@@ -759,25 +759,29 @@ function sumar_fuerzas_por_turno(array $matriz): array
 }
 
 /**
- * Cuadro "En este momento" del mapa del SUPERVISOR: efectivos (propios y de
- * apoyo) y unidades móviles de los operativos en estado visible EN_CURSO. Los
+ * Cuadro "En este momento" del mapa del SUPERVISOR: efectivos (propios + de
+ * apoyo, y cada uno por separado) y unidades móviles de los operativos en estado visible EN_CURSO. Los
  * SIN_CIERRE no cuentan: ya pasó su hora de fin y probablemente se retiraron.
  * Al ser simultáneos, la suma no repite personas. Son las fuerzas declaradas al
  * programar: si salieron menos, el sistema no lo sabe.
  *
  * @param list<array{estado: string, fuerzas_propias: int|string, fuerzas_apoyo: int|string, unidades_moviles: int|string}> $operativos
  *        Con el estado visible (calcular_estado_visible()).
- * @return array{operativos: int, efectivos: int, moviles: int}
+ * @return array{operativos: int, efectivos: int, propias: int, apoyo: int, moviles: int}
  */
 function sumar_fuerzas_en_curso(array $operativos): array
 {
-    $suma = ['operativos' => 0, 'efectivos' => 0, 'moviles' => 0];
+    $suma = ['operativos' => 0, 'efectivos' => 0, 'propias' => 0, 'apoyo' => 0, 'moviles' => 0];
     foreach ($operativos as $operativo) {
         if ($operativo['estado'] !== 'EN_CURSO') {
             continue;
         }
+        $propias = (int) $operativo['fuerzas_propias'];
+        $apoyo = (int) $operativo['fuerzas_apoyo'];
         $suma['operativos']++;
-        $suma['efectivos'] += (int) $operativo['fuerzas_propias'] + (int) $operativo['fuerzas_apoyo'];
+        $suma['efectivos'] += $propias + $apoyo;
+        $suma['propias'] += $propias;
+        $suma['apoyo'] += $apoyo;
         $suma['moviles'] += (int) $operativo['unidades_moviles'];
     }
     return $suma;

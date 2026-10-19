@@ -394,6 +394,14 @@
     color: #1f6f50;
 }
 
+/* Propios y de apoyo, debajo del total de efectivos (alineado con el texto, no con el ícono). */
+.mapa-ahora-desglose {
+    display: block;
+    padding-left: 1.3em;
+    font-size: .75rem;
+    color: #6b747d;
+}
+
 @media (max-width: 575.98px) {
     .mapa-ahora {
         padding: .3rem .5rem;

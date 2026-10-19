@@ -446,8 +446,8 @@ final class DominioTest extends TestCase
             $operativo('PROGRAMADO', 6, 0, 1),
             $operativo('NO_INICIADO', 7, 0, 1),
         ]);
-        $this->assertSame(['operativos' => 2, 'efectivos' => 17, 'moviles' => 4], $suma);
-        $this->assertSame(['operativos' => 0, 'efectivos' => 0, 'moviles' => 0], sumar_fuerzas_en_curso([]));
+        $this->assertSame(['operativos' => 2, 'efectivos' => 17, 'propias' => 15, 'apoyo' => 2, 'moviles' => 4], $suma);
+        $this->assertSame(['operativos' => 0, 'efectivos' => 0, 'propias' => 0, 'apoyo' => 0, 'moviles' => 0], sumar_fuerzas_en_curso([]));
     }
 
     public function test_divisiones_partidas_por_el_orden(): void

@@ -101,7 +101,8 @@ require RUTA_APP . '/vistas/cabecera.php';
             </div>
             <template x-if="enCurso && enCurso.operativos > 0">
                 <div class="mapa-ahora-cifras">
-                    <span><i class="bi bi-people-fill"></i> <strong x-text="enCurso.efectivos"></strong> <span x-text="enCurso.efectivos === 1 ? 'efectivo' : 'efectivos'"></span></span>
+                    <span><i class="bi bi-people-fill"></i> <strong x-text="enCurso.efectivos"></strong> <span x-text="enCurso.efectivos === 1 ? 'efectivo' : 'efectivos'"></span>
+                        <span class="mapa-ahora-desglose" x-text="enCurso.propias + (enCurso.propias === 1 ? ' propio' : ' propios') + ' · ' + enCurso.apoyo + ' de apoyo'"></span></span>
                     <span><i class="bi bi-car-front-fill"></i> <strong x-text="enCurso.moviles"></strong> <span x-text="enCurso.moviles === 1 ? 'móvil' : 'móviles'"></span></span>
                     <span><strong x-text="enCurso.operativos"></strong><span class="mapa-ahora-largo" x-text="enCurso.operativos === 1 ? ' operativo' : ' operativos'"></span> en curso</span>
                 </div>
