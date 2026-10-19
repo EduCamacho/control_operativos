@@ -42,29 +42,19 @@
 .reporte-tarjetas .division-divopus .tarjeta-cifra  { color: #3949ab; }
 .reporte-tarjetas .division-due .tarjeta-cifra      { color: #8e24aa; }
 .reporte-tarjetas .division-divincri .tarjeta-cifra { color: #00838f; }
-/* Personal y recursos: casillas blancas con borde fino gris y un ícono en un círculo
-   verde claro; sin franja de color, para que no se confundan con las divisiones. */
+/* Personal y recursos: una casilla blanca por turno, con borde fino gris, el nombre del
+   turno y dos líneas (efectivos y móviles) con su ícono; sin franja de color, para que no
+   se confundan con las divisiones. Los turnos sin nada van en gris. */
 .reporte .reporte-fuerzas { border-collapse: separate; border-spacing: 4pt; }
-.reporte-fuerzas td.fuerza { width: 25%; padding: .5em .6em; border: .5pt solid #d8dde2; border-radius: 4pt; background: #ffffff; vertical-align: middle; }
+.reporte-fuerzas td.fuerza { width: 25%; padding: .5em .7em; border: .5pt solid #d8dde2; border-radius: 4pt; background: #ffffff; vertical-align: top; }
+.reporte .fuerza-turno { display: block; font-size: .75em; font-weight: bold; letter-spacing: .05em; text-transform: uppercase; color: #1f6f50; margin-bottom: .2em; }
 .reporte .fuerza-contenido { border-collapse: collapse; width: 100%; }
-.reporte .fuerza-contenido td { padding: 0; border: 0; vertical-align: middle; }
-.reporte .fuerza-contenido td.fuerza-icono { width: 2.8em; padding-right: .5em; }
-.reporte .fuerza-icono img { box-sizing: content-box; /* Bootstrap usa border-box y achicaría el ícono */
-    width: 1.6em; height: 1.6em; padding: .45em; border-radius: 50%; background: #e6f1eb; }
-.reporte .fuerza-cifra { display: block; font-size: 1.7em; font-weight: bold; color: #1d2329; line-height: 1.1; }
-.reporte .fuerza-titulo { display: block; font-size: .8em; font-weight: bold; color: #1d2329; }
-.reporte .fuerza-detalle { display: block; font-size: .7em; color: #6b747d; }
-/* El total de efectivos se distingue del detalle: más ancho, fondo verde claro,
-   cifra verde más grande e ícono blanco sobre círculo verde lleno. */
-.reporte-fuerzas td.fuerza { width: 22%; }
-.reporte-fuerzas td.fuerza-total { width: 34%; border: 1pt solid #1f6f50; background: #eef6f1; }
-.reporte .fuerza-total .fuerza-icono img { background: #1f6f50; }
-.reporte .fuerza-total .fuerza-cifra { font-size: 2.1em; color: #1f6f50; }
-.reporte-fuerzas-division { color: #4b5560; }
-.reporte .marca-division { display: inline-block; width: .7em; height: .7em; margin-right: .3em; border-radius: 1pt; }
-.reporte .marca-division.division-divopus  { background: #3949ab; }
-.reporte .marca-division.division-due      { background: #8e24aa; }
-.reporte .marca-division.division-divincri { background: #00838f; }
+.reporte .fuerza-contenido td { padding: .1em 0; border: 0; vertical-align: middle; }
+.reporte .fuerza-contenido td.fuerza-icono { width: 1.6em; }
+.reporte .fuerza-icono img { width: 1.2em; height: 1.2em; }
+.reporte .fuerza-cifra { font-size: 1.5em; font-weight: bold; color: #1d2329; }
+.reporte .fuerza-titulo { font-size: .8em; color: #4b5560; }
+.reporte .fuerza-vacia .fuerza-turno, .reporte .fuerza-vacia .fuerza-cifra { color: #aab2ba; }
 .reporte-matriz .fila-division.division-divopus td  { background: #eceefa; color: #283593; border-left: 3pt solid #3949ab; }
 .reporte-matriz .fila-division.division-due td      { background: #f5e9f8; color: #6a1b9a; border-left: 3pt solid #8e24aa; }
 .reporte-matriz .fila-division.division-divincri td { background: #e3f4f5; color: #006064; border-left: 3pt solid #00838f; }
@@ -123,12 +113,11 @@
     .reporte-encabezado td { display: block; border-bottom: 0; padding: 0; }
     .reporte-encabezado td.reporte-logo { margin-bottom: .5em; }
     .reporte-generado { width: auto; text-align: left; margin-top: .3em; }
-    /* Personal y recursos: 2 por fila. */
+    /* Personal y recursos: 2 turnos por fila. */
     .reporte .reporte-fuerzas { display: block; }
     .reporte-fuerzas > tbody { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .reporte-fuerzas > tbody > tr { display: contents; }
     .reporte-fuerzas td.fuerza { display: block; width: auto; }
-    .reporte-fuerzas td.fuerza-total { grid-column: 1 / -1; } /* el total ocupa toda la fila */
     /* Cifras principales: 2 por fila. */
     .reporte .reporte-tarjetas { display: block; }
     .reporte-tarjetas tbody { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }

@@ -147,7 +147,7 @@ function armar_reporte_servicio(string $fecha_servicio, string $division, DateTi
         'unidades'   => count($unidades),
         'matriz'     => $matriz,
         'cifras'     => contar_realizados_por_division($matriz),
-        'fuerzas'    => sumar_fuerzas_realizadas($matriz),
+        'fuerzas'    => sumar_fuerzas_por_turno($matriz),
         'resultados' => $resultados,
         'positivos'  => $positivos,
         'negativos'  => $negativos,

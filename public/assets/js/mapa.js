@@ -32,6 +32,8 @@ document.addEventListener('alpine:init', function () {
             config: config,
             operativos: [],
             servicio: '',
+            enCurso: null,          // cuadro "En este momento": {operativos, efectivos, moviles}
+            horaServidor: '',
             ultimaCarga: null,
             ahora: Date.now(),
             errorCarga: '',
@@ -83,6 +85,8 @@ document.addEventListener('alpine:init', function () {
                     const datos = await respuesta.json();
                     this.operativos = datos.operativos;
                     this.servicio = datos.servicio_etiqueta;
+                    this.enCurso = datos.en_curso;
+                    this.horaServidor = datos.hora_servidor.slice(0, 5);
                     this.ultimaCarga = Date.now();
                     this.errorCarga = '';
                     this.actualizarMarcadores();

@@ -399,26 +399,55 @@ final class DominioTest extends TestCase
         $this->assertSame(['DIVOPUS' => 2, 'DUE' => 0], $c['divisiones']);
     }
 
-    public function test_fuerzas_de_los_operativos_realizados(): void
+    public function test_fuerzas_por_turno_de_los_operativos_realizados(): void
     {
         $unidades = [['id' => 1, 'division' => 'DUE'], ['id' => 2, 'division' => 'DIVOPUS']];
         $con_fuerzas = static fn (array $o, int $propias, int $apoyo, int $moviles): array => $o + [
             'fuerzas_propias' => $propias, 'fuerzas_apoyo' => $apoyo, 'unidades_moviles' => $moviles,
         ];
         $operativos = [
+            // Dos en la mañana, de unidades distintas: se suman en el mismo turno.
             $con_fuerzas(self::operativo_reporte(2, 'MANANA', 'FINALIZADO', '2026-10-18 07:00:00', '2026-10-18 09:00:00'), 10, 2, 1),
-            $con_fuerzas(self::operativo_reporte(2, 'TARDE', 'EN_CURSO', '2026-10-18 12:00:00', '2026-10-18 13:00:00'), 5, 0, 2),
+            $con_fuerzas(self::operativo_reporte(1, 'MANANA', 'FINALIZADO', '2026-10-18 08:00:00', '2026-10-18 10:00:00'), 4, 0, 1),
+            // Pasado de hora (SIN_CIERRE) también cuenta.
+            $con_fuerzas(self::operativo_reporte(2, 'TARDE', 'EN_CURSO', '2026-10-18 12:00:00', '2026-10-18 13:00:00'), 5, 1, 2),
             // Programado: su personal todavía no se empleó.
             $con_fuerzas(self::operativo_reporte(1, 'NOCHE', 'PROGRAMADO', '2026-10-18 20:00:00', '2026-10-18 22:00:00'), 30, 5, 4),
         ];
         $matriz = armar_matriz_servicio($unidades, $operativos, '2026-10-18', self::lima('2026-10-18 14:00:00'), 15, 30);
-        $f = sumar_fuerzas_realizadas($matriz);
+        $f = sumar_fuerzas_por_turno($matriz);
 
-        $this->assertSame([15, 2, 17, 3], [$f['propias'], $f['apoyo'], $f['efectivos'], $f['moviles']]);
-        $this->assertSame(
-            ['DIVOPUS' => ['efectivos' => 17, 'moviles' => 3], 'DUE' => ['efectivos' => 0, 'moviles' => 0]],
-            $f['divisiones'],
-        );
+        $this->assertSame(TURNOS, array_keys($f));
+        $this->assertSame(['efectivos' => 16, 'moviles' => 2], $f['MANANA']);
+        $this->assertSame(['efectivos' => 6, 'moviles' => 2], $f['TARDE']);
+        $vacio = ['efectivos' => 0, 'moviles' => 0];
+        $this->assertSame($vacio, $f['NOCHE']);
+        $this->assertSame($vacio, $f['MADRUGADA']);
+    }
+
+    public function test_fuerzas_por_turno_sin_operativos(): void
+    {
+        $matriz = armar_matriz_servicio([['id' => 1, 'division' => 'DUE']], [], '2026-10-18', self::lima('2026-10-18 14:00:00'), 15, 30);
+        $vacio = ['efectivos' => 0, 'moviles' => 0];
+        $this->assertSame(array_fill_keys(TURNOS, $vacio), sumar_fuerzas_por_turno($matriz));
+    }
+
+    public function test_fuerzas_en_curso_solo_cuenta_en_curso(): void
+    {
+        $operativo = static fn (string $estado, int|string $propias, int|string $apoyo, int|string $moviles): array => [
+            'estado' => $estado, 'fuerzas_propias' => $propias, 'fuerzas_apoyo' => $apoyo, 'unidades_moviles' => $moviles,
+        ];
+        $suma = sumar_fuerzas_en_curso([
+            $operativo('EN_CURSO', 10, 2, 3),
+            $operativo('EN_CURSO', '5', '0', '1'), // así llegan de PDO
+            // Ya pasó la hora de fin: probablemente se retiraron.
+            $operativo('SIN_CIERRE', 20, 5, 4),
+            $operativo('FINALIZADO', 8, 0, 2),
+            $operativo('PROGRAMADO', 6, 0, 1),
+            $operativo('NO_INICIADO', 7, 0, 1),
+        ]);
+        $this->assertSame(['operativos' => 2, 'efectivos' => 17, 'propias' => 15, 'apoyo' => 2, 'moviles' => 4], $suma);
+        $this->assertSame(['operativos' => 0, 'efectivos' => 0, 'propias' => 0, 'apoyo' => 0, 'moviles' => 0], sumar_fuerzas_en_curso([]));
     }
 
     public function test_divisiones_partidas_por_el_orden(): void
