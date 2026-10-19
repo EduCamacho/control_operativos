@@ -25,7 +25,7 @@ declare(strict_types=1);
     <h2 class="h6">Jefe del operativo</h2>
     <?php require RUTA_APP . '/vistas/campos_jefe.php'; ?>
 </div>
-<div class="card card-body shadow-sm mb-3">
+<div class="card card-body shadow-sm mb-3 rejilla-contadores rejilla-3">
     <h2 class="h6">Fuerzas</h2>
     <?php require RUTA_APP . '/vistas/campos_fuerzas.php'; ?>
 </div>
