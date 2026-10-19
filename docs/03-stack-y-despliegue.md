@@ -142,7 +142,7 @@ Son funciones puras, sin acceso a la base de datos, y cada una tiene sus tests e
 3. **Base de datos**: en *Bases de datos MySQL*:
    - Crear la base (por ejemplo `usuario_operativos`) y un usuario con clave larga.
    - Dar al usuario solo **SELECT, INSERT, UPDATE y DELETE** sobre esa base. Los cambios de estructura se aplican desde phpMyAdmin con la cuenta de cPanel, no con este usuario.
-4. **Esquema**: en phpMyAdmin, elegir la base e importar **en orden** `sql/001_esquema.sql`, `002_datos_iniciales.sql`, `003_madrugada_origen_sesion.sql`, `004_id_envio_ubicaciones.sql`, `005_id_envio_controles.sql`, `006_coordenadas_lugar_programado.sql`, `007_quitar_nombre_plan.sql`, `008_varios_operativos_por_turno.sql`, `009_dispositivo_distancia_ubicaciones.sql`, `010_referencia_opcional_ubicaciones.sql`, `011_intentos_ingreso.sql` y `012_icono_conceptos.sql`. Anotar en la tabla de abajo cuáles se aplicaron.
+4. **Esquema**: en phpMyAdmin, elegir la base e importar **en orden** `sql/001_esquema.sql`, `002_datos_iniciales.sql`, `003_madrugada_origen_sesion.sql`, `004_id_envio_ubicaciones.sql`, `005_id_envio_controles.sql`, `006_coordenadas_lugar_programado.sql`, `007_quitar_nombre_plan.sql`, `008_varios_operativos_por_turno.sql`, `009_dispositivo_distancia_ubicaciones.sql`, `010_referencia_opcional_ubicaciones.sql`, `011_intentos_ingreso.sql`, `012_icono_conceptos.sql` y `013_dos_cuentas_por_unidad.sql`. Anotar en la tabla de abajo cuáles se aplicaron.
 5. **Archivos**: en el *Administrador de archivos*, crear `/home/USUARIO/control_operativos/`, subir el `.zip` ahí y usar *Extract*. Borrar el `.zip` después.
 6. **Configuración**: copiar `app/config.ejemplo.php` como `app/config.php` y completar:
    - `ENTORNO = 'produccion'` y `URL_BASE = ''`.
@@ -203,6 +203,7 @@ No hay tareas programadas (cron), así que el respaldo es manual: al menos una v
 | `010_referencia_opcional_ubicaciones.sql` | | |
 | `011_intentos_ingreso.sql` | | |
 | `012_icono_conceptos.sql` | | |
+| `013_dos_cuentas_por_unidad.sql` | | |
 
 ## Dompdf (reportes en PDF)
 

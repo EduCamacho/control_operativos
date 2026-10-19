@@ -7,7 +7,7 @@ Motor: MySQL 8 o MariaDB 10.6+, con `utf8mb4` y tablas InnoDB.
 
 ```mermaid
 erDiagram
-    unidades ||--o| usuarios : "tiene (rol UNIDAD)"
+    unidades ||--o{ usuarios : "tiene hasta 2 (rol UNIDAD)"
     unidades ||--o{ operativos : programa
     operativos }o--o{ tipos_operativo : "operativo_tipos"
     operativos ||--|{ operativo_ubicaciones : recorrido
@@ -23,7 +23,7 @@ erDiagram
 | Tabla | Contenido | Claves y notas |
 |---|---|---|
 | `unidades` | Las 26 comisarías y unidades | `division`: `DIVOPUS`, `DUE` o `DIVINCRI`. `nombre` es el nombre completo y `nombre_corto` el que se muestra en el mapa. |
-| `usuarios` | Cuentas del sistema | `rol`: `ADMIN`, `SUPERVISOR` o `UNIDAD`. `unidad_id` es único: una cuenta por unidad. Las cuentas ADMIN y SUPERVISOR tienen `unidad_id` NULL. |
+| `usuarios` | Cuentas del sistema, una por persona | `rol`: `ADMIN`, `SUPERVISOR` o `UNIDAD`. Hasta dos cuentas activas por unidad (RN-20; el límite lo controla el sistema, no la base). `grado`, `cip` (único) y `celular` son obligatorios en las cuentas UNIDAD y opcionales (NULL) en las demás. Las cuentas ADMIN y SUPERVISOR tienen `unidad_id` NULL. Se cambia con `sql/013`. |
 | `tipos_operativo` | Catálogo: control de identidad, rastrillaje, etc. | Lo administra ADMIN. |
 | `conceptos_resultado` | Catálogo: detenidos en flagrancia, papeletas IRNT, etc. | Lo administra ADMIN. El formulario de cierre se genera a partir de este catálogo. |
 | `operativos` | Los operativos de cada unidad; puede haber varios por fecha de servicio y turno (RN-01) | Índice `(unidad_id, fecha_servicio, turno)` sin unicidad (`sql/008` quitó la clave única). `estado`: `PROGRAMADO`, `EN_CURSO` o `FINALIZADO`. |
@@ -31,7 +31,7 @@ erDiagram
 | `operativo_ubicaciones` | Puntos del recorrido | La última por `registrado_en` es la posición actual. `origen` es `GPS` (con precisión en metros) o `MANUAL` (sin precisión), RN-09. |
 | `operativo_resultados` | Cantidad por concepto | Clave primaria `(operativo_id, concepto_resultado_id)`. Se crean al finalizar. |
 | `controles_inopinados` | Controles del General | Resultado y observación. Desde el 17/10/2026 no se guardan la ubicación del supervisor ni la distancia (puede controlar con un dron); esas columnas quedan para los controles anteriores. |
-| `bitacora` | Auditoría de acciones | Es obligatoria porque las cuentas de unidad son compartidas (RN-17). La IP es la real del visitante, también detrás de Cloudflare. |
+| `bitacora` | Auditoría de acciones | Es obligatoria porque cada cuenta puede usarse en varios dispositivos (RN-17). La IP es la real del visitante, también detrás de Cloudflare. |
 | `intentos_ingreso` | Ingresos fallidos por IP (RN-19a) | `motivo`: `CLAVE`, `TRAMPA` (campo trampa lleno) o `VERIFICACION` (Turnstile). Se cuentan los de los últimos 15 minutos por IP; los de más de un día se borran al registrar uno nuevo (no hay cron). Se agrega con `sql/011`. |
 
 ## Decisiones de diseño

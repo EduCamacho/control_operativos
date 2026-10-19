@@ -2,18 +2,23 @@
 /**
  * ADMIN: lista de unidades por división (docs/04). La búsqueda y los chips de
  * división filtran en el navegador, sin recargar. Cada fila abre el formulario
- * (donde también se activa o desactiva); las unidades sin cuenta tienen
- * "Crear cuenta", que abre el formulario de usuario con la unidad ya elegida.
+ * (donde también se activa o desactiva); las unidades con cupo de cuentas
+ * (RN-20) tienen "Crear cuenta", que abre el formulario de usuario con la
+ * unidad ya elegida.
  */
 declare(strict_types=1);
 
 requiere_rol('ADMIN');
 
 $unidades = consultar(
-    'SELECT un.id, un.division, un.nombre, un.nombre_corto, un.orden, un.activo, us.usuario
+    "SELECT un.id, un.division, un.nombre, un.nombre_corto, un.orden, un.activo,
+            COALESCE(c.cantidad, 0) AS cuentas, c.usuarios
      FROM unidades un
-     LEFT JOIN usuarios us ON us.unidad_id = un.id
-     ORDER BY un.orden, un.nombre_corto',
+     LEFT JOIN (
+         SELECT unidad_id, COUNT(*) AS cantidad, GROUP_CONCAT(usuario ORDER BY usuario SEPARATOR ', ') AS usuarios
+         FROM usuarios WHERE activo = 1 AND unidad_id IS NOT NULL GROUP BY unidad_id
+     ) c ON c.unidad_id = un.id
+     ORDER BY un.orden, un.nombre_corto",
 )->fetchAll();
 
 // Una sección por división, en el orden de DIVISIONES (Alpine las pinta con x-text, que escapa el texto).
@@ -28,10 +33,10 @@ foreach ($unidades as $unidad) {
         'orden'      => (int) $unidad['orden'],
         'corto'      => $unidad['nombre_corto'],
         'nombre'     => $unidad['nombre'],
-        'usuario'    => $unidad['usuario'],
-        'url_cuenta' => $unidad['usuario'] === null ? armar_url('admin/usuarios/editar', ['unidad_id' => $unidad['id']]) : null,
+        'usuario'    => $unidad['usuarios'],
+        'url_cuenta' => $unidad['cuentas'] < MAX_CUENTAS_POR_UNIDAD ? armar_url('admin/usuarios/editar', ['unidad_id' => $unidad['id']]) : null,
         'activo'     => (bool) $unidad['activo'],
-        'buscar'     => $unidad['nombre_corto'] . ' ' . $unidad['nombre'] . ' ' . ($unidad['usuario'] ?? ''),
+        'buscar'     => $unidad['nombre_corto'] . ' ' . $unidad['nombre'] . ' ' . ($unidad['usuarios'] ?? ''),
     ];
 }
 $secciones = array_values($secciones);

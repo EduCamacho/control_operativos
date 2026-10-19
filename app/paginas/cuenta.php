@@ -2,9 +2,9 @@
 /**
  * Mi cuenta (todas las cuentas): los datos de la cuenta, de solo lectura (los
  * administra el ADMIN), y el formulario para cambiar la propia clave.
- * La cuenta UNIDAD es compartida (RN-17): por eso la sesión actual se mantiene y
- * las de los demás dispositivos solo se cierran si el usuario lo elige
- * (version_sesion, RN-19).
+ * La cuenta UNIDAD puede estar abierta en varios dispositivos (RN-17): por eso la
+ * sesión actual se mantiene y las de los demás dispositivos solo se cierran si el
+ * usuario lo elige (version_sesion, RN-19).
  */
 declare(strict_types=1);
 
@@ -12,7 +12,8 @@ $usuario = requiere_login();
 $errores = [];
 $cerrar_otras = false;
 $ahora = obtener_ahora();
-$ultimo_acceso = consultar('SELECT ultimo_acceso FROM usuarios WHERE id = :id', ['id' => $usuario['id']])->fetchColumn() ?: null;
+$persona = consultar('SELECT grado, cip, celular, ultimo_acceso FROM usuarios WHERE id = :id', ['id' => $usuario['id']])->fetch();
+$ultimo_acceso = $persona['ultimo_acceso'] ?? null;
 
 if (es_post()) {
     verificar_csrf();
@@ -83,7 +84,15 @@ require RUTA_APP . '/vistas/cabecera.php';
                 <dt class="col-5 col-sm-4 fw-normal text-body-secondary">Usuario</dt>
                 <dd class="col-7 col-sm-8 fw-semibold"><?= e($usuario['usuario']) ?></dd>
                 <dt class="col-5 col-sm-4 fw-normal text-body-secondary">Nombre</dt>
-                <dd class="col-7 col-sm-8"><?= e($usuario['nombre']) ?></dd>
+                <dd class="col-7 col-sm-8"><?= e(trim(($persona['grado'] ?? '') . ' ' . $usuario['nombre'])) ?></dd>
+                <?php if (($persona['cip'] ?? null) !== null): ?>
+                    <dt class="col-5 col-sm-4 fw-normal text-body-secondary">CIP</dt>
+                    <dd class="col-7 col-sm-8"><?= e($persona['cip']) ?></dd>
+                <?php endif; ?>
+                <?php if (($persona['celular'] ?? null) !== null): ?>
+                    <dt class="col-5 col-sm-4 fw-normal text-body-secondary">Celular</dt>
+                    <dd class="col-7 col-sm-8"><?= e($persona['celular']) ?></dd>
+                <?php endif; ?>
                 <dt class="col-5 col-sm-4 fw-normal text-body-secondary">Rol</dt>
                 <dd class="col-7 col-sm-8"><?= e(obtener_etiqueta_rol($usuario['rol'])) ?></dd>
                 <?php if ($usuario['unidad_nombre'] !== null): ?>
@@ -94,7 +103,7 @@ require RUTA_APP . '/vistas/cabecera.php';
                 <dd class="col-7 col-sm-8 mb-0">
                     <?= e($ultimo_acceso === null ? '—' : formatear_hora($ultimo_acceso) . ' · ' . formatear_hace($ultimo_acceso, $ahora)) ?>
                     <?php if ($usuario['rol'] === 'UNIDAD'): ?>
-                        <span class="d-block small text-body-secondary">Desde cualquier dispositivo: la cuenta es compartida.</span>
+                        <span class="d-block small text-body-secondary">Desde cualquier dispositivo: la cuenta puede estar abierta en la PC y en el celular.</span>
                     <?php endif; ?>
                 </dd>
             </dl>
@@ -119,7 +128,7 @@ require RUTA_APP . '/vistas/cabecera.php';
         <?php if ($usuario['rol'] === 'UNIDAD'): ?>
             <div class="aviso-estado small mb-3">
                 <i class="bi bi-people"></i>
-                Esta cuenta es compartida por la unidad. Avise la clave nueva a quienes la usan (por ejemplo, al jefe del operativo en campo).
+                Si esta cuenta la usa también otra persona (por ejemplo, el jefe del operativo en campo), avísele la clave nueva.
             </div>
         <?php endif; ?>
 
