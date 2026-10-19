@@ -349,6 +349,75 @@
     }
 }
 
+/* Cuadro "En este momento" sobre el mapa: arriba a la izquierda, blanco semitransparente.
+   En el celular, una sola línea: "45 · 9 · 6 en curso" con sus íconos. */
+.mapa-ahora {
+    position: absolute;
+    top: .5rem;
+    left: .5rem;
+    z-index: 1;
+    padding: .4rem .65rem;
+    border-radius: .5rem;
+    background: rgba(255, 255, 255, .9);
+    color: #1d2329;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .25);
+    font-size: .875rem;
+    line-height: 1.35;
+}
+
+.mapa-ahora-titulo {
+    font-weight: 600;
+    font-size: .8rem;
+}
+
+.mapa-ahora-hora {
+    margin-left: .5rem;
+    color: #6b747d;
+    font-weight: 400;
+}
+
+.mapa-ahora-vivo {
+    display: inline-block;
+    width: .55rem;
+    height: .55rem;
+    margin-right: .2rem;
+    border-radius: 50%;
+    background: #198754;
+    box-shadow: 0 0 0 2px rgba(25, 135, 84, .25);
+}
+
+.mapa-ahora-cifras > span {
+    display: block;
+}
+
+.mapa-ahora-cifras .bi {
+    color: #1f6f50;
+}
+
+@media (max-width: 575.98px) {
+    .mapa-ahora {
+        padding: .3rem .5rem;
+    }
+
+    .mapa-ahora-titulo {
+        display: none;
+    }
+
+    .mapa-ahora-cifras > span {
+        display: inline;
+    }
+
+    .mapa-ahora-cifras > span + span::before {
+        content: " · ";
+        color: #6b747d;
+    }
+
+    .mapa-ahora-cifras > span > span:not(.mapa-ahora-largo),
+    .mapa-ahora-largo {
+        display: none;
+    }
+}
+
 .mapa-punto {
     display: inline-block;
     width: .75rem;

@@ -28,6 +28,9 @@ foreach (listar_operativos_para_mapa($servicio) as $fila) {
         'fin_programado'    => formatear_hora($fila['fin_programado']),
         'jefe'              => $fila['jefe_grado'] . ' ' . $fila['jefe_nombres'],
         'jefe_celular'      => $fila['jefe_celular'],
+        'fuerzas_propias'   => (int) $fila['fuerzas_propias'],
+        'fuerzas_apoyo'     => (int) $fila['fuerzas_apoyo'],
+        'unidades_moviles'  => (int) $fila['unidades_moviles'],
         'puntos'            => (int) $fila['puntos'],
         // Lugar programado: ubica en el mapa al operativo que aún no registra puntos.
         'lugar'             => $fila['lugar_latitud'] === null ? null : [
@@ -51,5 +54,7 @@ responder_json([
     'servicio_diario'   => $servicio,
     'servicio_etiqueta' => formatear_fecha_larga(validar_fecha($servicio)),
     'hora_servidor'     => $ahora->format('H:i:s'),
+    // Cuadro "En este momento": de todos los operativos, sin los filtros de la pantalla.
+    'en_curso'          => sumar_fuerzas_en_curso($operativos),
     'operativos'        => $operativos,
 ]);

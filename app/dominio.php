@@ -732,38 +732,54 @@ function contar_realizados_por_division(array $matriz): array
 }
 
 /**
- * Personal y recursos empleados en los operativos realizados (los mismos que
- * cuenta contar_realizados_por_division()): fuerzas propias, de apoyo, su total
- * (efectivos) y unidades móviles, en total y por división. Es la suma de lo que
- * declaró cada operativo: no distingue si son las mismas personas en dos operativos.
+ * Personal y recursos desplegados en cada turno por los operativos realizados (los
+ * mismos que cuenta contar_realizados_por_division()): efectivos (fuerzas propias
+ * y de apoyo) y unidades móviles. Es la suma de lo que declaró cada
+ * operativo. No hay gran total del día: dentro de un turno los operativos son
+ * simultáneos y casi no repiten personas, pero entre turnos sí (decisión de
+ * Eduardo, 18/10/2026).
  *
- * @return array{propias: int, apoyo: int, efectivos: int, moviles: int, divisiones: array<string, array{efectivos: int, moviles: int}>}
+ * @return array<string, array{efectivos: int, moviles: int}> En el orden de TURNOS.
  */
-function sumar_fuerzas_realizadas(array $matriz): array
+function sumar_fuerzas_por_turno(array $matriz): array
 {
-    $suma = ['propias' => 0, 'apoyo' => 0, 'efectivos' => 0, 'moviles' => 0, 'divisiones' => []];
+    $suma = array_fill_keys(TURNOS, ['efectivos' => 0, 'moviles' => 0]);
     foreach ($matriz['filas'] as $fila) {
-        $division = $fila['unidad']['division'];
-        $suma['divisiones'][$division] ??= ['efectivos' => 0, 'moviles' => 0];
-        foreach ($fila['turnos'] as $celda) {
-            foreach ($celda['operativos'] as ['operativo' => $operativo]) {
+        foreach (TURNOS as $turno) {
+            foreach ($fila['turnos'][$turno]['operativos'] as ['operativo' => $operativo]) {
                 if (!in_array($operativo['estado'], ['EN_CURSO', 'FINALIZADO'], true)) {
                     continue;
                 }
-                $propias = (int) $operativo['fuerzas_propias'];
-                $apoyo = (int) $operativo['fuerzas_apoyo'];
-                $moviles = (int) $operativo['unidades_moviles'];
-                $suma['propias'] += $propias;
-                $suma['apoyo'] += $apoyo;
-                $suma['efectivos'] += $propias + $apoyo;
-                $suma['moviles'] += $moviles;
-                $suma['divisiones'][$division]['efectivos'] += $propias + $apoyo;
-                $suma['divisiones'][$division]['moviles'] += $moviles;
+                $suma[$turno]['efectivos'] += (int) $operativo['fuerzas_propias'] + (int) $operativo['fuerzas_apoyo'];
+                $suma[$turno]['moviles'] += (int) $operativo['unidades_moviles'];
             }
         }
     }
-    $orden = array_flip(array_keys(DIVISIONES));
-    uksort($suma['divisiones'], static fn (string $a, string $b): int => ($orden[$a] ?? 99) <=> ($orden[$b] ?? 99));
+    return $suma;
+}
+
+/**
+ * Cuadro "En este momento" del mapa del SUPERVISOR: efectivos (propios y de
+ * apoyo) y unidades móviles de los operativos en estado visible EN_CURSO. Los
+ * SIN_CIERRE no cuentan: ya pasó su hora de fin y probablemente se retiraron.
+ * Al ser simultáneos, la suma no repite personas. Son las fuerzas declaradas al
+ * programar: si salieron menos, el sistema no lo sabe.
+ *
+ * @param list<array{estado: string, fuerzas_propias: int|string, fuerzas_apoyo: int|string, unidades_moviles: int|string}> $operativos
+ *        Con el estado visible (calcular_estado_visible()).
+ * @return array{operativos: int, efectivos: int, moviles: int}
+ */
+function sumar_fuerzas_en_curso(array $operativos): array
+{
+    $suma = ['operativos' => 0, 'efectivos' => 0, 'moviles' => 0];
+    foreach ($operativos as $operativo) {
+        if ($operativo['estado'] !== 'EN_CURSO') {
+            continue;
+        }
+        $suma['operativos']++;
+        $suma['efectivos'] += (int) $operativo['fuerzas_propias'] + (int) $operativo['fuerzas_apoyo'];
+        $suma['moviles'] += (int) $operativo['unidades_moviles'];
+    }
     return $suma;
 }
 

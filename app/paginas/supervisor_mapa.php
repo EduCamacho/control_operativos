@@ -93,6 +93,21 @@ require RUTA_APP . '/vistas/cabecera.php';
     <!-- Mapa -->
     <div class="mapa-contenedor position-relative" x-show="vista === 'mapa'">
         <div x-ref="mapa" class="mapa-google"></div>
+        <!-- En este momento: fuerzas declaradas de los operativos EN_CURSO (no los SIN_CIERRE), de todos
+             los operativos aunque haya filtros. Arriba a la izquierda: a la derecha van los controles del mapa. -->
+        <div class="mapa-ahora" x-show="enCurso && !viendoRecorrido" x-cloak>
+            <div class="mapa-ahora-titulo">
+                <span class="mapa-ahora-vivo"></span> En este momento <span class="mapa-ahora-hora" x-text="horaServidor"></span>
+            </div>
+            <template x-if="enCurso && enCurso.operativos > 0">
+                <div class="mapa-ahora-cifras">
+                    <span><i class="bi bi-people-fill"></i> <strong x-text="enCurso.efectivos"></strong> <span x-text="enCurso.efectivos === 1 ? 'efectivo' : 'efectivos'"></span></span>
+                    <span><i class="bi bi-car-front-fill"></i> <strong x-text="enCurso.moviles"></strong> <span x-text="enCurso.moviles === 1 ? 'móvil' : 'móviles'"></span></span>
+                    <span><strong x-text="enCurso.operativos"></strong><span class="mapa-ahora-largo" x-text="enCurso.operativos === 1 ? ' operativo' : ' operativos'"></span> en curso</span>
+                </div>
+            </template>
+            <div class="mapa-ahora-cifras text-body-secondary" x-show="enCurso && enCurso.operativos === 0">Ningún operativo en curso</div>
+        </div>
         <!-- Mientras se ve el recorrido de un operativo (botón "Ver recorrido" de la ficha) -->
         <div class="barra-recorrido position-absolute top-0 start-50 translate-middle-x mt-2 fila-flex gap-2"
              x-show="viendoRecorrido && vista === 'mapa'" x-cloak>

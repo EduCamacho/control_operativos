@@ -102,48 +102,33 @@ $orden_resumen = ['FINALIZADO', 'EN_CURSO', 'PROGRAMADO', 'NO_INICIADO', 'SIN_CI
         <?php endforeach; ?>
     </table>
 
-    <!-- Personal y recursos de los operativos realizados (los mismos de las casillas de arriba).
-         Se suma lo que declaró cada operativo: las mismas personas o vehículos en dos operativos cuentan
-         dos veces; por eso dice "suma por operativo" (decisión de Eduardo, 18/10/2026).
-         Diseño propio, sin franja de color: no se confunde con las divisiones. -->
-    <?php
-    $fuerzas = $reporte['fuerzas'];
-    $casillas_fuerzas = [
-        ['users', $fuerzas['efectivos'], 'Efectivos empleados', 'propios y de apoyo · suma por operativo'],
-        ['user-shield', $fuerzas['propias'], 'Propios', 'de las unidades'],
-        ['users-plus', $fuerzas['apoyo'], 'De apoyo', 'de otras unidades'],
-        ['car-suv', $fuerzas['moviles'], 'Unidades móviles', 'suma por operativo'],
-    ];
-    ?>
-    <h2 class="reporte-seccion">Personal y recursos empleados</h2>
+    <!-- Personal y recursos de los operativos realizados (los mismos de las casillas de arriba): una
+         tarjeta por turno con efectivos (propios + apoyo) y móviles, sin gran total: entre turnos se repiten
+         las mismas personas y vehículos, y un total del día se leería como personas distintas (decisión de
+         Eduardo, 18/10/2026). Casillas blancas, sin franja de color: no se confunden con las divisiones. -->
+    <?php $fuerzas = $reporte['fuerzas']; ?>
+    <h2 class="reporte-seccion">Personal y recursos desplegados por turno</h2>
     <table class="reporte-fuerzas">
         <tr>
-            <?php foreach ($casillas_fuerzas as $indice_fuerza => [$icono_fuerza, $cifra_fuerza, $titulo_fuerza, $detalle_fuerza]): ?>
-                <?php $es_total = $indice_fuerza === 0; // la primera es el total: se distingue de las demás ?>
-                <td class="fuerza<?= $es_total ? ' fuerza-total' : '' ?>">
+            <?php foreach (TURNOS as $turno): ?>
+                <?php ['efectivos' => $efectivos_turno, 'moviles' => $moviles_turno] = $fuerzas[$turno]; ?>
+                <td class="fuerza<?= $efectivos_turno + $moviles_turno === 0 ? ' fuerza-vacia' : '' ?>">
+                    <span class="fuerza-turno"><?= e(obtener_etiqueta_turno($turno)) ?></span>
                     <table class="fuerza-contenido">
                         <tr>
-                            <td class="fuerza-icono"><img alt="" src="<?= e(armar_icono($icono_fuerza, $es_total ? '#ffffff' : '#1f6f50')) ?>"></td>
-                            <td>
-                                <span class="fuerza-cifra"><?= $cifra_fuerza ?></span>
-                                <span class="fuerza-titulo"><?= e($titulo_fuerza) ?></span>
-                                <span class="fuerza-detalle"><?= e($detalle_fuerza) ?></span>
-                            </td>
+                            <td class="fuerza-icono"><img alt="" src="<?= e(armar_icono('users', '#1f6f50')) ?>"></td>
+                            <td><span class="fuerza-cifra"><?= $efectivos_turno ?></span> <span class="fuerza-titulo">efectivo<?= $efectivos_turno === 1 ? '' : 's' ?></span></td>
+                        </tr>
+                        <tr>
+                            <td class="fuerza-icono"><img alt="" src="<?= e(armar_icono('car-suv', '#1f6f50')) ?>"></td>
+                            <td><span class="fuerza-cifra"><?= $moviles_turno ?></span> <span class="fuerza-titulo">móvil<?= $moviles_turno === 1 ? '' : 'es' ?></span></td>
                         </tr>
                     </table>
                 </td>
             <?php endforeach; ?>
         </tr>
     </table>
-    <p class="reporte-linea reporte-fuerzas-division">
-        <?php $partes = []; ?>
-        <?php foreach ($fuerzas['divisiones'] as $clave => $de_division): ?>
-            <?php $partes[] = '<span class="marca-division division-' . e(strtolower($clave)) . '"></span><strong>' . e($clave) . '</strong>: '
-                . $de_division['efectivos'] . ' efectivo' . ($de_division['efectivos'] === 1 ? '' : 's')
-                . ' y ' . $de_division['moviles'] . ' móvil' . ($de_division['moviles'] === 1 ? '' : 'es'); ?>
-        <?php endforeach; ?>
-        <?= implode(' · ', $partes) ?>
-    </p>
+    <p class="reporte-nota">Efectivos propios y de apoyo. Suma de lo declarado por cada operativo realizado del turno. Entre turnos pueden repetirse las mismas personas y vehículos.</p>
 
     <h2 class="reporte-seccion">Cumplimiento por unidad</h2>
     <div class="reporte-desplazable">
