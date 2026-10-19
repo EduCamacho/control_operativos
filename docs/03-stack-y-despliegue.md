@@ -148,6 +148,7 @@ Son funciones puras, sin acceso a la base de datos, y cada una tiene sus tests e
    - `ENTORNO = 'produccion'` y `URL_BASE = ''`.
    - `BD_HOST` (normalmente `localhost`), `BD_NOMBRE`, `BD_USUARIO` y `BD_CLAVE` del paso 3.
    - `GOOGLE_MAPS_API_KEY` y `GOOGLE_MAPS_MAP_ID` de producción.
+   - `MAX_CUENTAS_POR_UNIDAD` (2: cuentas activas por unidad, RN-20; si falta, se usa 2).
    - Tolerancias (15, 30 y 60 min), `SESION_INACTIVIDAD_S` y `SESION_MAXIMA_S` por rol (RN-18; si faltan, se usan los valores de `config.ejemplo.php`) y `DURACION_SESION_S` (43200 = 12 h: vida de la cookie, al menos la mayor inactividad).
    - Cloudflare Turnstile: `TURNSTILE_SITE_KEY` y `TURNSTILE_SECRET_KEY` (ver "Cloudflare"), y `CSP_APLICAR` (empieza en `false`).
    - Ayuda de las unidades: `SOPORTE_NOMBRE`, `SOPORTE_CELULAR`, `SOPORTE_WHATSAPP` y `VIDEO_TUTORIAL_UNIDAD_URL` (video de YouTube subido como "No listado"). Si un `config.php` ya creado no las tiene, el sistema las toma vacías y la Ayuda indica consultar al administrador; para completarlas, agregarlas a mano en el servidor.

@@ -1224,15 +1224,28 @@ final class DominioTest extends TestCase
 
     public function test_cupo_de_cuentas_por_unidad(): void
     {
-        $this->assertNull(validar_cupo_unidad(0, true));
-        $this->assertNull(validar_cupo_unidad(MAX_CUENTAS_POR_UNIDAD - 1, true));
-        $this->assertNotNull(validar_cupo_unidad(MAX_CUENTAS_POR_UNIDAD, true));
-        $this->assertNotNull(validar_cupo_unidad(MAX_CUENTAS_POR_UNIDAD + 1, true));
+        $this->assertNull(validar_cupo_unidad(0, true, 2));
+        $this->assertNull(validar_cupo_unidad(1, true, 2));
+        $this->assertSame(
+            'Esa unidad ya tiene 2 cuentas activas. Desactive una antes de crear o activar otra.',
+            validar_cupo_unidad(2, true, 2),
+        );
+        $this->assertNotNull(validar_cupo_unidad(3, true, 2));
+    }
+
+    public function test_cupo_con_otro_maximo(): void
+    {
+        $this->assertNull(validar_cupo_unidad(4, true, 5));
+        $this->assertNotNull(validar_cupo_unidad(5, true, 5));
+        $this->assertSame(
+            'Esa unidad ya tiene 1 cuenta activa. Desactive una antes de crear o activar otra.',
+            validar_cupo_unidad(1, true, 1),
+        );
     }
 
     public function test_una_cuenta_inactiva_no_ocupa_cupo(): void
     {
-        $this->assertNull(validar_cupo_unidad(MAX_CUENTAS_POR_UNIDAD, false));
+        $this->assertNull(validar_cupo_unidad(2, false, 2));
     }
 
     public function test_usuario_unidad_sin_unidad_es_error(): void

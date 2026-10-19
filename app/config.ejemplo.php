@@ -45,6 +45,9 @@ const TOLERANCIA_NO_INICIADO_MIN = 15;
 const TOLERANCIA_SIN_CIERRE_MIN = 30;
 const VENTANA_INICIO_MIN = 60;
 
+// Cuentas activas que puede tener cada unidad, una por persona (RN-20). Las inactivas no cuentan.
+const MAX_CUENTAS_POR_UNIDAD = 2;
+
 // Duración de la sesión por rol, en segundos (RN-18). "Inactividad": sin usar el sistema;
 // "máxima": desde el ingreso, aunque se use todo el tiempo.
 const SESION_INACTIVIDAD_S = ['ADMIN' => 1800, 'SUPERVISOR' => 14400, 'UNIDAD' => 43200];   // 30 min, 4 h, 12 h

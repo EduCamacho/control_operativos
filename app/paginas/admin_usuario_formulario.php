@@ -96,7 +96,7 @@ if (es_post()) {
                 'SELECT COUNT(*) FROM usuarios WHERE unidad_id = :unidad_id AND activo = 1 AND id <> :id',
                 ['unidad_id' => $datos['unidad_id'], 'id' => $id ?? 0],
             )->fetchColumn();
-            $error_cupo = validar_cupo_unidad($otras_activas, (bool) $datos['activo']);
+            $error_cupo = validar_cupo_unidad($otras_activas, (bool) $datos['activo'], MAX_CUENTAS_POR_UNIDAD);
             if ($error_cupo !== null) {
                 $errores['unidad_id'] = $error_cupo;
             }

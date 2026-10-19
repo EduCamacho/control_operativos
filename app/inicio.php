@@ -23,6 +23,7 @@ defined('TURNSTILE_SECRET_KEY') || define('TURNSTILE_SECRET_KEY', '');
 defined('CSP_APLICAR') || define('CSP_APLICAR', false);
 defined('SESION_INACTIVIDAD_S') || define('SESION_INACTIVIDAD_S', ['ADMIN' => 1800, 'SUPERVISOR' => 14400, 'UNIDAD' => 43200]);
 defined('SESION_MAXIMA_S') || define('SESION_MAXIMA_S', ['ADMIN' => 28800, 'SUPERVISOR' => 57600, 'UNIDAD' => 86400]);
+defined('MAX_CUENTAS_POR_UNIDAD') || define('MAX_CUENTAS_POR_UNIDAD', 2);
 
 date_default_timezone_set('America/Lima');
 mb_internal_encoding('UTF-8');
