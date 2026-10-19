@@ -18,7 +18,7 @@ Reemplaza el Excel "LLENAR FORMATO COMISARÍAS Y DIVINCRI", que deja de usarse. 
 |---|---|---|
 | `ADMIN` | UNITIC | Gestiona unidades, usuarios y catálogos. Ve todo. Puede corregir cualquier operativo (queda en bitácora). |
 | `SUPERVISOR` | El General y quien él designe | Ve el mapa y el tablero de cumplimiento de todas las unidades. Registra controles inopinados. **No** crea ni modifica operativos. |
-| `UNIDAD` | Una cuenta por comisaría o unidad, usada por el jefe de operativo de turno y por quien programa en la unidad | Programa, inicia, registra puntos, finaliza y registra resultados **solo de su unidad**. |
+| `UNIDAD` | Hasta dos cuentas por comisaría o unidad, una por persona (por ejemplo, el secretario y el jefe de unidad) | Programa, inicia, registra puntos, finaliza y registra resultados **solo de su unidad**. |
 
 ## Unidades
 
@@ -139,21 +139,21 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 
 **Cuentas y seguridad**
 
-- **RN-17** — Hay **una sola cuenta por unidad**, compartida. Puede estar abierta a la vez en varios dispositivos (la PC de la comisaría y el celular del jefe). Cada acción queda en bitácora con usuario, IP y dispositivo, y el operativo guarda el jefe declarado.
+- **RN-17** — Cada unidad tiene **hasta dos cuentas, una por persona** (por ejemplo, el secretario y el jefe de unidad), con su grado, nombre completo, CIP y celular (decisión de Eduardo, 19/10/2026: antes era una sola cuenta compartida). Las dos ven y manejan los mismos operativos de su unidad (RN-16). Cada cuenta puede estar abierta a la vez en varios dispositivos (la PC de la comisaría y el celular del jefe). Cada acción queda en bitácora con usuario, IP y dispositivo, y el operativo guarda el jefe declarado.
 - **RN-18** — La sesión dura según el rol (decisión de Eduardo, 18/10/2026), con dos límites: **sin actividad** y **máximo desde el ingreso** (aunque se use todo el tiempo):
   - **UNIDAD**: 12 horas sin actividad y 24 horas como máximo, para que el jefe no tenga que volver a ingresar en campo.
   - **SUPERVISOR**: 4 horas sin actividad y 16 horas como máximo.
   - **ADMIN**: 30 minutos sin actividad y 8 horas como máximo, porque puede cambiar todo.
   - Al vencer, se vuelve al ingreso con el aviso "Su sesión se cerró por inactividad" (o "Por seguridad, su sesión se cerró") y queda `SESION_VENCIDA` en la bitácora. Los tiempos se cambian en `app/config.php` (`SESION_INACTIVIDAD_S` y `SESION_MAXIMA_S`).
   - Toda consulta al servidor cuenta como actividad; el mapa del supervisor consulta cada 30 s, así que mientras esté abierto solo vence por el máximo.
-- **RN-19** — Cada usuario puede **cambiar su propia clave** (clave actual, nueva de al menos 8 caracteres y distinta, y confirmación). La sesión actual sigue abierta y las de los demás dispositivos solo se cierran si el usuario lo elige, porque la cuenta UNIDAD es compartida (RN-17). Desde el 5.º intento fallido de ingreso, la cuenta pide **esperas crecientes**: 1, 2, 4 y 8 minutos, y luego 15 como máximo en cada fallo; el contador vuelve a 0 al ingresar bien (decisión de Eduardo, 18/10/2026: antes eran 15 minutos fijos, y un atacante que conoce los usuarios, que son predecibles, podía dejar sin acceso a todas las unidades). La espera es **por cuenta**, sin importar la IP. ADMIN puede resetear claves y desbloquear. Al resetear la clave o desactivar una cuenta, **se cierran todas sus sesiones abiertas**. **HTTPS es obligatorio**, porque sin él el navegador no entrega el GPS.
+- **RN-19** — Cada usuario puede **cambiar su propia clave** (clave actual, nueva de al menos 8 caracteres y distinta, y confirmación). La sesión actual sigue abierta y las de los demás dispositivos solo se cierran si el usuario lo elige, porque la cuenta UNIDAD puede estar abierta en varios dispositivos (RN-17). Desde el 5.º intento fallido de ingreso, la cuenta pide **esperas crecientes**: 1, 2, 4 y 8 minutos, y luego 15 como máximo en cada fallo; el contador vuelve a 0 al ingresar bien (decisión de Eduardo, 18/10/2026: antes eran 15 minutos fijos, y un atacante que conoce los usuarios, que son predecibles, podía dejar sin acceso a todas las unidades). La espera es **por cuenta**, sin importar la IP. ADMIN puede resetear claves y desbloquear. Al resetear la clave o desactivar una cuenta, **se cierran todas sus sesiones abiertas**. **HTTPS es obligatorio**, porque sin él el navegador no entrega el GPS.
 - **RN-19a** — **Defensas del ingreso**, porque el sistema está expuesto a internet (decisión de Eduardo, 18/10/2026):
   - **Límite por conexión**: 15 intentos fallidos desde la misma IP en 15 minutos frenan esa IP 15 minutos, aunque luego escriba la clave correcta. No bloquea la cuenta. Ojo: varios celulares de la misma red móvil pueden compartir IP; por eso el límite es holgado.
   - **Campo trampa (honeypot)**: un campo invisible que solo llenan los bots. Si viene lleno, se rechaza con el mensaje genérico.
   - **Cloudflare Turnstile**: verificación de que es una persona, casi siempre invisible. Se activa al configurar sus claves.
   - Cada rechazo queda en `intentos_ingreso` y en la bitácora, con la IP real del visitante (detrás de Cloudflare, `CF-Connecting-IP`).
   - En Cloudflare se bloquean las conexiones de fuera del Perú (docs/03).
-- **RN-20** — Una cuenta con rol UNIDAD debe tener una unidad asignada, y cada unidad tiene como máximo una cuenta. Las cuentas ADMIN y SUPERVISOR no tienen unidad.
+- **RN-20** — Una cuenta con rol UNIDAD debe tener una unidad asignada y los datos de la persona: grado (de la lista de RN-03), nombre completo, CIP (de 6 a 8 dígitos, único en el sistema) y celular (9 dígitos que empiezan con 9). Cada unidad tiene como máximo **dos cuentas activas** (`MAX_CUENTAS_POR_UNIDAD`); las inactivas no cuentan, para poder desactivar la de quien se va y crear la de su reemplazo. Las cuentas ADMIN y SUPERVISOR no tienen unidad, y en ellas grado, CIP y celular son opcionales.
 
 ## Flujo típico de un turno
 
@@ -176,6 +176,8 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 
 - [ ] Nombres completos de las 26 unidades (Eduardo enviará la lista; los de `sql/002_datos_iniciales.sql` son provisionales).
 - [ ] Quiénes, además del General, tendrán rol SUPERVISOR.
+- [ ] Largo del CIP: se aceptan de 6 a 8 dígitos (RN-20). Confirmar con Eduardo.
+- [ ] Si el secretario de una unidad puede ser un empleado civil, el grado necesita una opción más (hoy se elige de la lista de RN-03).
 - [ ] Catálogos iniciales de tipos de operativo y conceptos de resultado (ver `sql/002_datos_iniciales.sql`).
 - [x] Tolerancias (15 y 30 min) y ventana para iniciar (60 min antes): se configuran en `app/config.php` (`TOLERANCIA_NO_INICIADO_MIN`, `TOLERANCIA_SIN_CIERRE_MIN`, `VENTANA_INICIO_MIN`). No hay pantalla de ADMIN.
 - [x] El grado de Comandante se abrevia CMDTE (confirmado por Eduardo).

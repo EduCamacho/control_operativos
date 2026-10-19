@@ -93,6 +93,7 @@ const MAX_PRECISION_GUARDADA_M = 65535;
 
 const ROLES = ['ADMIN', 'SUPERVISOR', 'UNIDAD'];
 const ETIQUETAS_ROL = ['ADMIN' => 'Administrador', 'SUPERVISOR' => 'Supervisor', 'UNIDAD' => 'Unidad'];
+const MAX_CUENTAS_POR_UNIDAD = 2;    // cuentas activas, por ejemplo secretario y jefe de unidad (RN-20)
 const DIVISIONES = [
     'DIVOPUS'  => 'DIVOPUS Trujillo',
     'DUE'      => 'DUE',
@@ -928,6 +929,13 @@ function normalizar_celular(string $texto): ?string
     return preg_match('/^9\d{8}$/', $digitos) ? $digitos : null;
 }
 
+/** CIP: de 6 a 8 dígitos, sin otros caracteres. Acepta espacios alrededor. */
+function normalizar_cip(string $texto): ?string
+{
+    $cip = trim($texto);
+    return preg_match('/^\d{6,8}$/', $cip) ? $cip : null;
+}
+
 /** Entero dentro de un rango; acepta enteros y textos de un formulario. */
 function validar_entero(mixed $valor, int $minimo, int $maximo): ?int
 {
@@ -1273,9 +1281,12 @@ function validar_unidad(array $entrada): array
 }
 
 /**
- * Datos de una cuenta (RN-20): UNIDAD lleva unidad; ADMIN y SUPERVISOR no.
+ * Datos de una cuenta (RN-20): UNIDAD lleva unidad, grado, CIP y celular de la
+ * persona; ADMIN y SUPERVISOR no llevan unidad, y esos datos son opcionales
+ * (si vienen, se validan igual).
  * La clave es opcional: si viene vacía, la página genera una temporal.
- * La unicidad del usuario y de la unidad la garantiza la base de datos.
+ * La unicidad del usuario y del CIP la garantiza la base de datos; el cupo de
+ * cuentas por unidad, validar_cupo_unidad().
  *
  * @param list<int> $ids_unidades Unidades que existen.
  * @return array{datos: array<string, mixed>, errores: array<string, string>}
@@ -1295,14 +1306,43 @@ function validar_usuario(array $entrada, array $ids_unidades, bool $es_nuevo): a
 
     $nombre = $texto('nombre');
     if ($nombre === '') {
-        $errores['nombre'] = 'Indique el nombre.';
+        $errores['nombre'] = 'Indique el nombre completo.';
     } elseif (mb_strlen($nombre) > 150) {
-        $errores['nombre'] = 'El nombre admite hasta 150 caracteres.';
+        $errores['nombre'] = 'El nombre completo admite hasta 150 caracteres.';
     } else {
         $datos['nombre'] = $nombre;
     }
 
     $rol = $texto('rol');
+    $obligatorios = $rol === 'UNIDAD';
+
+    $grado = $texto('grado');
+    if ($grado === '' && !$obligatorios) {
+        $datos['grado'] = null;
+    } elseif (!in_array($grado, GRADOS, true)) {
+        $errores['grado'] = 'Elija el grado.';
+    } else {
+        $datos['grado'] = $grado;
+    }
+
+    $cip = $texto('cip');
+    if ($cip === '' && !$obligatorios) {
+        $datos['cip'] = null;
+    } elseif (($cip = normalizar_cip($cip)) === null) {
+        $errores['cip'] = 'El CIP debe tener de 6 a 8 dígitos.';
+    } else {
+        $datos['cip'] = $cip;
+    }
+
+    $celular = $texto('celular');
+    if ($celular === '' && !$obligatorios) {
+        $datos['celular'] = null;
+    } elseif (($celular = normalizar_celular($celular)) === null) {
+        $errores['celular'] = 'El celular debe tener 9 dígitos y empezar con 9.';
+    } else {
+        $datos['celular'] = $celular;
+    }
+
     if (!in_array($rol, ROLES, true)) {
         $errores['rol'] = 'Elija el rol.';
     } else {
@@ -1333,6 +1373,21 @@ function validar_usuario(array $entrada, array $ids_unidades, bool $es_nuevo): a
 
     $datos['activo'] = !empty($entrada['activo']) ? 1 : 0;
     return ['datos' => $datos, 'errores' => $errores];
+}
+
+/**
+ * Cupo de cuentas de una unidad (RN-20): solo cuentan las activas, para poder
+ * desactivar la de quien se fue y crear la de su reemplazo.
+ *
+ * @param int $otras_activas Cuentas activas de la unidad, sin contar la que se guarda.
+ * @return string|null Mensaje de error, o null si la cuenta cabe.
+ */
+function validar_cupo_unidad(int $otras_activas, bool $queda_activa): ?string
+{
+    if (!$queda_activa || $otras_activas < MAX_CUENTAS_POR_UNIDAD) {
+        return null;
+    }
+    return 'Esa unidad ya tiene ' . MAX_CUENTAS_POR_UNIDAD . ' cuentas activas. Desactive una antes de crear o activar otra.';
 }
 
 /**

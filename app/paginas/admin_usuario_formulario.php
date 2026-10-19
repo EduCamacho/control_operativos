@@ -1,6 +1,7 @@
 <?php
 /**
  * ADMIN: crear o editar una cuenta, resetear su clave y desbloquearla (RN-19, RN-20).
+ * Cada unidad tiene hasta MAX_CUENTAS_POR_UNIDAD cuentas activas, personales.
  * Al resetear la clave o desactivar la cuenta se cierran sus sesiones (version_sesion).
  */
 declare(strict_types=1);
@@ -12,7 +13,7 @@ $id = obtener_id_get();
 $actual = null;
 if ($id !== null) {
     $actual = consultar(
-        'SELECT id, usuario, nombre, rol, unidad_id, activo, intentos_fallidos, bloqueado_hasta, ultimo_acceso
+        'SELECT id, usuario, nombre, grado, cip, celular, rol, unidad_id, activo, intentos_fallidos, bloqueado_hasta, ultimo_acceso
          FROM usuarios WHERE id = :id',
         ['id' => $id],
     )->fetch();
@@ -30,8 +31,11 @@ $hay_otro_admin = static fn (int $excepto): bool => (bool) consultar(
 )->fetchColumn();
 
 $errores = [];
-$valores = $actual ?? ['usuario' => '', 'nombre' => '', 'rol' => 'UNIDAD', 'unidad_id' => null, 'activo' => 1];
-// "Crear cuenta" desde la lista de unidades sin cuenta llega con la unidad ya elegida.
+$valores = $actual ?? [
+    'usuario' => '', 'nombre' => '', 'grado' => '', 'cip' => '', 'celular' => '',
+    'rol' => 'UNIDAD', 'unidad_id' => null, 'activo' => 1,
+];
+// "Crear cuenta" desde la lista de unidades con cuentas por crear llega con la unidad ya elegida.
 if ($actual === null && ($unidad_elegida = obtener_id_get('unidad_id')) !== null) {
     $valores['unidad_id'] = $unidad_elegida;
 }
@@ -87,6 +91,17 @@ if (es_post()) {
             $errores['rol'] = 'Debe quedar al menos un ADMIN activo.';
         }
 
+        if ($errores === [] && $datos['unidad_id'] !== null) {
+            $otras_activas = (int) consultar(
+                'SELECT COUNT(*) FROM usuarios WHERE unidad_id = :unidad_id AND activo = 1 AND id <> :id',
+                ['unidad_id' => $datos['unidad_id'], 'id' => $id ?? 0],
+            )->fetchColumn();
+            $error_cupo = validar_cupo_unidad($otras_activas, (bool) $datos['activo']);
+            if ($error_cupo !== null) {
+                $errores['unidad_id'] = $error_cupo;
+            }
+        }
+
         if ($errores === []) {
             try {
                 if ($actual === null) {
@@ -94,8 +109,8 @@ if (es_post()) {
                     $clave = $clave_elegida ?? generar_clave_temporal();
                     unset($datos['clave']);
                     consultar(
-                        'INSERT INTO usuarios (usuario, password_hash, nombre, rol, unidad_id, activo)
-                         VALUES (:usuario, :hash, :nombre, :rol, :unidad_id, :activo)',
+                        'INSERT INTO usuarios (usuario, password_hash, nombre, grado, cip, celular, rol, unidad_id, activo)
+                         VALUES (:usuario, :hash, :nombre, :grado, :cip, :celular, :rol, :unidad_id, :activo)',
                         $datos + ['hash' => password_hash($clave, PASSWORD_DEFAULT)],
                     );
                     $id = (int) db()->lastInsertId();
@@ -111,7 +126,8 @@ if (es_post()) {
                         $cierra_sesiones = $actual['activo'] && !$datos['activo'];
                         consultar(
                             'UPDATE usuarios
-                             SET usuario = :usuario, nombre = :nombre, rol = :rol, unidad_id = :unidad_id, activo = :activo'
+                             SET usuario = :usuario, nombre = :nombre, grado = :grado, cip = :cip, celular = :celular,
+                                 rol = :rol, unidad_id = :unidad_id, activo = :activo'
                              . ($cierra_sesiones ? ', version_sesion = version_sesion + 1' : '') . '
                              WHERE id = :id',
                             $datos + ['id' => $id],
@@ -125,12 +141,12 @@ if (es_post()) {
                 if (!es_error_duplicado($error)) {
                     throw $error;
                 }
-                $duplicada_unidad = $datos['unidad_id'] !== null && (bool) consultar(
-                    'SELECT 1 FROM usuarios WHERE unidad_id = :unidad_id AND id <> :id',
-                    ['unidad_id' => $datos['unidad_id'], 'id' => $id ?? 0],
+                $duplicado_cip = $datos['cip'] !== null && (bool) consultar(
+                    'SELECT 1 FROM usuarios WHERE cip = :cip AND id <> :id',
+                    ['cip' => $datos['cip'], 'id' => $id ?? 0],
                 )->fetchColumn();
-                if ($duplicada_unidad) {
-                    $errores['unidad_id'] = 'Esa unidad ya tiene una cuenta (RN-20).';
+                if ($duplicado_cip) {
+                    $errores['cip'] = 'Ya existe otra cuenta con ese CIP.';
                 } else {
                     $errores['usuario'] = 'Ya existe otra cuenta con ese usuario.';
                 }
@@ -139,24 +155,26 @@ if (es_post()) {
     }
 }
 
-// Unidades para elegir, marcando las que ya tienen otra cuenta.
+// Unidades para elegir, marcando las que ya completaron su cupo con otras cuentas activas.
 $unidades = consultar(
-    'SELECT un.id, un.division, un.nombre, un.nombre_corto, un.activo, us.id AS usuario_id, us.usuario
+    "SELECT un.id, un.division, un.nombre, un.nombre_corto, un.activo,
+            COUNT(us.id) AS otras, GROUP_CONCAT(us.usuario ORDER BY us.usuario SEPARATOR ', ') AS usuarios
      FROM unidades un
-     LEFT JOIN usuarios us ON us.unidad_id = un.id
-     ORDER BY un.orden, un.nombre_corto',
+     LEFT JOIN usuarios us ON us.unidad_id = un.id AND us.activo = 1 AND us.id <> :id
+     GROUP BY un.id, un.division, un.nombre, un.nombre_corto, un.activo, un.orden
+     ORDER BY un.orden, un.nombre_corto",
+    ['id' => $actual['id'] ?? 0],
 )->fetchAll();
 
 $bloqueada = $actual !== null && cuenta_bloqueada($actual['bloqueado_hasta'], $ahora);
-// Al crear una cuenta de unidad, elegir la unidad sugiere el usuario y el nombre (usuario_formulario.js).
+// Al crear una cuenta de unidad, elegir la unidad sugiere el usuario (usuario_formulario.js).
 $configuracion = [
     'rol'      => (string) $valores['rol'],
     'unidadId' => (string) ($valores['unidad_id'] ?? ''),
     'usuario'  => (string) $valores['usuario'],
-    'nombre'   => (string) $valores['nombre'],
     'sugerir'  => $actual === null,
     'unidades' => array_column(array_map(static fn (array $u): array => [
-        'id' => (string) $u['id'], 'corto' => $u['nombre_corto'], 'nombre' => $u['nombre'],
+        'id' => (string) $u['id'], 'corto' => $u['nombre_corto'],
     ], $unidades), null, 'id'),
 ];
 
@@ -257,15 +275,15 @@ require RUTA_APP . '/vistas/cabecera.php';
                     <optgroup label="<?= e($etiqueta) ?>">
                         <?php foreach ($unidades as $unidad): ?>
                             <?php if ($unidad['division'] !== $division) continue; ?>
-                            <?php $ocupada = $unidad['usuario_id'] !== null && (int) $unidad['usuario_id'] !== (int) ($actual['id'] ?? 0); ?>
-                            <option value="<?= e($unidad['id']) ?>"<?= $ocupada ? ' disabled' : '' ?>>
-                                <?= e($unidad['nombre_corto']) ?><?= $ocupada ? ' — ya tiene cuenta (' . e($unidad['usuario']) . ')' : '' ?><?= $unidad['activo'] ? '' : ' — inactiva' ?>
+                            <?php $completa = $unidad['otras'] >= MAX_CUENTAS_POR_UNIDAD; ?>
+                            <option value="<?= e($unidad['id']) ?>"<?= $completa ? ' disabled' : '' ?>>
+                                <?= e($unidad['nombre_corto']) ?><?= $unidad['usuarios'] !== null ? ' — ' . ($completa ? 'completa' : 'ya tiene') . ' (' . e($unidad['usuarios']) . ')' : '' ?><?= $unidad['activo'] ? '' : ' — inactiva' ?>
                             </option>
                         <?php endforeach; ?>
                     </optgroup>
                 <?php endforeach; ?>
             </select>
-            <div class="form-text">Cada unidad tiene una sola cuenta, compartida (RN-17, RN-20).</div>
+            <div class="form-text">Cada unidad tiene hasta <?= MAX_CUENTAS_POR_UNIDAD ?> cuentas activas, una por persona (RN-17, RN-20).</div>
             <?= mostrar_error($errores, 'unidad_id') ?>
         </div>
 
@@ -273,16 +291,45 @@ require RUTA_APP . '/vistas/cabecera.php';
             <label for="usuario" class="form-label">Usuario</label>
             <input type="text" id="usuario" name="usuario" maxlength="50" required autocapitalize="none" spellcheck="false"
                    class="form-control<?= clase_error($errores, 'usuario') ?>" x-model="usuario"
-                   placeholder="com.ayacucho" aria-describedby="ayuda-usuario">
+                   placeholder="com.ayacucho.jefe" aria-describedby="ayuda-usuario">
             <div id="ayuda-usuario" class="form-text">Letras sin tilde, números, punto, guion o guion bajo.</div>
             <?= mostrar_error($errores, 'usuario') ?>
         </div>
-        <div class="mb-3">
-            <label for="nombre" class="form-label">Nombre</label>
-            <input type="text" id="nombre" name="nombre" maxlength="150" required
-                   class="form-control<?= clase_error($errores, 'nombre') ?>" x-model="nombre"
-                   placeholder="Comisaría PNP Ayacucho / CRNL PNP Juan Pérez">
-            <?= mostrar_error($errores, 'nombre') ?>
+        <!-- Datos de la persona: obligatorios en las cuentas de unidad (RN-20) -->
+        <div class="row g-2 mb-3">
+            <div class="col-5 col-sm-4">
+                <label for="grado" class="form-label">Grado <span class="text-body-secondary" x-show="rol !== 'UNIDAD'">(opcional)</span></label>
+                <select id="grado" name="grado" class="form-select<?= clase_error($errores, 'grado') ?>" :required="rol === 'UNIDAD'">
+                    <option value="">Elija…</option>
+                    <?php foreach (GRADOS as $grado): ?>
+                        <option value="<?= e($grado) ?>"<?= marcar($grado === (string) ($valores['grado'] ?? ''), 'selected') ?>><?= e($grado) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <?= mostrar_error($errores, 'grado') ?>
+            </div>
+            <div class="col-7 col-sm-8">
+                <label for="nombre" class="form-label">Nombre completo</label>
+                <input type="text" id="nombre" name="nombre" maxlength="150" required autocomplete="off"
+                       class="form-control<?= clase_error($errores, 'nombre') ?>" value="<?= e($valores['nombre']) ?>"
+                       placeholder="Juan Pérez García">
+                <?= mostrar_error($errores, 'nombre') ?>
+            </div>
+        </div>
+        <div class="row g-2 mb-3">
+            <div class="col-6">
+                <label for="cip" class="form-label">CIP <span class="text-body-secondary" x-show="rol !== 'UNIDAD'">(opcional)</span></label>
+                <input type="text" id="cip" name="cip" maxlength="8" inputmode="numeric" autocomplete="off"
+                       class="form-control<?= clase_error($errores, 'cip') ?>" value="<?= e($valores['cip'] ?? '') ?>"
+                       placeholder="31234567" :required="rol === 'UNIDAD'">
+                <?= mostrar_error($errores, 'cip') ?>
+            </div>
+            <div class="col-6">
+                <label for="celular" class="form-label">Celular <span class="text-body-secondary" x-show="rol !== 'UNIDAD'">(opcional)</span></label>
+                <input type="tel" id="celular" name="celular" maxlength="15" inputmode="tel" autocomplete="off"
+                       class="form-control<?= clase_error($errores, 'celular') ?>" value="<?= e($valores['celular'] ?? '') ?>"
+                       placeholder="987 654 321" :required="rol === 'UNIDAD'">
+                <?= mostrar_error($errores, 'celular') ?>
+            </div>
         </div>
         <?php if ($actual === null): ?>
             <div class="mb-3" x-data="{ visible: false }">

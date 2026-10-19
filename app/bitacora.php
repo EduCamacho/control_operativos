@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 /**
- * Registra una acción en la bitácora (RN-17). Las cuentas de unidad son
- * compartidas, por eso se guardan siempre la IP y el dispositivo.
+ * Registra una acción en la bitácora (RN-17). Una cuenta de unidad puede
+ * usarse en varios dispositivos, por eso se guardan siempre la IP y el dispositivo.
  * Si no se indica el usuario, se usa el de la sesión.
  */
 function registrar_bitacora(

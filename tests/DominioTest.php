@@ -1148,13 +1148,91 @@ final class DominioTest extends TestCase
 
     // --- validar_usuario ----------------------------------------------------
 
+    /** Cuenta UNIDAD válida; $cambios reemplaza o agrega campos. */
+    private function cuenta_unidad(array $cambios = []): array
+    {
+        return $cambios + [
+            'usuario' => 'com.ayacucho.jefe', 'nombre' => 'Juan Pérez García', 'grado' => 'CAP',
+            'cip' => '31234567', 'celular' => '987654321', 'rol' => 'UNIDAD', 'unidad_id' => '1', 'activo' => '1',
+        ];
+    }
+
     public function test_usuario_unidad_con_unidad_asignada(): void
     {
-        $r = validar_usuario(['usuario' => ' Com.Ayacucho ', 'nombre' => 'Comisaría Ayacucho', 'rol' => 'UNIDAD', 'unidad_id' => '1', 'activo' => '1'], [1, 2], true);
+        $r = validar_usuario($this->cuenta_unidad(['usuario' => ' Com.Ayacucho ', 'cip' => ' 31234567 ', 'celular' => '+51 987 654 321']), [1, 2], true);
         $this->assertSame([], $r['errores']);
         $this->assertSame('com.ayacucho', $r['datos']['usuario']);
         $this->assertSame(1, $r['datos']['unidad_id']);
+        $this->assertSame('CAP', $r['datos']['grado']);
+        $this->assertSame('31234567', $r['datos']['cip']);
+        $this->assertSame('987654321', $r['datos']['celular']);
         $this->assertArrayNotHasKey('clave', $r['datos']);
+    }
+
+    public function test_usuario_unidad_exige_grado_cip_y_celular(): void
+    {
+        $r = validar_usuario($this->cuenta_unidad(['grado' => '', 'cip' => '', 'celular' => '']), [1], true);
+        $this->assertEqualsCanonicalizing(['grado', 'cip', 'celular'], array_keys($r['errores']));
+    }
+
+    public function test_usuario_rechaza_grado_cip_y_celular_invalidos(): void
+    {
+        $r = validar_usuario($this->cuenta_unidad(['grado' => 'GENERAL', 'cip' => '12345', 'celular' => '87654321']), [1], true);
+        $this->assertEqualsCanonicalizing(['grado', 'cip', 'celular'], array_keys($r['errores']));
+    }
+
+    public function test_datos_de_la_persona_opcionales_en_admin_y_supervisor(): void
+    {
+        foreach (['ADMIN', 'SUPERVISOR'] as $rol) {
+            $r = validar_usuario(['usuario' => 'abc', 'nombre' => 'X', 'rol' => $rol], [], true);
+            $this->assertSame([], $r['errores'], $rol);
+            $this->assertNull($r['datos']['grado'], $rol);
+            $this->assertNull($r['datos']['cip'], $rol);
+            $this->assertNull($r['datos']['celular'], $rol);
+
+            // Si vienen, se validan igual.
+            $r = validar_usuario(['usuario' => 'abc', 'nombre' => 'X', 'rol' => $rol, 'cip' => 'abc123'], [], true);
+            $this->assertArrayHasKey('cip', $r['errores'], $rol);
+        }
+    }
+
+    // --- normalizar_cip -----------------------------------------------------
+
+    public static function casos_cip(): array
+    {
+        return [
+            'ocho dígitos'      => ['31234567', '31234567'],
+            'seis dígitos'      => ['123456', '123456'],
+            'cero adelante'     => ['01234567', '01234567'],
+            'espacios alrededor' => [' 31234567 ', '31234567'],
+            'cinco dígitos'     => ['12345', null],
+            'nueve dígitos'     => ['312345678', null],
+            'con letras'        => ['3123456A', null],
+            'con espacio dentro' => ['3123 4567', null],
+            'con guion'         => ['3123-4567', null],
+            'vacío'             => ['', null],
+        ];
+    }
+
+    #[DataProvider('casos_cip')]
+    public function test_normalizar_cip(string $texto, ?string $esperado): void
+    {
+        $this->assertSame($esperado, normalizar_cip($texto));
+    }
+
+    // --- validar_cupo_unidad ------------------------------------------------
+
+    public function test_cupo_de_cuentas_por_unidad(): void
+    {
+        $this->assertNull(validar_cupo_unidad(0, true));
+        $this->assertNull(validar_cupo_unidad(MAX_CUENTAS_POR_UNIDAD - 1, true));
+        $this->assertNotNull(validar_cupo_unidad(MAX_CUENTAS_POR_UNIDAD, true));
+        $this->assertNotNull(validar_cupo_unidad(MAX_CUENTAS_POR_UNIDAD + 1, true));
+    }
+
+    public function test_una_cuenta_inactiva_no_ocupa_cupo(): void
+    {
+        $this->assertNull(validar_cupo_unidad(MAX_CUENTAS_POR_UNIDAD, false));
     }
 
     public function test_usuario_unidad_sin_unidad_es_error(): void
