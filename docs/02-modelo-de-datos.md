@@ -23,7 +23,7 @@ erDiagram
 | Tabla | Contenido | Claves y notas |
 |---|---|---|
 | `unidades` | Las 26 comisarías y unidades | `division`: `DIVOPUS`, `DUE` o `DIVINCRI`. `nombre` es el nombre completo y `nombre_corto` el que se muestra en el mapa. |
-| `usuarios` | Cuentas del sistema, una por persona | `rol`: `ADMIN`, `SUPERVISOR` o `UNIDAD`. Hasta dos cuentas activas por unidad (RN-20; el límite lo controla el sistema, no la base). `grado`, `cip` (único) y `celular` son obligatorios en las cuentas UNIDAD y opcionales (NULL) en las demás. Las cuentas ADMIN y SUPERVISOR tienen `unidad_id` NULL. Se cambia con `sql/013`. |
+| `usuarios` | Cuentas del sistema, una por persona | `rol`: `ADMIN`, `SUPERVISOR` o `UNIDAD`. Hasta dos cuentas activas por unidad (RN-20; el límite lo controla el sistema con `MAX_CUENTAS_POR_UNIDAD` de `app/config.php`, no la base). `grado`, `cip` (único) y `celular` son obligatorios en las cuentas UNIDAD y opcionales (NULL) en las demás. Las cuentas ADMIN y SUPERVISOR tienen `unidad_id` NULL. Se cambia con `sql/013`. |
 | `tipos_operativo` | Catálogo: control de identidad, rastrillaje, etc. | Lo administra ADMIN. |
 | `conceptos_resultado` | Catálogo: detenidos en flagrancia, papeletas IRNT, etc. | Lo administra ADMIN. El formulario de cierre se genera a partir de este catálogo. |
 | `operativos` | Los operativos de cada unidad; puede haber varios por fecha de servicio y turno (RN-01) | Índice `(unidad_id, fecha_servicio, turno)` sin unicidad (`sql/008` quitó la clave única). `estado`: `PROGRAMADO`, `EN_CURSO` o `FINALIZADO`. |

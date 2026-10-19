@@ -92,9 +92,7 @@ const RESULTADOS_CONTROL = [
 const MAX_PRECISION_GUARDADA_M = 65535;
 
 const ROLES = ['ADMIN', 'SUPERVISOR', 'UNIDAD'];
-const ETIQUETAS_ROL = ['ADMIN' => 'Administrador', 'SUPERVISOR' => 'Supervisor', 'UNIDAD' => 'Unidad'];
-const MAX_CUENTAS_POR_UNIDAD = 2;    // cuentas activas, por ejemplo secretario y jefe de unidad (RN-20)
-const DIVISIONES = [
+const ETIQUETAS_ROL = ['ADMIN' => 'Administrador', 'SUPERVISOR' => 'Supervisor', 'UNIDAD' => 'Unidad'];const DIVISIONES = [
     'DIVOPUS'  => 'DIVOPUS Trujillo',
     'DUE'      => 'DUE',
     'DIVINCRI' => 'DIVINCRI La Libertad',
@@ -1380,14 +1378,16 @@ function validar_usuario(array $entrada, array $ids_unidades, bool $es_nuevo): a
  * desactivar la de quien se fue y crear la de su reemplazo.
  *
  * @param int $otras_activas Cuentas activas de la unidad, sin contar la que se guarda.
+ * @param int $maximo Cuentas activas permitidas (MAX_CUENTAS_POR_UNIDAD de config.php).
  * @return string|null Mensaje de error, o null si la cuenta cabe.
  */
-function validar_cupo_unidad(int $otras_activas, bool $queda_activa): ?string
+function validar_cupo_unidad(int $otras_activas, bool $queda_activa, int $maximo): ?string
 {
-    if (!$queda_activa || $otras_activas < MAX_CUENTAS_POR_UNIDAD) {
+    if (!$queda_activa || $otras_activas < $maximo) {
         return null;
     }
-    return 'Esa unidad ya tiene ' . MAX_CUENTAS_POR_UNIDAD . ' cuentas activas. Desactive una antes de crear o activar otra.';
+    $cuentas = $maximo === 1 ? '1 cuenta activa' : "$maximo cuentas activas";
+    return "Esa unidad ya tiene $cuentas. Desactive una antes de crear o activar otra.";
 }
 
 /**

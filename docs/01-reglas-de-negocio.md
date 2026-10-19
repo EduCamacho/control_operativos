@@ -139,7 +139,7 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
 
 **Cuentas y seguridad**
 
-- **RN-17** — Cada unidad tiene **hasta dos cuentas, una por persona** (por ejemplo, el secretario y el jefe de unidad), con su grado, nombre completo, CIP y celular (decisión de Eduardo, 19/10/2026: antes era una sola cuenta compartida). Las dos ven y manejan los mismos operativos de su unidad (RN-16). Cada cuenta puede estar abierta a la vez en varios dispositivos (la PC de la comisaría y el celular del jefe). Cada acción queda en bitácora con usuario, IP y dispositivo, y el operativo guarda el jefe declarado.
+- **RN-17** — Cada unidad tiene **hasta dos cuentas, una por persona** (el máximo se configura, RN-20) (por ejemplo, el secretario y el jefe de unidad), con su grado, nombre completo, CIP y celular (decisión de Eduardo, 19/10/2026: antes era una sola cuenta compartida). Las dos ven y manejan los mismos operativos de su unidad (RN-16). Cada cuenta puede estar abierta a la vez en varios dispositivos (la PC de la comisaría y el celular del jefe). Cada acción queda en bitácora con usuario, IP y dispositivo, y el operativo guarda el jefe declarado.
 - **RN-18** — La sesión dura según el rol (decisión de Eduardo, 18/10/2026), con dos límites: **sin actividad** y **máximo desde el ingreso** (aunque se use todo el tiempo):
   - **UNIDAD**: 12 horas sin actividad y 24 horas como máximo, para que el jefe no tenga que volver a ingresar en campo.
   - **SUPERVISOR**: 4 horas sin actividad y 16 horas como máximo.
@@ -153,7 +153,7 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
   - **Cloudflare Turnstile**: verificación de que es una persona, casi siempre invisible. Se activa al configurar sus claves.
   - Cada rechazo queda en `intentos_ingreso` y en la bitácora, con la IP real del visitante (detrás de Cloudflare, `CF-Connecting-IP`).
   - En Cloudflare se bloquean las conexiones de fuera del Perú (docs/03).
-- **RN-20** — Una cuenta con rol UNIDAD debe tener una unidad asignada y los datos de la persona: grado (de la lista de RN-03), nombre completo, CIP (de 6 a 8 dígitos, único en el sistema) y celular (9 dígitos que empiezan con 9). Cada unidad tiene como máximo **dos cuentas activas** (`MAX_CUENTAS_POR_UNIDAD`); las inactivas no cuentan, para poder desactivar la de quien se va y crear la de su reemplazo. Las cuentas ADMIN y SUPERVISOR no tienen unidad, y en ellas grado, CIP y celular son opcionales.
+- **RN-20** — Una cuenta con rol UNIDAD debe tener una unidad asignada y los datos de la persona: grado (de la lista de RN-03), nombre completo, CIP (de 6 a 8 dígitos, único en el sistema) y celular (9 dígitos que empiezan con 9). Cada unidad tiene como máximo **dos cuentas activas**; el número se cambia en `app/config.php` (`MAX_CUENTAS_POR_UNIDAD`), sin generar un paquete nuevo. Las inactivas no cuentan, para poder desactivar la de quien se va y crear la de su reemplazo. Las cuentas ADMIN y SUPERVISOR no tienen unidad, y en ellas grado, CIP y celular son opcionales.
 
 ## Flujo típico de un turno
 
