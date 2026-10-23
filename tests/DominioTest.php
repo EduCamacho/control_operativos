@@ -468,6 +468,114 @@ final class DominioTest extends TestCase
         $this->assertSame('reporte_servicio_2026-10-18_DIVOPUS.pdf', nombre_archivo_reporte('2026-10-18', 'DIVOPUS'));
     }
 
+    // --- Mis resultados (RN-22) ---------------------------------------------
+
+    /** @return array{0: string, 1: string, 2: string} [desde, hasta, atajo] */
+    private static function periodo(array $consulta, string $ahora): array
+    {
+        return array_values(calcular_periodo_resultados($consulta, self::lima($ahora)));
+    }
+
+    public function test_periodo_por_defecto_es_el_mes_en_curso_hasta_el_servicio_vigente(): void
+    {
+        $this->assertSame(['2026-10-01', '2026-10-23', 'MES'], self::periodo([], '2026-10-23 10:00:00'));
+        $this->assertSame(['2026-10-01', '2026-10-23', 'MES'], self::periodo(['periodo' => 'MES'], '2026-10-23 10:00:00'));
+    }
+
+    public function test_periodo_antes_de_las_seis_pertenece_al_servicio_anterior(): void
+    {
+        // El 01/11 a las 05:59 sigue el servicio del 31/10: "Este mes" es octubre.
+        $this->assertSame(['2026-10-01', '2026-10-31', 'MES'], self::periodo([], '2026-11-01 05:59:00'));
+        $this->assertSame(['2026-11-01', '2026-11-01', 'MES'], self::periodo([], '2026-11-01 06:00:00'));
+    }
+
+    public function test_periodo_esta_semana_empieza_el_lunes(): void
+    {
+        $this->assertSame(['2026-10-19', '2026-10-23', 'SEMANA'], self::periodo(['periodo' => 'SEMANA'], '2026-10-23 10:00:00')); // viernes
+        $this->assertSame(['2026-10-19', '2026-10-19', 'SEMANA'], self::periodo(['periodo' => 'SEMANA'], '2026-10-19 06:00:00')); // lunes
+        $this->assertSame(['2026-10-19', '2026-10-25', 'SEMANA'], self::periodo(['periodo' => 'SEMANA'], '2026-10-25 23:00:00')); // domingo
+        // El lunes a las 05:59 sigue el servicio del domingo: es la semana anterior.
+        $this->assertSame(['2026-10-19', '2026-10-25', 'SEMANA'], self::periodo(['periodo' => 'SEMANA'], '2026-10-26 05:59:00'));
+    }
+
+    public function test_periodo_mes_anterior_completo(): void
+    {
+        $this->assertSame(['2026-09-01', '2026-09-30', 'MES_ANTERIOR'], self::periodo(['periodo' => 'MES_ANTERIOR'], '2026-10-23 10:00:00'));
+        $this->assertSame(['2026-02-01', '2026-02-28', 'MES_ANTERIOR'], self::periodo(['periodo' => 'MES_ANTERIOR'], '2026-03-31 10:00:00'));
+        $this->assertSame(['2028-02-01', '2028-02-29', 'MES_ANTERIOR'], self::periodo(['periodo' => 'MES_ANTERIOR'], '2028-03-31 10:00:00'));
+        $this->assertSame(['2026-12-01', '2026-12-31', 'MES_ANTERIOR'], self::periodo(['periodo' => 'MES_ANTERIOR'], '2027-01-15 10:00:00'));
+    }
+
+    public function test_periodo_con_rango_libre(): void
+    {
+        $this->assertSame(['2026-10-05', '2026-10-10', ''], self::periodo(['desde' => '2026-10-05', 'hasta' => '2026-10-10'], '2026-10-23 10:00:00'));
+        $this->assertSame(['2026-10-05', '2026-10-05', ''], self::periodo(['desde' => '2026-10-05', 'hasta' => '2026-10-05'], '2026-10-23 10:00:00'));
+        // Un rango invertido se ordena.
+        $this->assertSame(['2026-10-05', '2026-10-10', ''], self::periodo(['desde' => '2026-10-10', 'hasta' => '2026-10-05'], '2026-10-23 10:00:00'));
+        // Si coincide con un atajo, se marca.
+        $this->assertSame(['2026-09-01', '2026-09-30', 'MES_ANTERIOR'], self::periodo(['desde' => '2026-09-01', 'hasta' => '2026-09-30'], '2026-10-23 10:00:00'));
+        // Un periodo desconocido no impide usar el rango.
+        $this->assertSame(['2026-10-05', '2026-10-10', ''], self::periodo(['periodo' => 'ANIO', 'desde' => '2026-10-05', 'hasta' => '2026-10-10'], '2026-10-23 10:00:00'));
+    }
+
+    public function test_periodo_de_mas_de_un_anio_se_recorta_desde_el_final(): void
+    {
+        // 366 días se aceptan; uno más se recorta.
+        $this->assertSame(['2025-10-23', '2026-10-23', ''], self::periodo(['desde' => '2025-10-23', 'hasta' => '2026-10-23'], '2026-10-23 10:00:00'));
+        $this->assertSame(['2025-10-23', '2026-10-23', ''], self::periodo(['desde' => '2025-10-22', 'hasta' => '2026-10-23'], '2026-10-23 10:00:00'));
+        $this->assertSame(['2025-10-23', '2026-10-23', ''], self::periodo(['desde' => '2020-01-01', 'hasta' => '2026-10-23'], '2026-10-23 10:00:00'));
+    }
+
+    public static function periodos_invalidos(): array
+    {
+        return [
+            'sin nada'            => [[]],
+            'solo desde'          => [['desde' => '2026-10-05']],
+            'solo hasta'          => [['hasta' => '2026-10-05']],
+            'día que no existe'   => [['desde' => '2026-02-30', 'hasta' => '2026-03-05']],
+            'formato dd/mm/aaaa'  => [['desde' => '05/10/2026', 'hasta' => '10/10/2026']],
+            'texto'               => [['desde' => 'ayer', 'hasta' => 'hoy']],
+            'arreglo en la URL'   => [['desde' => ['2026-10-05'], 'hasta' => '2026-10-10']],
+        ];
+    }
+
+    #[DataProvider('periodos_invalidos')]
+    public function test_periodo_invalido_vuelve_al_mes_en_curso(array $consulta): void
+    {
+        $this->assertSame(['2026-10-01', '2026-10-23', 'MES'], self::periodo($consulta, '2026-10-23 10:00:00'));
+    }
+
+    public function test_formato_del_periodo(): void
+    {
+        $this->assertSame('01/10 al 23/10/2026', formatear_periodo('2026-10-01', '2026-10-23'));
+        $this->assertSame('15/12/2026 al 10/01/2027', formatear_periodo('2026-12-15', '2027-01-10'));
+        $this->assertSame('23/10/2026', formatear_periodo('2026-10-23', '2026-10-23'));
+    }
+
+    public function test_nombre_del_archivo_de_resultados(): void
+    {
+        $this->assertSame('resultados_COM-AYACUCHO_2026-10-01_al_2026-10-23.pdf', nombre_archivo_resultados('Com. Ayacucho', '2026-10-01', '2026-10-23'));
+        $this->assertSame('resultados_DEPINCRI_2026-09-01_al_2026-09-30.pdf', nombre_archivo_resultados('DEPINCRI', '2026-09-01', '2026-09-30'));
+        $this->assertSame('resultados_UNIDAD_2026-09-01_al_2026-09-30.pdf', nombre_archivo_resultados('***', '2026-09-01', '2026-09-30'));
+    }
+
+    public function test_cifras_de_mis_resultados(): void
+    {
+        $finalizado = static fn (int $id, ?string $nota): array => ['id' => $id] + self::operativo('FINALIZADO', '2026-10-17 16:00:00', '2026-10-17 18:00:00', $nota);
+        $operativos = [
+            $finalizado(1, '202601802185'),  // positivo con N.I
+            $finalizado(2, null),            // positivo sin N.I
+            $finalizado(3, '202601802186'),  // negativo (sin filas de resultado)
+            $finalizado(4, null),            // negativo (total 0) sin N.I
+            ['id' => 5] + self::operativo('EN_CURSO', '2026-10-17 16:00:00', '2026-10-17 18:00:00'), // no cuenta
+        ];
+        $this->assertSame(
+            ['realizados' => 4, 'positivos' => 2, 'negativos' => 2, 'sin_nota' => 2],
+            contar_resultados_de_unidad($operativos, [1 => 3, 2 => 1, 4 => 0, 5 => 7]),
+        );
+        $this->assertSame(['realizados' => 0, 'positivos' => 0, 'negativos' => 0, 'sin_nota' => 0], contar_resultados_de_unidad([], []));
+    }
+
     // --- formatear_servicio_diario ------------------------------------------
 
     public function test_servicio_diario_dentro_del_mes(): void

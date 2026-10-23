@@ -75,32 +75,11 @@ $orden_resumen = ['FINALIZADO', 'EN_CURSO', 'PROGRAMADO', 'NO_INICIADO', 'SIN_CI
     <?php endif; ?>
 
     <h2 class="reporte-seccion">Resultados</h2>
-    <?php $con_cantidad = array_filter($reporte['resultados'], static fn (array $r): bool => (int) $r['cantidad'] > 0); ?>
-    <?php if ($con_cantidad === []): ?>
-        <p class="reporte-vacio">Ningún concepto con resultados en este servicio diario.</p>
-    <?php endif; ?>
-    <!-- Una casilla por concepto, 3 por fila; los que quedaron en 0 van en gris. -->
-    <table class="reporte-resultados">
-        <?php foreach (array_chunk($reporte['resultados'], 3) as $fila_resultados): ?>
-            <tr>
-                <?php foreach ($fila_resultados as $resultado): ?>
-                    <?php $cantidad = (int) $resultado['cantidad']; ?>
-                    <td class="resultado<?= $cantidad > 0 ? ' con-cantidad' : '' ?>">
-                        <img class="resultado-icono" alt=""
-                             src="<?= e(armar_icono_resultado($resultado['icono'], $cantidad > 0 ? '#1f6f50' : '#aab2ba')) ?>">
-                        <span class="resultado-cifra"><?= $cantidad ?></span>
-                        <span class="resultado-nombre"><?= e($resultado['nombre']) ?></span>
-                        <?php if ($resultado['descripcion'] !== null && $resultado['descripcion'] !== ''): ?>
-                            <span class="resultado-ayuda"><?= e($resultado['descripcion']) ?></span>
-                        <?php endif; ?>
-                    </td>
-                <?php endforeach; ?>
-                <?php for ($vacia = count($fila_resultados); $vacia < 3; $vacia++): ?>
-                    <td class="resultado-relleno"></td>
-                <?php endfor; ?>
-            </tr>
-        <?php endforeach; ?>
-    </table>
+    <?php
+    $resultados = $reporte['resultados'];
+    $texto_vacio = 'Ningún concepto con resultados en este servicio diario.';
+    require RUTA_APP . '/vistas/reporte_casillas_resultados.php';
+    ?>
 
     <!-- Personal y recursos de los operativos realizados (los mismos de las casillas de arriba): una
          tarjeta por turno con efectivos (propios + apoyo) y móviles, sin gran total: entre turnos se repiten

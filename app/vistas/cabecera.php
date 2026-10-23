@@ -39,6 +39,7 @@ $menu = match ($usuario['rol'] ?? null) {
     'UNIDAD'     => [
         ''                     => ['Mis operativos', 'clipboard-check'],
         'operativos/programar' => ['Programar', 'calendar-plus'],
+        'resultados'           => ['Mis resultados', 'bar-chart'],
         'ayuda'                => ['Ayuda', 'question-circle'],
     ],
     default      => [],

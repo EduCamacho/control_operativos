@@ -1,6 +1,7 @@
 /*
- * Reporte del servicio diario (app/vistas/reporte_servicio.php). Lo usan la
- * pantalla /reportes y el PDF de Dompdf, que lee este mismo archivo: solo
+ * Reporte del servicio diario (app/vistas/reporte_servicio.php) y Mis resultados
+ * de la UNIDAD (app/vistas/reporte_resultados.php). Los usan las pantallas
+ * /reportes y /resultados y el PDF de Dompdf, que lee este mismo archivo: solo
  * CSS sencillo (tablas, colores, márgenes), sin flexbox, grid ni variables.
  * Los tamaños van en em sobre la letra base: 10pt en el PDF y más grande en
  * pantalla (al final). Colores de estado en tonos claros, legibles también
@@ -79,6 +80,13 @@
 .reporte-resultados .con-cantidad .resultado-nombre { color: #1d2329; }
 .reporte-resultados .resultado-ayuda { display: block; font-size: .7em; color: #6b747d; }
 
+/* Mis resultados (UNIDAD): "Sin N.I" en rojo si falta alguna, y la lista de operativos finalizados. */
+.reporte-tarjetas .tarjeta-alerta { border-top-color: #b02a37; background: #fbeced; }
+.reporte-tarjetas .tarjeta-alerta .tarjeta-cifra { color: #b02a37; }
+.reporte-operativos td.fecha { white-space: nowrap; }
+.reporte-operativos .secundario { color: #6b747d; }
+.reporte-operativos .falta-nota { color: #b02a37; font-weight: bold; white-space: nowrap; }
+
 .reporte-matriz td.unidad { font-weight: bold; white-space: nowrap; width: 20%; }
 .reporte-matriz td { width: 20%; }
 .reporte-matriz .fila-division td { background: #f4f6f8; font-weight: bold; color: #4b5560; }
@@ -101,6 +109,7 @@
     .reporte-tabla td, .reporte-tabla th { font-size: .875em; }
     .reporte-desplazable { overflow-x: auto; }
     .reporte-matriz { min-width: 640px; }
+    .reporte-operativos { min-width: 640px; }
 }
 @media screen and (max-width: 575.98px) {
     /* El resumen pasa a dos filas de 4 casillas. */

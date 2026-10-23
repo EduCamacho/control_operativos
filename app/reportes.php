@@ -1,7 +1,7 @@
 <?php
 /**
- * Reportes para el SUPERVISOR y ADMIN (docs/04): los datos del reporte del
- * servicio diario y su PDF con Dompdf, incluido en app/lib/dompdf (sin
+ * Reportes (docs/04): el del servicio diario para el SUPERVISOR y ADMIN, "Mis
+ * resultados" para la UNIDAD, y sus PDF con Dompdf, incluido en app/lib/dompdf (sin
  * Composer en producción). La matriz se arma con armar_matriz_servicio().
  */
 declare(strict_types=1);
@@ -151,6 +151,70 @@ function armar_reporte_servicio(string $fecha_servicio, string $division, DateTi
         'resultados' => $resultados,
         'positivos'  => $positivos,
         'negativos'  => $negativos,
+    ];
+}
+
+/**
+ * "Mis resultados" de una UNIDAD (RN-22): solo sus operativos finalizados entre dos
+ * servicios diarios, porque los resultados se registran al finalizar (RN-12). El
+ * $unidad_id sale siempre de unidad_de_sesion(), nunca del navegador (RN-16).
+ *
+ * @return array<string, mixed>
+ */
+function armar_resultados_unidad(int $unidad_id, string $desde, string $hasta, DateTimeImmutable $ahora): array
+{
+    $filtro = "o.unidad_id = :unidad_id AND o.estado = 'FINALIZADO' AND o.fecha_servicio BETWEEN :desde AND :hasta";
+    $parametros = ['unidad_id' => $unidad_id, 'desde' => $desde, 'hasta' => $hasta];
+
+    // Como el reporte del servicio: todos los conceptos activos, también en 0, más los
+    // inactivos que tengan cantidad en el período.
+    $resultados = consultar(
+        "SELECT c.nombre, c.descripcion, c.icono, COALESCE(SUM(r.cantidad), 0) AS cantidad
+         FROM conceptos_resultado c
+         LEFT JOIN (operativo_resultados r JOIN operativos o ON o.id = r.operativo_id)
+             ON r.concepto_resultado_id = c.id AND $filtro
+         GROUP BY c.id, c.nombre, c.descripcion, c.icono, c.orden, c.activo
+         HAVING c.activo = 1 OR SUM(r.cantidad) > 0
+         ORDER BY c.orden, c.nombre",
+        $parametros,
+    )->fetchAll();
+
+    $operativos = consultar(
+        'SELECT ' . COLUMNAS_OPERATIVO . "
+         FROM operativos o JOIN unidades un ON un.id = o.unidad_id
+         WHERE $filtro
+         ORDER BY o.inicio_programado",
+        $parametros,
+    )->fetchAll();
+
+    // Lo logrado por cada operativo, en una línea de la lista (solo cantidades mayores que 0).
+    $detalle = [];
+    $totales = [];
+    foreach (consultar(
+        "SELECT r.operativo_id, c.nombre, r.cantidad
+         FROM operativo_resultados r
+         JOIN conceptos_resultado c ON c.id = r.concepto_resultado_id
+         JOIN operativos o ON o.id = r.operativo_id
+         WHERE $filtro AND r.cantidad > 0
+         ORDER BY c.orden, c.nombre",
+        $parametros,
+    )->fetchAll() as $fila) {
+        $id = (int) $fila['operativo_id'];
+        $detalle[$id][] = ['nombre' => $fila['nombre'], 'cantidad' => (int) $fila['cantidad']];
+        $totales[$id] = ($totales[$id] ?? 0) + (int) $fila['cantidad'];
+    }
+    foreach ($operativos as &$operativo) {
+        $operativo['detalle'] = $detalle[(int) $operativo['id']] ?? [];
+    }
+    unset($operativo);
+
+    return [
+        'desde'      => $desde,
+        'hasta'      => $hasta,
+        'generado'   => $ahora,
+        'resultados' => $resultados,
+        'operativos' => $operativos,
+        'cifras'     => contar_resultados_de_unidad($operativos, $totales),
     ];
 }
 

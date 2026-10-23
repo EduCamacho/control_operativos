@@ -109,6 +109,7 @@ Son funciones puras, sin acceso a la base de datos, y cada una tiene sus tests e
 - `puede_iniciar()`, `puede_eliminar()`, `campos_editables(string $estado, bool $paso_hora_inicio): array` (RN-05, RN-06, RN-07).
 - `normalizar_nota_informativa(string $texto): ?string`: deja solo los dígitos (RN-13).
 - `programacion_permitida(DateTimeImmutable $inicio, DateTimeImmutable $ahora, bool $es_admin): bool`: el inicio debe ser futuro, salvo para ADMIN (RN-03).
+- `calcular_periodo_resultados(array $consulta, DateTimeImmutable $ahora): array`: período de "Mis resultados" (atajo o rango, hasta un año) y `contar_resultados_de_unidad(array $operativos, array $totales): array`: realizados, positivos, negativos y sin N.I (RN-22).
 
 ## Desarrollo en local
 
