@@ -212,6 +212,11 @@
                     this.error = '';
                     if (paso === 1 && this.activo('hora_inicio')) {
                         if (!this.fecha) return this.fallar('Elija la fecha de servicio.', 'fecha_servicio');
+                        // Límite de anticipación (RN-03): el "max" del campo lo pone el servidor.
+                        const maxima = this.campo('fecha_servicio').max;
+                        if (maxima && this.fecha > maxima) {
+                            return this.fallar('Solo se puede programar hasta el servicio del ' + maxima.split('-').reverse().join('/') + '.', 'fecha_servicio');
+                        }
                         if (minutos(this.horaInicio) === null) return this.fallar('Indique la hora de inicio.', 'hora_inicio');
                         if (minutos(this.horaFin) === null) return this.fallar('Indique la hora de fin.', 'hora_fin');
                         if (this.horaInicio === this.horaFin) return this.fallar('La hora de fin debe ser distinta de la de inicio.', 'hora_fin');

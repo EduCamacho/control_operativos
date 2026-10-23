@@ -95,6 +95,10 @@ if ($accion === 'guardar') {
     $horario = null;
     try {
         $horario = calcular_horario_turno((string) ($_POST['fecha_servicio'] ?? ''), (string) ($_POST['hora_inicio'] ?? ''), (string) ($_POST['hora_fin'] ?? ''));
+        // Hasta 60 días también para ADMIN: más allá, la unidad no vería el operativo (RN-03).
+        if (($error_anticipacion = validar_anticipacion((string) $_POST['fecha_servicio'], $ahora)) !== null) {
+            $errores['fecha_servicio'] = $error_anticipacion;
+        }
     } catch (InvalidArgumentException $error) {
         $errores['hora_inicio'] = $error->getMessage();
     }
@@ -208,6 +212,7 @@ if ($accion === 'guardar') {
 $tipos_formulario = obtener_tipos_para_formulario(array_map('intval', (array) $valores['tipos']));
 $deshabilitado = static fn (string $campo): string => '';
 $fecha_minima = null;
+$fecha_maxima = fecha_servicio_maxima($ahora);
 $titulo = $actual === null ? 'Programar en nombre de una unidad' : 'Corregir operativo';
 $scripts = ['assets/js/programacion.js'];
 require RUTA_APP . '/vistas/cabecera.php';

@@ -101,7 +101,7 @@ require RUTA_APP . '/vistas/cabecera.php';
         </div>
         <div>
             <label for="observaciones" class="form-label">Observaciones <span class="text-body-secondary">(opcional)</span></label>
-            <textarea id="observaciones" name="observaciones" rows="3" class="form-control"><?= e($operativo['observaciones'] ?? '') ?></textarea>
+            <textarea id="observaciones" name="observaciones" rows="3" maxlength="<?= MAX_CARACTERES_OBSERVACIONES ?>" class="form-control"><?= e($operativo['observaciones'] ?? '') ?></textarea>
         </div>
     </div>
 

@@ -30,8 +30,8 @@ try {
 }
 
 $observaciones = trim((string) ($entrada['observaciones'] ?? ''));
-if (mb_strlen($observaciones) > 5000) {
-    $errores['observaciones'] = 'Las observaciones admiten hasta 5000 caracteres.';
+if (mb_strlen($observaciones) > MAX_CARACTERES_OBSERVACIONES) {
+    $errores['observaciones'] = 'Las observaciones admiten hasta ' . MAX_CARACTERES_OBSERVACIONES . ' caracteres.';
 }
 
 if ($errores !== []) {
