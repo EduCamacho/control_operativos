@@ -13,7 +13,7 @@ Es un sistema web para que 26 comisarías y unidades especializadas programen un
 ## Stack (resumen)
 
 PHP 8.2+ plano con PDO, MySQL o MariaDB, Bootstrap 5.3 y Alpine.js 3. El hosting es compartido con cPanel.
-La Google Maps JS API se carga **solo en las pantallas del SUPERVISOR** (RN-21). En las demás vistas, cada ubicación es un enlace `https://www.google.com/maps/search/?api=1&query=LAT,LNG`. Para ubicar se intenta primero el GPS del navegador. Si falla o es impreciso (por ejemplo, en una PC), se pueden pegar coordenadas de Google Maps, y quedan marcadas como `MANUAL` (RN-09).
+La Google Maps JS API se carga **solo en las pantallas del SUPERVISOR** (RN-21). En las demás vistas, cada ubicación es un enlace `https://www.google.com/maps/search/?api=1&query=LAT,LNG`. Para ubicar, en el celular se intenta primero el GPS del navegador; en la PC se va directo a pegar las coordenadas (de WhatsApp o Google Maps), que quedan marcadas como `MANUAL` (RN-09).
 **No usar** frameworks, Composer en producción, Node, bundlers, websockets ni tareas cron. El mapa se actualiza consultando `/api/mapa` cada 30 s.
 
 ## Reglas de código
