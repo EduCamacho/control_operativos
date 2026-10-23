@@ -13,6 +13,7 @@ $reporte = armar_resultados_unidad(unidad_de_sesion(), $desde, $hasta, $ahora);
 $unidad_nombre = $usuario['unidad_nombre'];
 $generado_por = $usuario['nombre'];
 $en_pantalla = true;
+$ruta_ficha = 'operativos/ver';
 
 $titulo = 'Mis resultados';
 $estilos = ['assets/css/reporte.css'];

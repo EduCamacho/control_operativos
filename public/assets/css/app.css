@@ -240,6 +240,14 @@
     color: var(--bs-secondary-color);
 }
 
+/* Pestañas que son enlaces (Reportes: Servicio diario / Por unidad). */
+a.pestana {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
 .pestana .badge {
     background: var(--bs-secondary-bg);
     color: var(--bs-body-color);

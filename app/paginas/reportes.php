@@ -2,6 +2,7 @@
 /**
  * SUPERVISOR y ADMIN: reporte del servicio diario (docs/04). Filtros de fecha
  * y división, el reporte en pantalla y el botón para descargarlo en PDF.
+ * La pestaña "Por unidad" es reportes_unidad.php.
  * No usa la API de Google Maps (RN-21).
  */
 declare(strict_types=1);
@@ -24,6 +25,8 @@ require RUTA_APP . '/vistas/cabecera.php';
         <i class="bi bi-file-earmark-arrow-down"></i> Descargar PDF
     </a>
 </div>
+
+<?php require RUTA_APP . '/vistas/pestanas_reportes.php'; ?>
 
 <!-- Barra de filtros: otro fondo y sin sombra, para que no parezca parte del reporte. -->
 <form method="get" action="<?= e(armar_url('reportes')) ?>" class="barra-filtros mb-4">

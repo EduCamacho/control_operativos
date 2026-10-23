@@ -2,8 +2,9 @@
 /**
  * SUPERVISOR y ADMIN: ficha de un operativo de cualquier unidad.
  * Con ?fragmento=1 devuelve solo la ficha, para el panel del mapa.
- * "Volver" lleva al tablero (con su fecha, división y filtro) si se llegó desde
- * ahí; si no, al mapa (SUPERVISOR) o al tablero (ADMIN).
+ * "Volver" lleva al tablero (con su fecha, división y filtro) o al reporte por
+ * unidad (con su unidad y período) si se llegó desde ahí; si no, al mapa
+ * (SUPERVISOR) o al tablero (ADMIN).
  */
 declare(strict_types=1);
 
@@ -34,18 +35,25 @@ if ($es_fragmento) {
     exit;
 }
 
-// Volver: al tablero si se llegó desde ahí (mismo sitio), conservando solo sus filtros.
+// Volver: al tablero o al reporte por unidad si se llegó desde ahí (mismo sitio), conservando solo sus filtros.
 $volver = $usuario['rol'] === 'SUPERVISOR' ? ['', 'Mapa'] : ['supervisor/tablero', 'Tablero'];
 $volver_parametros = [];
+$origenes = [
+    'supervisor/tablero' => ['Tablero', ['fecha', 'division', 'alertas']],
+    'reportes/unidad'    => ['Reporte por unidad', ['unidad', 'desde', 'hasta', 'periodo']],
+];
 $origen = parse_url((string) ($_SERVER['HTTP_REFERER'] ?? ''));
-if (is_array($origen)
-    && ($origen['host'] ?? '') === parse_url('http://' . ($_SERVER['HTTP_HOST'] ?? ''), PHP_URL_HOST)
-    && ($origen['path'] ?? '') === parse_url(armar_url('supervisor/tablero'), PHP_URL_PATH)) {
-    $volver = ['supervisor/tablero', 'Tablero'];
-    parse_str($origen['query'] ?? '', $consulta);
-    foreach (['fecha', 'division', 'alertas'] as $clave) {
-        if (isset($consulta[$clave]) && is_string($consulta[$clave]) && $consulta[$clave] !== '') {
-            $volver_parametros[$clave] = $consulta[$clave];
+if (is_array($origen) && ($origen['host'] ?? '') === parse_url('http://' . ($_SERVER['HTTP_HOST'] ?? ''), PHP_URL_HOST)) {
+    foreach ($origenes as $ruta_origen => [$etiqueta_origen, $claves_origen]) {
+        if (($origen['path'] ?? '') !== parse_url(armar_url($ruta_origen), PHP_URL_PATH)) {
+            continue;
+        }
+        $volver = [$ruta_origen, $etiqueta_origen];
+        parse_str($origen['query'] ?? '', $consulta);
+        foreach ($claves_origen as $clave) {
+            if (isset($consulta[$clave]) && is_string($consulta[$clave]) && $consulta[$clave] !== '') {
+                $volver_parametros[$clave] = $consulta[$clave];
+            }
         }
     }
 }

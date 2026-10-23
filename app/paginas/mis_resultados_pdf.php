@@ -12,6 +12,7 @@ $reporte = armar_resultados_unidad(unidad_de_sesion(), $desde, $hasta, $ahora);
 $unidad_nombre = $usuario['unidad_nombre'];
 $generado_por = $usuario['nombre'];
 $en_pantalla = false;
+$ruta_ficha = 'operativos/ver';
 
 ob_start();
 ?>

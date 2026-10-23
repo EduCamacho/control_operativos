@@ -3,7 +3,8 @@
  * Cuerpo de "Mis resultados" de la UNIDAD (RN-22). Lo usan la pantalla /resultados y
  * el PDF, con los estilos de public/assets/css/reporte.css (solo tablas: Dompdf no
  * entiende flexbox ni grid). Espera $reporte (armar_resultados_unidad()),
- * $unidad_nombre, $generado_por y $en_pantalla (en el PDF no hay enlaces a la ficha).
+ * $unidad_nombre, $generado_por, $en_pantalla (en el PDF no hay enlaces a la ficha) y
+ * $ruta_ficha: operativos/ver para la UNIDAD, supervisor/operativo para SUPERVISOR y ADMIN.
  */
 declare(strict_types=1);
 
@@ -84,7 +85,7 @@ $cifras = $reporte['cifras'];
                             <td class="fecha">
                                 <?php $fecha = validar_fecha($operativo['fecha_servicio'])->format('d/m/Y'); ?>
                                 <?php if ($en_pantalla): ?>
-                                    <a href="<?= e(armar_url('operativos/ver', ['id' => $operativo['id']])) ?>"><?= e($fecha) ?></a>
+                                    <a href="<?= e(armar_url($ruta_ficha, ['id' => $operativo['id']])) ?>"><?= e($fecha) ?></a>
                                 <?php else: ?>
                                     <?= e($fecha) ?>
                                 <?php endif; ?>

@@ -208,6 +208,12 @@ function listar_unidades_activas(): array
     return consultar('SELECT id, division, nombre, nombre_corto, orden FROM unidades WHERE activo = 1 ORDER BY orden, nombre_corto')->fetchAll();
 }
 
+/** @return list<array> Todas las unidades, también las inactivas (pueden tener historial): primero las activas, en el orden del tablero. */
+function listar_unidades(): array
+{
+    return consultar('SELECT id, division, nombre, nombre_corto, orden, activo FROM unidades ORDER BY activo DESC, orden, nombre_corto')->fetchAll();
+}
+
 /** @return list<array> Operativos de todas las unidades en un servicio diario. */
 function listar_operativos_del_servicio(string $servicio_diario): array
 {

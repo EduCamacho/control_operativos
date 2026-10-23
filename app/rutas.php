@@ -41,6 +41,8 @@ const RUTAS = [
     'supervisor/control'     => 'paginas/supervisor_control.php',
     'reportes'               => 'paginas/reportes.php',
     'reportes/pdf'           => 'paginas/reporte_pdf.php',
+    'reportes/unidad'        => 'paginas/reportes_unidad.php',
+    'reportes/unidad/pdf'    => 'paginas/reportes_unidad_pdf.php',
     'api/mapa'               => 'api/mapa.php',
     'api/controles'          => 'api/controles.php',
 ];
