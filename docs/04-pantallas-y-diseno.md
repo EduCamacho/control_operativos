@@ -67,7 +67,11 @@ El mapa interactivo solo existe en las pantallas del SUPERVISOR (RN-21). En las 
    - **Resultados** como una lista compacta: una fila por concepto, con el nombre (y la descripción) a la izquierda y el contador − 0 + a la derecha, con 0 por defecto. Las filas con cantidad se resaltan en verde. En el encabezado de la tarjeta se ve el resultado en vivo: **Negativo** o **Positivo · N**.
    - Número de nota informativa (con el prefijo "N°") y observaciones, ambos opcionales.
    - Al final pide confirmación.
-6. **Ayuda** (`/ayuda`), solo para las unidades (al General se le explica en persona), en el menú lateral.
+6. **Mis resultados** (`/resultados`), en el menú lateral, entre Programar y Ayuda (RN-22).
+   - Barra de filtros como la de Reportes (rótulo "Período"): chips **Esta semana**, **Este mes** y **Mes anterior** (el que coincide con el rango se marca), y debajo **Desde** y **Hasta** con el botón **Ver resultados**. Arriba, **Descargar PDF** (`/resultados/pdf`, A4 vertical).
+   - El reporte, con el mismo encabezado institucional y estilos que el del servicio diario: casillas de **operativos realizados** (verde lleno), **positivos**, **negativos** y **sin N.I** (en rojo si hay alguno); **Resultados** como casillas por concepto (la misma plantilla, `vistas/reporte_casillas_resultados.php`); y **Operativos finalizados** en una tabla: fecha (en pantalla, enlace a la ficha), turno y horario, lugar, lo logrado ("1 DETENIDOS EN FLAGRANCIA", uno por línea, o "Negativo") y la N.I o "Sin N.I" en rojo. En el celular la tabla se desplaza de lado.
+   - Pantalla y PDF usan la misma plantilla (`vistas/reporte_resultados.php`).
+7. **Ayuda** (`/ayuda`), solo para las unidades (al General se le explica en persona), en el menú lateral.
    - **¿Necesita ayuda?**: nombre y celular de soporte con los botones **Llamar** y **WhatsApp** (este solo si `SOPORTE_WHATSAPP` y el número es un celular). Sin datos configurados, dice que se consulte al administrador.
    - **Videotutorial**: botón **Ver el videotutorial**, que abre YouTube (la app, en el celular). Es un enlace y no un video incrustado, para que la página siga siendo liviana con poca señal. Sin video configurado, no se muestra.
    - **Preguntas frecuentes** plegables: activar la ubicación (con el botón **Ver video (Android)**), el aviso de PC, copiar coordenadas de Google Maps (con **Ver video**), corregir un dato, la N.I después de finalizar y la clave olvidada. Los videos son de YouTube, de terceros.

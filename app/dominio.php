@@ -55,6 +55,8 @@ const RANGOS_CLOUDFLARE = [
 const MAX_FUERZAS = 9999;
 const MAX_CANTIDAD_RESULTADO = 9999;
 const MAX_DIGITOS_NOTA = 20;
+const MAX_DIAS_PERIODO_RESULTADOS = 366; // "Mis resultados": hasta un año (RN-22)
+const PERIODOS_RESULTADOS = ['SEMANA' => 'Esta semana', 'MES' => 'Este mes', 'MES_ANTERIOR' => 'Mes anterior'];
 
 // Estados visibles: etiqueta y clase de color (docs/04). SIN_CIERRE usa el naranja propio.
 const ETIQUETAS_ESTADO = [
@@ -826,6 +828,98 @@ function nombre_archivo_reporte(string $fecha_servicio, string $division): strin
 {
     return 'reporte_servicio_' . validar_fecha($fecha_servicio)->format('Y-m-d')
         . ($division === '' ? '' : '_' . preg_replace('/[^A-Z0-9]/', '', strtoupper($division))) . '.pdf';
+}
+
+/**
+ * Período de "Mis resultados" de la UNIDAD (RN-22): un atajo (?periodo=SEMANA, MES o
+ * MES_ANTERIOR) o un rango libre de servicios diarios (?desde=…&hasta=…). Por defecto, el
+ * mes en curso hasta el servicio vigente. Un rango invertido se ordena y uno de más de
+ * MAX_DIAS_PERIODO_RESULTADOS se recorta desde "hasta". Un valor inválido vuelve al predeterminado.
+ *
+ * @return array{desde: string, hasta: string, atajo: string}  atajo '' si el rango no coincide con ninguno.
+ */
+function calcular_periodo_resultados(array $consulta, DateTimeImmutable $ahora): array
+{
+    $vigente = validar_fecha(fecha_servicio_vigente($ahora));
+    $atajos = [
+        'SEMANA'       => [$vigente->modify('-' . ((int) $vigente->format('N') - 1) . ' days'), $vigente], // desde el lunes
+        'MES'          => [$vigente->modify('first day of this month'), $vigente],
+        'MES_ANTERIOR' => [$vigente->modify('first day of last month'), $vigente->modify('last day of last month')],
+    ];
+
+    // Desde la URL puede llegar un arreglo (?desde[]=…): se trata como vacío.
+    $leer = static fn (string $clave): string => is_string($consulta[$clave] ?? null) ? $consulta[$clave] : '';
+    $periodo = $leer('periodo');
+    if (isset($atajos[$periodo])) {
+        [$desde, $hasta] = $atajos[$periodo];
+    } else {
+        try {
+            $desde = validar_fecha($leer('desde'));
+            $hasta = validar_fecha($leer('hasta'));
+        } catch (InvalidArgumentException) {
+            [$desde, $hasta] = $atajos['MES'];
+        }
+    }
+    if ($desde > $hasta) {
+        [$desde, $hasta] = [$hasta, $desde];
+    }
+    $minimo = $hasta->modify('-' . (MAX_DIAS_PERIODO_RESULTADOS - 1) . ' days');
+    if ($desde < $minimo) {
+        $desde = $minimo;
+    }
+
+    $atajo = '';
+    foreach ($atajos as $clave => [$desde_atajo, $hasta_atajo]) {
+        if ($desde == $desde_atajo && $hasta == $hasta_atajo) {
+            $atajo = $clave;
+            break;
+        }
+    }
+    return ['desde' => $desde->format('Y-m-d'), 'hasta' => $hasta->format('Y-m-d'), 'atajo' => $atajo];
+}
+
+/** '01/10 al 23/10/2026'; de un año a otro, '15/12/2026 al 10/01/2027'; un solo día, '23/10/2026'. */
+function formatear_periodo(string $desde, string $hasta): string
+{
+    $inicio = validar_fecha($desde);
+    $fin = validar_fecha($hasta);
+    return match (true) {
+        $desde === $hasta                             => $fin->format('d/m/Y'),
+        $inicio->format('Y') === $fin->format('Y') => $inicio->format('d/m') . ' al ' . $fin->format('d/m/Y'),
+        default                                       => $inicio->format('d/m/Y') . ' al ' . $fin->format('d/m/Y'),
+    };
+}
+
+/** 'resultados_COM-AYACUCHO_2026-10-01_al_2026-10-23.pdf'. */
+function nombre_archivo_resultados(string $unidad, string $desde, string $hasta): string
+{
+    $unidad = trim((string) preg_replace('/[^A-Z0-9]+/', '-', strtoupper($unidad)), '-');
+    return 'resultados_' . ($unidad === '' ? 'UNIDAD' : $unidad) . '_'
+        . validar_fecha($desde)->format('Y-m-d') . '_al_' . validar_fecha($hasta)->format('Y-m-d') . '.pdf';
+}
+
+/**
+ * Cifras de "Mis resultados" sobre los operativos finalizados del período (RN-22):
+ * positivos (alguna cantidad), negativos (todo en 0, RN-12) y sin nota informativa (RN-13).
+ *
+ * @param list<array>      $operativos  Finalizados del período.
+ * @param array<int, int>  $totales     Suma de cantidades por id de operativo (sin fila = 0).
+ * @return array{realizados: int, positivos: int, negativos: int, sin_nota: int}
+ */
+function contar_resultados_de_unidad(array $operativos, array $totales): array
+{
+    $cifras = ['realizados' => 0, 'positivos' => 0, 'negativos' => 0, 'sin_nota' => 0];
+    foreach ($operativos as $operativo) {
+        if ($operativo['estado'] !== 'FINALIZADO') {
+            continue;
+        }
+        $cifras['realizados']++;
+        $cifras[($totales[(int) $operativo['id']] ?? 0) > 0 ? 'positivos' : 'negativos']++;
+        if (pendiente_nota($operativo)) {
+            $cifras['sin_nota']++;
+        }
+    }
+    return $cifras;
 }
 
 /**
