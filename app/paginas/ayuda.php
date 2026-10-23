@@ -17,8 +17,8 @@ $video = str_starts_with(VIDEO_TUTORIAL_UNIDAD_URL, 'https://') ? VIDEO_TUTORIAL
 // Los videos son de terceros (elegidos por Eduardo, 18/10/2026): si los borran, reemplazarlos por uno propio.
 $preguntas = [
     ['¿Cómo activo la ubicación del celular?', null, ['https://www.youtube.com/watch?v=7jE82O5tRe8', 'Ver video (Android)']],
-    ['Me aparece "¡Detectamos que está en una PC!"',
-        'Lo ideal es iniciar y registrar los puntos desde el celular, en el lugar del operativo. Si está en la comisaría, toque <strong>¿No es mi ubicación?</strong> → <strong>Ingresar manualmente</strong> y pegue las coordenadas que le envíe el jefe del operativo.'],
+    ['Inicio el operativo desde la PC de la comisaría',
+        'En la PC el sistema no usa el GPS: pide directamente la ubicación. Pegue la que le envió el jefe del operativo (el enlace de la ubicación compartida por WhatsApp o las coordenadas de Google Maps), revísela con <strong>Ver en Google Maps</strong> y toque <strong>Ubicación correcta · Iniciar</strong>.'],
     ['¿Cómo copio las coordenadas de Google Maps?',
         'En Google Maps, mantenga presionado el lugar (o haga clic derecho en la PC) y toque las coordenadas para copiarlas, por ejemplo <em>-8.111600, -79.028800</em>. También puede pegar el enlace del lugar.',
         ['https://www.youtube.com/watch?v=MQRf4R9haVs', 'Ver video']],

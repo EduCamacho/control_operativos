@@ -264,6 +264,7 @@ final class DominioTest extends TestCase
             'URL con @'                  => ['https://www.google.com/maps/@-8.1116,-79.0287,17z', [-8.1116, -79.0287]],
             'URL de lugar con !3d!4d'    => ['https://www.google.com/maps/place/Plaza/@-8.11,-79.02,17z/data=!3m1!4b1!4m6!3m5!1s0x0:0x0!8m2!3d-8.1116!4d-79.0287', [-8.1116, -79.0287]],
             'URL con q='                 => ['https://maps.google.com/?q=-8.1116,-79.0287', [-8.1116, -79.0287]],
+            'Ubicación de WhatsApp'      => ['https://maps.google.com/maps?q=-8.1116%2C-79.0287&z=17&hl=es', [-8.1116, -79.0287]],
             'URL codificada'             => ['https://www.google.com/maps/search/?api=1&query=-8.1116%2C-79.0287', [-8.1116, -79.0287]],
             'URL de búsqueda con +'      => ['https://www.google.com/maps/search/-8.1116,+-79.0287', [-8.1116, -79.0287]],
             'grados, minutos y segundos' => ['8°06\'41.8"S 79°01\'43.3"W', [-8.1116111, -79.0286944]],

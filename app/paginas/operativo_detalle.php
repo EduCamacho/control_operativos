@@ -43,6 +43,12 @@ $configuracion_captura = static fn (string $accion): string => e(json_encode([
         ? ['latitud' => (float) $operativo['lugar_latitud'], 'longitud' => (float) $operativo['lugar_longitud']]
         : null,
     'distanciaLejos'  => DISTANCIA_LEJOS_LUGAR_M,
+    // Donde se centra "Abrir Google Maps" (sin pin): el último punto registrado o, al iniciar, el lugar programado.
+    'centroMapa'      => match (true) {
+        $accion === 'PUNTO' && $actual !== null => ['latitud' => (float) $actual['latitud'], 'longitud' => (float) $actual['longitud']],
+        $operativo['lugar_latitud'] !== null    => ['latitud' => (float) $operativo['lugar_latitud'], 'longitud' => (float) $operativo['lugar_longitud']],
+        default                                 => null,
+    },
 ]));
 
 $turno = obtener_etiqueta_turno($operativo['turno']);

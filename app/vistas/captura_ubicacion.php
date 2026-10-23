@@ -22,19 +22,13 @@ declare(strict_types=1);
                 <button type="button" class="btn-close btn-close-white" aria-label="Cerrar" @click="cancelar()" :disabled="bloqueado"></button>
             </div>
             <div class="modal-body">
-                <!-- RN-09a: desde la PC de la comisaría se registraría la ubicación de la comisaría. -->
-                <div x-show="desdePc" class="alert alert-warning py-2 small mb-3">
-                    <i class="bi bi-pc-display"></i> <strong>¡Detectamos que está en una PC!</strong> Se recomienda abrir el sistema desde el mismo lugar del operativo, en un celular con GPS,
-                    porque se guardarán las coordenadas. Si Ud. no está en el lugar del operativo, haga clic en <em>¿No es mi ubicación?</em> e ingrese las coordenadas brindadas por el jefe del operativo.
-                </div>
-
                 <div class="mb-3">
                     <label class="form-label fw-semibold" :for="'referencia-' + $id('captura')">
                         ¿Dónde está el operativo? <span x-show="!referenciaObligatoria" class="fw-normal text-body-secondary small">(opcional)</span>
                     </label>
                     <input type="text" :id="'referencia-' + $id('captura')" x-ref="referencia" x-model="referencia" maxlength="255"
                            class="form-control form-control-lg" :class="errores.referencia && 'is-invalid'"
-                           placeholder="Calle, avenida o sector" :disabled="bloqueado" @keydown.enter.prevent="fase === 'lista' && enviar()">
+                           placeholder="Calle, avenida o sector" :disabled="bloqueado" @keydown.enter.prevent="puedeEnviar && enviar()">
                     <div class="invalid-feedback" x-text="errores.referencia"></div>
                 </div>
 
@@ -48,12 +42,12 @@ declare(strict_types=1);
             <div x-show="fase === 'lista' || fase === 'enviando' || fase === 'sin_conexion'" class="mb-3">
                 <a :href="enlaceMaps(latitud, longitud)" target="_blank" rel="noopener" class="text-success">
                     <i class="bi bi-check-circle-fill"></i>
-                    <span x-text="origen === 'MANUAL' ? 'Ver la ubicación ingresada' : 'Ver mi ubicación actual'"></span>
+                    <span x-text="origen === 'MANUAL' ? 'Ver la ubicación ingresada' : (desdePc ? 'Ver la ubicación de este equipo' : 'Ver mi ubicación actual')"></span>
                 </a>
             </div>
 
             <!-- RN-09a: lejos del lugar programado (solo al iniciar). Solo se avisa. -->
-            <div x-show="lejosDelLugar && (fase === 'lista' || fase === 'enviando' || fase === 'sin_conexion')" class="alert alert-warning py-2 mb-3">
+            <div x-show="lejosDelLugar && (fase === 'lista' || fase === 'manual' || fase === 'enviando' || fase === 'sin_conexion')" class="alert alert-warning py-2 mb-3">
                 <i class="bi bi-exclamation-triangle-fill"></i>
                 Está a <strong x-text="textoDistancia"></strong> del lugar programado.
             </div>
@@ -76,32 +70,49 @@ declare(strict_types=1);
                 </details>
             </div>
 
-            <!-- Ingreso manual: coordenadas pegadas de Google Maps (RN-09) -->
+            <!-- Ingreso manual (RN-09): en la PC se abre directo aquí. Se confirma con el botón del pie, sin paso intermedio. -->
             <div x-show="fase === 'manual'" class="border rounded p-3 mb-3 bg-body-tertiary">
-                <label class="form-label fw-semibold" :for="'pegado-' + $id('captura')">Pegar coordenadas de Google Maps</label>
+                <label class="form-label fw-semibold" :for="'pegado-' + $id('captura')"
+                       x-text="desdePc ? 'Pegue la ubicación que le envió el jefe del operativo' : 'Pegar coordenadas de Google Maps'"></label>
                 <textarea :id="'pegado-' + $id('captura')" x-ref="textoPegado" x-model="textoPegado" rows="2" class="form-control"
                           placeholder="-8.111600, -79.028800" @paste="$nextTick(() => analizarTexto())" @change="analizarTexto()"></textarea>
                 <div class="form-text mb-2">
-                    En Google Maps, mantenga presionado el lugar (o haga clic derecho en la PC) y copie las coordenadas.
-                    También puede pegar el enlace del lugar.
-                </div>
-                <div class="row g-2 mb-2">
-                    <div class="col-6">
-                        <label class="form-label small mb-0" :for="'latitud-' + $id('captura')">Latitud</label>
-                        <input type="text" inputmode="decimal" :id="'latitud-' + $id('captura')" x-model="latitudManual" class="form-control" placeholder="-8.1116">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label small mb-0" :for="'longitud-' + $id('captura')">Longitud</label>
-                        <input type="text" inputmode="decimal" :id="'longitud-' + $id('captura')" x-model="longitudManual" class="form-control" placeholder="-79.0288">
-                    </div>
+                    Puede pegar el enlace de la ubicación compartida por WhatsApp o buscar las coordenadas haciendo click en el boton "Abrir google maps".
                 </div>
                 <div x-show="analizando" class="small text-body-secondary mb-2">Analizando…</div>
                 <div x-show="errorManual" class="text-danger small mb-2" x-text="errorManual"></div>
-                <div class="d-grid gap-2 d-sm-flex">
-                    <button type="button" class="btn btn-institucional boton-accion" @click="confirmarManual()"><i class="bi bi-check-lg"></i> Usar estas coordenadas</button>
-                    <a :href="enlaceMaps(latitudManual, longitudManual)" target="_blank" rel="noopener" class="btn btn-outline-secondary boton-accion"
-                       :class="(latitudManual === '' || longitudManual === '') && 'disabled'"><i class="bi bi-geo-alt"></i> Ver en Google Maps</a>
-                    <button type="button" class="btn btn-outline-secondary boton-accion" @click="obtenerGps()"><i class="bi bi-crosshair"></i> Volver a intentar con GPS</button>
+                <!-- Resultado del pegado en una línea, para revisarlo (RN-09) -->
+                <div x-show="puntoManual !== null && !camposVisibles" class="text-success small mb-2">
+                    <i class="bi bi-check-circle-fill"></i> <span x-text="textoPuntoManual"></span>
+                </div>
+
+                <!-- Latitud y longitud por separado: solo si se piden o si no hubo conexión para analizar el texto -->
+                <div x-show="camposVisibles">
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small mb-0" :for="'latitud-' + $id('captura')">Latitud</label>
+                            <input type="text" inputmode="decimal" :id="'latitud-' + $id('captura')" x-model="latitudManual" class="form-control" placeholder="-8.1116">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small mb-0" :for="'longitud-' + $id('captura')">Longitud</label>
+                            <input type="text" inputmode="decimal" :id="'longitud-' + $id('captura')" x-model="longitudManual" class="form-control" placeholder="-79.0288">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <!-- Sin coordenadas abre Google Maps para buscar el lugar; con coordenadas, las muestra para revisarlas. -->
+                    <a :href="enlaceManual" target="_blank" rel="noopener" class="btn btn-sm btn-outline-institucional">
+                        <i class="bi bi-geo-alt"></i> <span x-text="puntoManual === null ? 'Abrir Google Maps' : 'Ver en Google Maps'"></span>
+                    </a>
+                    <span class="ms-auto">
+                        <button type="button" x-show="!camposVisibles" class="btn btn-link btn-sm" @click="camposVisibles = true">
+                            <i class="bi bi-pencil"></i> Escribir latitud y longitud
+                        </button>
+                        <button type="button" class="btn btn-link btn-sm" @click="obtenerGps()">
+                            <i class="bi bi-crosshair"></i> <span x-text="desdePc ? 'Usar la ubicación de este equipo' : 'Volver a intentar con GPS'"></span>
+                        </button>
+                    </span>
                 </div>
             </div>
 
@@ -120,7 +131,7 @@ declare(strict_types=1);
             </div>
             <div class="modal-footer barra-modal flex-column align-items-stretch">
                 <!-- El botón es la confirmación: "Ubicación correcta" (RN-09a). -->
-                <button type="button" class="btn btn-institucional btn-lg boton-accion" :disabled="fase !== 'lista'" @click="enviar()">
+                <button type="button" class="btn btn-institucional btn-lg boton-accion" :disabled="!puedeEnviar" @click="enviar()">
                     <span x-show="fase === 'enviando' || fase === 'obteniendo'" class="spinner-border spinner-border-sm" role="status"></span>
                     <span x-text="textoBoton(<?= e(json_encode($captura['boton'])) ?>)"></span>
                 </button>
