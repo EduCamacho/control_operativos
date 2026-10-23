@@ -22,10 +22,12 @@ $anteriores_en_curso = array_values(array_filter(
     static fn (array $o): bool => $o['estado'] === 'EN_CURSO',
 ));
 
+// Hasta el último servicio que se puede programar (RN-03): ninguno queda fuera de la lista.
 $proximos = listar_operativos_de_unidad(
     $unidad_id,
     $dia_vigente->modify('+1 day')->format('Y-m-d'),
-    $dia_vigente->modify('+60 days')->format('Y-m-d'),
+    fecha_servicio_maxima($ahora),
+    1000, // 60 días con 4 turnos ya pasan de los 200 por defecto
 );
 $historial = array_reverse(listar_operativos_de_unidad(
     $unidad_id,

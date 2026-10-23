@@ -55,6 +55,8 @@ const RANGOS_CLOUDFLARE = [
 const MAX_FUERZAS = 9999;
 const MAX_CANTIDAD_RESULTADO = 9999;
 const MAX_DIGITOS_NOTA = 20;
+const MAX_CARACTERES_OBSERVACIONES = 5000;
+const MAX_DIAS_ANTICIPACION = 60; // RN-03: los mismos días que muestra "Próximos" en Mis operativos
 const MAX_DIAS_PERIODO_RESULTADOS = 366; // "Mis resultados": hasta un año (RN-22)
 const PERIODOS_RESULTADOS = ['SEMANA' => 'Esta semana', 'MES' => 'Este mes', 'MES_ANTERIOR' => 'Mes anterior'];
 
@@ -300,6 +302,25 @@ function formatear_fecha_larga(DateTimeInterface $fecha): string
 function programacion_permitida(DateTimeImmutable $inicio, DateTimeImmutable $ahora, bool $es_admin): bool
 {
     return $es_admin || $inicio > $ahora;
+}
+
+/**
+ * Último servicio diario que se puede programar (RN-03): el vigente más
+ * MAX_DIAS_ANTICIPACION. Más allá, el operativo no aparecería en "Próximos".
+ */
+function fecha_servicio_maxima(DateTimeImmutable $ahora): string
+{
+    return validar_fecha(fecha_servicio_vigente($ahora))->modify('+' . MAX_DIAS_ANTICIPACION . ' days')->format('Y-m-d');
+}
+
+/** Mensaje de error si la fecha de servicio pasa del máximo (RN-03), o null. Vale también para ADMIN. */
+function validar_anticipacion(string $fecha_servicio, DateTimeImmutable $ahora): ?string
+{
+    $maxima = fecha_servicio_maxima($ahora);
+    return validar_fecha($fecha_servicio)->format('Y-m-d') > $maxima
+        ? 'Solo se puede programar con hasta ' . MAX_DIAS_ANTICIPACION . ' días de anticipación (hasta el servicio del '
+            . validar_fecha($maxima)->format('d/m/Y') . ').'
+        : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -1138,9 +1159,14 @@ function validar_programacion(array $entrada, array $ids_tipos_activos, ?array $
         }
     }
 
+    // Mismo límite que al finalizar: si no, unas observaciones largas impedirían cerrar el operativo.
     if (in_array('observaciones', $campos, true)) {
         $observaciones = $texto('observaciones');
-        $datos['observaciones'] = $observaciones === '' ? null : $observaciones;
+        if (mb_strlen($observaciones) > MAX_CARACTERES_OBSERVACIONES) {
+            $errores['observaciones'] = 'Las observaciones admiten hasta ' . MAX_CARACTERES_OBSERVACIONES . ' caracteres.';
+        } else {
+            $datos['observaciones'] = $observaciones === '' ? null : $observaciones;
+        }
     }
 
     return ['datos' => $datos, 'errores' => $errores];

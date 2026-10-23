@@ -25,5 +25,7 @@ $contadores = [
 <?php endforeach; ?>
 <div class="mb-1">
     <label for="observaciones" class="form-label">Observaciones <span class="text-body-secondary">(opcional)</span></label>
-    <textarea id="observaciones" name="observaciones" rows="3" class="form-control"<?= $deshabilitado('observaciones') ?>><?= e($valores['observaciones'] ?? '') ?></textarea>
+    <textarea id="observaciones" name="observaciones" rows="3" maxlength="<?= MAX_CARACTERES_OBSERVACIONES ?>"
+              class="form-control<?= clase_error($errores, 'observaciones') ?>"<?= $deshabilitado('observaciones') ?>><?= e($valores['observaciones'] ?? '') ?></textarea>
+    <?= mostrar_error($errores, 'observaciones') ?>
 </div>

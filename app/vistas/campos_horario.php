@@ -3,7 +3,7 @@
  * Bloque "Cuándo" del formulario de programación: fecha de servicio, horas y
  * el turno calculado (RN-02). Necesita un componente Alpine con fecha,
  * horaInicio, horaFin, turno y resumen (assets/js/programacion.js).
- * Espera $valores, $errores, $deshabilitado y $fecha_minima.
+ * Espera $valores, $errores, $deshabilitado, $fecha_minima y $fecha_maxima (RN-03).
  */
 declare(strict_types=1);
 ?>
@@ -12,8 +12,10 @@ declare(strict_types=1);
         <label for="fecha_servicio" class="form-label">Fecha de servicio</label>
         <input type="date" id="fecha_servicio" name="fecha_servicio" x-model="fecha" required
                <?= $fecha_minima === null ? '' : 'min="' . e($fecha_minima) . '"' ?>
+               <?= ($fecha_maxima ?? null) === null ? '' : 'max="' . e($fecha_maxima) . '"' ?>
                class="form-control form-control-lg<?= clase_error($errores, 'fecha_servicio') ?>"
                value="<?= e($valores['fecha_servicio']) ?>"<?= $deshabilitado('fecha_servicio') ?>>
+        <?= mostrar_error($errores, 'fecha_servicio') ?>
     </div>
     <div class="col-6">
         <label for="hora_inicio" class="form-label">Hora de inicio</label>

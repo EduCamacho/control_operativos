@@ -42,7 +42,7 @@ if ($actual !== null) {
 } else {
     $fecha = (string) ($_GET['fecha'] ?? $vigente);
     try {
-        $fecha = max($vigente, validar_fecha($fecha)->format('Y-m-d'));
+        $fecha = min(fecha_servicio_maxima($ahora), max($vigente, validar_fecha($fecha)->format('Y-m-d')));
     } catch (InvalidArgumentException) {
         $fecha = $vigente;
     }
@@ -98,6 +98,8 @@ if (es_post()) {
             );
             if (!programacion_permitida($horario['inicio'], $ahora, false)) {
                 $errores['hora_inicio'] = 'La hora de inicio ya pasó. Elija una hora futura.';
+            } elseif (($error_anticipacion = validar_anticipacion((string) $_POST['fecha_servicio'], $ahora)) !== null) {
+                $errores['fecha_servicio'] = $error_anticipacion;
             }
         } catch (InvalidArgumentException $error) {
             $errores['hora_inicio'] = $error->getMessage();
@@ -130,7 +132,6 @@ if (es_post()) {
                     $datos + ['unidad_id' => $unidad_id, 'creado_por' => usuario_actual()['id']],
                 );
                 $id = (int) $pdo->lastInsertId();
-                marcar_formulario_usado($id_formulario, $id);
                 $accion_bitacora = 'PROGRAMAR';
                 $detalle = $datos + ['tipos' => $tipos];
             } else {
@@ -163,6 +164,10 @@ if (es_post()) {
                 registrar_bitacora($accion_bitacora, 'operativos', $id, $detalle);
             }
             $pdo->commit();
+            // Recién ahora: si algo fallaba antes del commit, el reenvío debe poder crearlo.
+            if ($accion_bitacora === 'PROGRAMAR') {
+                marcar_formulario_usado($id_formulario, $id);
+            }
 
             guardar_mensaje('success', $accion_bitacora === 'PROGRAMAR'
                 ? 'Operativo programado: turno ' . obtener_etiqueta_turno($datos['turno']) . '.'
@@ -212,6 +217,7 @@ $tipos_formulario = obtener_tipos_para_formulario(array_map('intval', (array) $v
 $titulo = $actual === null ? 'Programar operativo' : 'Editar operativo';
 $deshabilitado = static fn (string $campo): string => $editable($campo) ? '' : ' disabled';
 $fecha_minima = $vigente;
+$fecha_maxima = fecha_servicio_maxima($ahora);
 $scripts = ['assets/js/programacion.js'];
 require RUTA_APP . '/vistas/cabecera.php';
 ?>

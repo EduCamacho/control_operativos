@@ -204,6 +204,38 @@ final class DominioTest extends TestCase
         $this->assertTrue(programacion_permitida(self::lima('2026-10-10 16:00:00'), self::lima('2026-10-17 16:00:00'), true));
     }
 
+    // --- anticipación máxima (RN-03) ----------------------------------------
+
+    public function test_fecha_maxima_es_el_servicio_vigente_mas_60_dias(): void
+    {
+        $this->assertSame('2026-12-22', fecha_servicio_maxima(self::lima('2026-10-23 10:00:00')));
+        // Antes de las 06:00 el vigente es el del día anterior.
+        $this->assertSame('2026-12-21', fecha_servicio_maxima(self::lima('2026-10-23 05:59:00')));
+        $this->assertSame('2026-12-22', fecha_servicio_maxima(self::lima('2026-10-23 06:00:00')));
+        // Cruza de año.
+        $this->assertSame('2027-01-30', fecha_servicio_maxima(self::lima('2026-12-01 10:00:00')));
+    }
+
+    public function test_anticipacion_en_el_limite(): void
+    {
+        $ahora = self::lima('2026-10-23 10:00:00');
+        $this->assertNull(validar_anticipacion('2026-10-23', $ahora));
+        $this->assertNull(validar_anticipacion('2026-12-22', $ahora));           // día 60: se acepta
+        $this->assertSame(
+            'Solo se puede programar con hasta 60 días de anticipación (hasta el servicio del 22/12/2026).',
+            validar_anticipacion('2026-12-23', $ahora),                            // día 61: se rechaza
+        );
+        $this->assertNotNull(validar_anticipacion('2062-10-23', $ahora));          // año mal escrito
+        // Las fechas pasadas no son asunto de esta regla (las controla programacion_permitida()).
+        $this->assertNull(validar_anticipacion('2026-10-01', $ahora));
+    }
+
+    public function test_anticipacion_con_fecha_invalida_lanza_excepcion(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        validar_anticipacion('2026-02-30', self::lima('2026-10-23 10:00:00'));
+    }
+
     // --- dentro_de_la_libertad ----------------------------------------------
 
     public static function coordenadas_validas(): array
@@ -982,6 +1014,17 @@ final class DominioTest extends TestCase
         $this->assertSame('987654321', $r['datos']['jefe_celular']);
         $this->assertSame(12, $r['datos']['fuerzas_propias']);
         $this->assertNull($r['datos']['observaciones']);
+    }
+
+    public function test_observaciones_hasta_el_mismo_limite_que_al_finalizar(): void
+    {
+        $r = validar_programacion(['observaciones' => str_repeat('ñ', MAX_CARACTERES_OBSERVACIONES)] + self::entrada_valida(), [1, 2, 3]);
+        $this->assertArrayNotHasKey('observaciones', $r['errores']); // cuenta caracteres, no bytes
+        $this->assertSame(MAX_CARACTERES_OBSERVACIONES, mb_strlen($r['datos']['observaciones']));
+
+        $r = validar_programacion(['observaciones' => str_repeat('a', MAX_CARACTERES_OBSERVACIONES + 1)] + self::entrada_valida(), [1, 2, 3]);
+        $this->assertSame('Las observaciones admiten hasta 5000 caracteres.', $r['errores']['observaciones']);
+        $this->assertArrayNotHasKey('observaciones', $r['datos']);
     }
 
     public function test_coordenadas_del_lugar_son_obligatorias(): void

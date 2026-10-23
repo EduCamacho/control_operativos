@@ -71,7 +71,7 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
   - Si la hora de inicio es anterior a las 06:00 (MADRUGADA), el inicio cae el día siguiente a la fecha de servicio.
   - El fin es la primera vez que llega la hora de fin después del inicio. Si la hora de fin es menor que la de inicio, cae al día siguiente del inicio (por ejemplo, de 20:00 a 02:00).
   - La hora de inicio y la de fin no pueden ser iguales.
-- **RN-03** — **No hay hora límite para programar**: se puede hacer en cualquier momento, siempre que `inicio_programado` sea posterior a la hora actual. **No se puede programar con la hora de inicio ya pasada**; eso solo lo puede hacer ADMIN, y queda en bitácora.
+- **RN-03** — **No hay hora límite para programar**: se puede hacer en cualquier momento, siempre que `inicio_programado` sea posterior a la hora actual. **No se puede programar con la hora de inicio ya pasada**; eso solo lo puede hacer ADMIN, y queda en bitácora. Se puede programar con **hasta 60 días de anticipación** (servicio vigente + 60, `MAX_DIAS_ANTICIPACION`), también ADMIN: son los días que muestra "Próximos" en Mis operativos, y más allá el operativo quedaría creado pero sin aparecer en la lista de la unidad (decisión de Eduardo, 23/10/2026).
 - **RN-04** — Datos de programación:
   - Tipo(s) de operativo: uno o más, del catálogo.
   - Lugar programado: texto con calle, avenida, sector o barrio.
