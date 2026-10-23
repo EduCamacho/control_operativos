@@ -140,6 +140,7 @@ Los **estados derivados** se calculan al consultar y no se guardan en la base de
   - Solo cuentan los operativos **finalizados**, porque los resultados se registran al finalizar (RN-12). Se muestran los realizados, los positivos, los negativos y los que no tienen N.I (RN-13), la suma por concepto y la lista de operativos con lo logrado por cada uno.
   - El período se elige con un atajo (**Esta semana**, desde el lunes; **Este mes**; **Mes anterior**) o con un rango desde y hasta. Por defecto, el mes en curso hasta el servicio vigente. Como máximo **un año** (366 días): un rango mayor se recorta desde el final.
   - Se filtra por la unidad de la sesión en el servidor (RN-16). Cada descarga del PDF queda en la bitácora (`REPORTE_PDF`).
+- **RN-22a** — **Reporte por unidad para SUPERVISOR y ADMIN** (decisión de Eduardo, 23/10/2026): el mismo reporte de RN-22, de **una unidad a la vez**, elegida de una lista. Se pueden elegir también las unidades **inactivas**, porque tienen historial. La unidad llega desde el navegador, así que el servidor acepta solo una que exista; la cuenta UNIDAD no tiene acceso a esta pantalla (RN-16).
 - **RN-21** — **El mapa interactivo es solo del SUPERVISOR.** En las vistas de UNIDAD y ADMIN, cada ubicación se muestra como un **enlace a Google Maps** armado con las coordenadas que guardó el sistema: `https://www.google.com/maps/search/?api=1&query=LAT,LNG`. Esos enlaces no consumen la API.
 
 **Cuentas y seguridad**
